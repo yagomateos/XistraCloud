@@ -8,33 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Project } from '@/types';
 
 const Projects = () => {
-  const [projects, setProjects] = useState<Project[]>([
-    {
-      id: '1',
-      name: 'mi-app-web',
-      repository: 'github.com/usuario/mi-app-web',
-      framework: 'React',
-      status: 'deployed',
-      lastDeploy: 'hace 2 horas',
-      url: 'https://mi-app-web.vercel.app'
-    },
-    {
-      id: '2', 
-      name: 'api-backend',
-      repository: 'github.com/usuario/api-backend',
-      framework: 'Node.js',
-      status: 'building',
-      lastDeploy: 'hace 5 min'
-    },
-    {
-      id: '3',
-      name: 'landing-page',
-      repository: 'github.com/usuario/landing-page',
-      framework: 'Next.js',
-      status: 'failed',
-      lastDeploy: 'hace 1 día'
-    }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,15 +28,6 @@ const Projects = () => {
     };
     
     setProjects(prev => [newProject, ...prev]);
-    
-    // Simulate deployment process
-    setTimeout(() => {
-      setProjects(prev => prev.map(p => 
-        p.id === newProject.id 
-          ? { ...p, status: 'deployed', url: `https://${projectData.name}.vercel.app` }
-          : p
-      ));
-    }, 3000);
   };
 
   const handleViewDetails = (projectId: string) => {
