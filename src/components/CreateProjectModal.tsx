@@ -51,13 +51,29 @@ const CreateProjectModal = ({ open, onOpenChange, onCreateProject }: CreateProje
   const onSubmit = async (data: ProjectFormData) => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    onCreateProject(data);
-    setIsLoading(false);
-    form.reset();
-    onOpenChange(false);
+    try {
+      const response = await fetch('http://localhost:3001/deploy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ gitUrl: data.repository }),
+      });
+
+      if (response.ok) {
+        onCreateProject(data);
+        form.reset();
+        onOpenChange(false);
+      } else {
+        console.error('Deployment failed');
+        // TODO: Show an error message to the user
+      }
+    } catch (error) {
+      console.error('Error during deployment:', error);
+      // TODO: Show an error message to the user
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const extractRepoName = (url: string) => {
