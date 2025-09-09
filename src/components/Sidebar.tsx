@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   FolderOpen, 
   Rocket, 
@@ -15,17 +15,25 @@ import {
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabase';
 
 interface SidebarProps {
   user?: {
     name: string;
     email: string;
     avatar?: string;
-  };
+  } | null;
 }
 
-const Sidebar = ({ user = { name: 'John Doe', email: 'john@example.com' } }: SidebarProps) => {
+const Sidebar = ({ user }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
@@ -84,42 +92,45 @@ const Sidebar = ({ user = { name: 'John Doe', email: 'john@example.com' } }: Sid
       </nav>
 
       {/* User Profile */}
-      <div className="p-3 border-t border-border mt-auto">
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
-          <NavLink
-            to="/dashboard/profile"
-            className={({ isActive }) => `
-                sidebar-item flex-1
-                ${isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'}
-                ${collapsed ? 'justify-center' : ''}
-              `}
-          >
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={user.avatar} />
-              <AvatarFallback className="text-xs">
-                {user.name.split(' ').map(n => n[0]).join('')}
-              </AvatarFallback>
-            </Avatar>
-            {!collapsed && (
-              <div className="ml-3 flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{user.name}</div>
-              </div>
-            )}
-          </NavLink>
-          {!collapsed && <ThemeToggle />}
+      {user && (
+        <div className="p-3 border-t border-border mt-auto">
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
+            <NavLink
+              to="/dashboard/profile"
+              className={({ isActive }) => `
+                  sidebar-item flex-1
+                  ${isActive ? 'sidebar-item-active' : 'sidebar-item-inactive'}
+                  ${collapsed ? 'justify-center' : ''}
+                `}
+            >
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={user.avatar} />
+                <AvatarFallback className="text-xs">
+                  {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              {!collapsed && (
+                <div className="ml-3 flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{user.name}</div>
+                </div>
+              )}
+            </NavLink>
+            {!collapsed && <ThemeToggle />}
+          </div>
+          
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start mt-2 text-muted-foreground hover:text-foreground"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 mr-3" />
+              Cerrar sesión
+            </Button>
+          )}
         </div>
-        
-        {!collapsed && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start mt-2 text-muted-foreground hover:text-foreground"
-          >
-            <LogOut className="h-4 w-4 mr-3" />
-            Cerrar sesión
-          </Button>
-        )}
-      </div>
+      )}
     </div>
   );
 };
