@@ -1,31 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ProjectCard from '@/components/ProjectCard';
 import CreateProjectModal from '@/components/CreateProjectModal';
 import { useNavigate } from 'react-router-dom';
-import { Project } from '@/types';
-import { supabase } from '@/lib/supabase';
+import { useQuery } from '@tanstack/react-query';
+import { getProjects, Project } from '@/lib/api';
 
 const Projects = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const { data, error } = await supabase.from('projects').select('*');
-      if (error) {
-        console.error('Error fetching projects:', error);
-      } else {
-        setProjects(data as Project[]);
-      }
-    };
+  // Use React Query with our API function that has mock data support
+  const { data: projects = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjects,
+    refetchInterval: 10000, // Refetch every 10 seconds
+  });
 
-    fetchProjects();
-  }, []);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div>Cargando proyectos...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-red-500">Error al cargar proyectos: {error.message}</div>
+      </div>
+    );
+  }
 
   const filteredProjects = projects.filter(project =>
     project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -33,14 +42,9 @@ const Projects = () => {
   );
 
   const handleCreateProject = (projectData: { name: string; repository: string; framework: string }) => {
-    const newProject: Project = {
-      id: Date.now().toString(), // Temporary ID for optimistic update
-      ...projectData,
-      status: 'building',
-      lastDeploy: 'hace pocos segundos'
-    };
-    
-    setProjects(prev => [newProject, ...prev]);
+    // In a real app, this would make an API call to create the project
+    // For now, we'll just refetch the data
+    refetch();
   };
 
   const handleViewDetails = (projectId: string) => {

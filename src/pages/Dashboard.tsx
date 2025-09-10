@@ -43,7 +43,7 @@ const Dashboard = () => {
   const recentActivity = (dashboardData?.recentActivity || []).map(activity => ({
     id: activity.id,
     type: activity.type,
-    project: activity.project_name,
+    project: activity.project,
     message: activity.message,
     status: activity.status,
     time: formatDistanceToNow(new Date(activity.created_at), { locale: es, addSuffix: true })
@@ -62,9 +62,9 @@ const Dashboard = () => {
 
   // Datos de ejemplo para proyectos principales
   const topProjects = [
-    { name: 'landing-page', requests: '5.1K', uptime: '98.8%', status: 'deployed' },
-    { name: 'api-service', requests: '3.2K', uptime: '99.9%', status: 'deployed' },
-    { name: 'dashboard', requests: '1.8K', uptime: '99.5%', status: 'deployed' },
+    { name: 'example-voting-app', requests: '5.1K', uptime: '98.8%', status: 'deployed' },
+    { name: 'fastapi-blog-api', requests: '3.2K', uptime: '99.9%', status: 'deployed' },
+    { name: 'react-dashboard', requests: '1.8K', uptime: '99.5%', status: 'deployed' },
   ];
 
   const getActivityIcon = (type: string) => {
@@ -110,7 +110,7 @@ const Dashboard = () => {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{(dashboardData?.projectStats.active || 0) + (dashboardData?.projectStats.building || 0) + (dashboardData?.projectStats.error || 0)}</div>
+            <div className="text-2xl font-bold">{(dashboardData?.projectStats.active || 0) + (dashboardData?.projectStats.building || 0) + (dashboardData?.projectStats.error || 0) + (dashboardData?.projectStats.stopped || 0)}</div>
             <p className="text-xs text-success">+2 este mes</p>
           </CardContent>
         </Card>

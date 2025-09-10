@@ -1,5 +1,74 @@
+// Types and interfaces
+export interface Project {
+  id: string;
+  name: string;
+  status: 'deployed' | 'building' | 'failed' | 'stopped';
+  created_at: string;
+  url?: string | null;
+  repository: string;
+  framework: string;
+  user_id?: string;
+  container_id?: string | null;
+  deploy_type?: string;
+  compose_path?: string | null;
+  lastDeploy: string; // For ProjectCard compatibility - required
+}
+
+export interface Domain {
+  id: string;
+  domain: string;
+  project_id: string;
+  project_name: string;
+  status: string;
+  ssl_status: string;
+  created_at: string;
+}
+
+export interface Log {
+  id: string;
+  project_id: string;
+  project_name: string;
+  type: string;
+  message: string;
+  created_at: string;
+  level: string;
+  source: string;
+}
+
+// Alias for backwards compatibility
+export type LogEntry = Log;
+
+export interface DashboardStats {
+  projectStats: {
+    active: number;
+    building: number;
+    error: number;
+    stopped?: number;
+  };
+  deploymentTrend: Array<{
+    date: string;
+    deployments: number;
+    success: number;
+    failed: number;
+  }>;
+  recentActivity: Array<{
+    id: string;
+    type: string;
+    project: string;
+    message: string;
+    created_at: string;
+    status: string;
+  }>;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+
+// Debug logs
+console.log('🔧 DEBUG - API Configuration:');
+console.log('  API_URL:', API_URL);
+console.log('  VITE_USE_MOCK_DATA:', import.meta.env.VITE_USE_MOCK_DATA);
+console.log('  USE_MOCK_DATA:', USE_MOCK_DATA);
 
 // Mock data for fallback
 const MOCK_PROJECTS: Project[] = [
@@ -8,17 +77,18 @@ const MOCK_PROJECTS: Project[] = [
     name: 'example-voting-app',
     repository: 'https://github.com/dockersamples/example-voting-app',
     framework: 'Docker Compose',
-    status: 'running',
+    status: 'deployed',
     url: 'https://example-voting-app.xistracloud.com',
     user_id: 'user-123',
     created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
     container_id: 'cnt-123',
     deploy_type: 'compose',
-    compose_path: './docker-compose.yml'
+    compose_path: './docker-compose.yml',
+    lastDeploy: new Date(Date.now() - 86400000 * 1).toLocaleDateString()
   },
   {
     id: 'f8275b2f-3030-4893-9473-1a10fe393092',
-    name: 'landing-page',
+    name: 'nextjs-landing-page',
     repository: 'https://github.com/vercel/next.js',
     framework: 'Next.js',
     status: 'building',
@@ -27,28 +97,101 @@ const MOCK_PROJECTS: Project[] = [
     created_at: new Date(Date.now() - 1800000).toISOString(),
     container_id: null,
     deploy_type: 'git',
-    compose_path: null
+    compose_path: null,
+    lastDeploy: new Date(Date.now() - 1800000).toLocaleDateString()
   },
   {
     id: '9a3d5f2e-8b7c-4d6e-9f8g-1h2i3j4k5l6m',
-    name: 'blog-api',
+    name: 'fastapi-blog-api',
     repository: 'https://github.com/fastapi/fastapi',
     framework: 'FastAPI',
-    status: 'stopped',
+    status: 'deployed',
     url: 'https://blog-api.xistracloud.com',
     user_id: 'user-123',
     created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
     container_id: 'cnt-456',
     deploy_type: 'dockerfile',
-    compose_path: null
+    compose_path: null,
+    lastDeploy: new Date(Date.now() - 86400000 * 2).toLocaleDateString()
+  },
+  {
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    name: 'react-dashboard',
+    repository: 'https://github.com/facebook/react',
+    framework: 'React',
+    status: 'deployed',
+    url: 'https://dashboard.xistracloud.com',
+    user_id: 'user-123',
+    created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
+    container_id: 'cnt-789',
+    deploy_type: 'git',
+    compose_path: null,
+    lastDeploy: new Date(Date.now() - 86400000 * 3).toLocaleDateString()
+  },
+  {
+    id: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
+    name: 'express-api-gateway',
+    repository: 'https://github.com/expressjs/express',
+    framework: 'Express.js',
+    status: 'failed',
+    url: null,
+    user_id: 'user-123',
+    created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    container_id: null,
+    deploy_type: 'git',
+    compose_path: null,
+    lastDeploy: new Date(Date.now() - 86400000 * 2).toLocaleDateString()
+  },
+  {
+    id: 'c3d4e5f6-g7h8-9012-cdef-345678901234',
+    name: 'vue-ecommerce',
+    repository: 'https://github.com/vuejs/vue',
+    framework: 'Vue.js',
+    status: 'deployed',
+    url: 'https://shop.xistracloud.com',
+    user_id: 'user-123',
+    created_at: new Date(Date.now() - 86400000 * 10).toISOString(),
+    container_id: 'cnt-101',
+    deploy_type: 'dockerfile',
+    compose_path: null,
+    lastDeploy: new Date(Date.now() - 86400000 * 5).toLocaleDateString()
+  },
+  {
+    id: 'd4e5f6g7-h8i9-0123-defg-456789012345',
+    name: 'django-cms',
+    repository: 'https://github.com/django/django',
+    framework: 'Django',
+    status: 'stopped',
+    url: 'https://cms.xistracloud.com',
+    user_id: 'user-123',
+    created_at: new Date(Date.now() - 86400000 * 15).toISOString(),
+    container_id: 'cnt-202',
+    deploy_type: 'git',
+    compose_path: null,
+    lastDeploy: new Date(Date.now() - 86400000 * 10).toLocaleDateString()
+  },
+  {
+    id: 'e5f6g7h8-i9j0-1234-efgh-567890123456',
+    name: 'golang-microservice',
+    repository: 'https://github.com/golang/go',
+    framework: 'Go',
+    status: 'building',
+    url: null,
+    user_id: 'user-123',
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    container_id: null,
+    deploy_type: 'dockerfile',
+    compose_path: null,
+    lastDeploy: new Date(Date.now() - 3600000).toLocaleDateString()
   }
 ];
 
 const MOCK_DASHBOARD_STATS: DashboardStats = {
   projectStats: {
-    active: 1,
-    building: 1,
-    error: 0
+    active: 4, // deployed projects
+    building: 2, // building projects  
+    error: 1, // failed projects
+    stopped: 1 // stopped projects (django-cms)
   },
   deploymentTrend: [
     { date: '2025-09-03', deployments: 2, success: 2, failed: 0 },
@@ -64,26 +207,42 @@ const MOCK_DASHBOARD_STATS: DashboardStats = {
     {
       id: '1',
       type: 'deployment',
-      project: 'example-voting-app',
-      message: 'Deployment completed successfully',
+      project: 'golang-microservice',
+      message: 'Building Go microservice...',
       created_at: new Date(Date.now() - 300000).toISOString(),
-      status: 'success'
+      status: 'warning'
     },
     {
       id: '2',
-      type: 'domain',
-      project: 'landing-page',
-      message: 'Domain verification pending',
+      type: 'deployment',
+      project: 'nextjs-landing-page',
+      message: 'Installing dependencies...',
       created_at: new Date(Date.now() - 600000).toISOString(),
       status: 'warning'
     },
     {
       id: '3',
       type: 'error',
-      project: 'blog-api',
-      message: 'Build failed: Missing environment variable',
+      project: 'express-api-gateway',
+      message: 'Build failed: Missing environment variable DATABASE_URL',
       created_at: new Date(Date.now() - 900000).toISOString(),
       status: 'error'
+    },
+    {
+      id: '4',
+      type: 'deployment',
+      project: 'vue-ecommerce',
+      message: 'Deployment completed successfully',
+      created_at: new Date(Date.now() - 1200000).toISOString(),
+      status: 'success'
+    },
+    {
+      id: '5',
+      type: 'deployment',
+      project: 'react-dashboard',
+      message: 'Deployment completed successfully',
+      created_at: new Date(Date.now() - 1800000).toISOString(),
+      status: 'success'
     }
   ]
 };
@@ -91,293 +250,333 @@ const MOCK_DASHBOARD_STATS: DashboardStats = {
 const MOCK_DOMAINS: Domain[] = [
   {
     id: '1',
-    domain: 'app.xistracloud.com',
-    projectId: 'eeea1aeb-1cb8-4559-976c-a0816f75feca',
-    projectName: 'example-voting-app',
+    domain: 'example-voting-app.xistracloud.com',
+    project_id: 'eeea1aeb-1cb8-4559-976c-a0816f75feca',
+    project_name: 'example-voting-app',
     status: 'verified',
-    ssl: true,
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    lastChecked: new Date(Date.now() - 3600000).toISOString()
+    ssl_status: 'active',
+    created_at: new Date(Date.now() - 86400000 * 6).toISOString()
   },
   {
     id: '2',
-    domain: 'demo.xistracloud.app',
-    projectId: 'f8275b2f-3030-4893-9473-1a10fe393092',
-    projectName: 'landing-page',
-    status: 'pending',
-    ssl: false,
-    createdAt: new Date(Date.now() - 1800000).toISOString()
-  }
-];
-
-const MOCK_LOGS: LogEntry[] = [
-  {
-    id: '1',
-    timestamp: new Date(Date.now() - 300000).toISOString(),
-    level: 'info',
-    message: 'Aplicación desplegada exitosamente',
-    source: 'deployment',
-    metadata: { duration: '2m15s' },
-    projectName: 'example-voting-app',
-    projectId: 'eeea1aeb-1cb8-4559-976c-a0816f75feca',
-    deploymentId: 'dep-1',
-    deploymentStatus: 'success'
-  },
-  {
-    id: '2',
-    timestamp: new Date(Date.now() - 600000).toISOString(),
-    level: 'success',
-    message: 'SSL certificado configurado para app.xistracloud.com',
-    source: 'ssl',
-    metadata: { domain: 'app.xistracloud.com' },
-    projectName: 'example-voting-app',
-    projectId: 'eeea1aeb-1cb8-4559-976c-a0816f75feca',
-    deploymentId: 'dep-1',
-    deploymentStatus: 'success'
+    domain: 'blog-api.xistracloud.com',
+    project_id: '9a3d5f2e-8b7c-4d6e-9f8g-1h2i3j4k5l6m',
+    project_name: 'fastapi-blog-api',
+    status: 'verified',
+    ssl_status: 'active',
+    created_at: new Date(Date.now() - 86400000 * 2).toISOString()
   },
   {
     id: '3',
-    timestamp: new Date(Date.now() - 900000).toISOString(),
-    level: 'warning',
-    message: 'Uso de CPU elevado detectado: 78%',
-    source: 'monitor',
-    metadata: { cpu: '78%', memory: '45%' },
-    projectName: 'example-voting-app',
-    projectId: 'eeea1aeb-1cb8-4559-976c-a0816f75feca',
-    deploymentId: 'dep-1',
-    deploymentStatus: 'running'
+    domain: 'dashboard.xistracloud.com',
+    project_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    project_name: 'react-dashboard',
+    status: 'verified',
+    ssl_status: 'active',
+    created_at: new Date(Date.now() - 86400000 * 4).toISOString()
+  },
+  {
+    id: '4',
+    domain: 'shop.xistracloud.com',
+    project_id: 'c3d4e5f6-g7h8-9012-cdef-345678901234',
+    project_name: 'vue-ecommerce',
+    status: 'verified',
+    ssl_status: 'active',
+    created_at: new Date(Date.now() - 86400000 * 9).toISOString()
+  },
+  {
+    id: '5',
+    domain: 'cms.xistracloud.com',
+    project_id: 'd4e5f6g7-h8i9-0123-defg-456789012345',
+    project_name: 'django-cms',
+    status: 'pending',
+    ssl_status: 'pending',
+    created_at: new Date(Date.now() - 86400000 * 14).toISOString()
   }
 ];
 
-export interface Project {
-  id: string;
-  name: string;
-  repository: string;
-  framework: string;
-  status: string;
-  url: string | null;
-  user_id: string | null;
-  created_at: string;
-  container_id: string | null;
-  deploy_type: string | null;
-  compose_path: string | null;
-}
+const MOCK_LOGS: Log[] = [
+  {
+    id: '1',
+    project_id: 'e5f6g7h8-i9j0-1234-efgh-567890123456',
+    project_name: 'golang-microservice',
+    type: 'build',
+    message: 'Building Go microservice with Docker...',
+    created_at: new Date(Date.now() - 300000).toISOString(),
+    level: 'info',
+    source: 'docker'
+  },
+  {
+    id: '2',
+    project_id: 'f8275b2f-3030-4893-9473-1a10fe393092',
+    project_name: 'nextjs-landing-page',
+    type: 'build',
+    message: 'Installing dependencies with npm...',
+    created_at: new Date(Date.now() - 600000).toISOString(),
+    level: 'info',
+    source: 'npm'
+  },
+  {
+    id: '3',
+    project_id: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
+    project_name: 'express-api-gateway',
+    type: 'error',
+    message: 'Build failed: Missing environment variable DATABASE_URL',
+    created_at: new Date(Date.now() - 900000).toISOString(),
+    level: 'error',
+    source: 'build'
+  },
+  {
+    id: '4',
+    project_id: 'c3d4e5f6-g7h8-9012-cdef-345678901234',
+    project_name: 'vue-ecommerce',
+    type: 'deployment',
+    message: 'Application deployed successfully to shop.xistracloud.com',
+    created_at: new Date(Date.now() - 1200000).toISOString(),
+    level: 'info',
+    source: 'docker'
+  },
+  {
+    id: '5',
+    project_id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    project_name: 'react-dashboard',
+    type: 'deployment',
+    message: 'React application deployed successfully to dashboard.xistracloud.com',
+    created_at: new Date(Date.now() - 1800000).toISOString(),
+    level: 'info',
+    source: 'docker'
+  },
+  {
+    id: '6',
+    project_id: 'eeea1aeb-1cb8-4559-976c-a0816f75feca',
+    project_name: 'example-voting-app',
+    type: 'deployment',
+    message: 'Docker Compose application running successfully',
+    created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    level: 'info',
+    source: 'docker'
+  },
+  {
+    id: '7',
+    project_id: '9a3d5f2e-8b7c-4d6e-9f8g-1h2i3j4k5l6m',
+    project_name: 'fastapi-blog-api',
+    type: 'deployment',
+    message: 'FastAPI service deployed to blog-api.xistracloud.com',
+    created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+    level: 'info',
+    source: 'docker'
+  },
+  {
+    id: '8',
+    project_id: 'd4e5f6g7-h8i9-0123-defg-456789012345',
+    project_name: 'django-cms',
+    type: 'info',
+    message: 'Container stopped - awaiting restart',
+    created_at: new Date(Date.now() - 86400000 * 14).toISOString(),
+    level: 'warning',
+    source: 'docker'
+  }
+];
 
-export interface ProjectStats {
-  active: number;
-  building: number;
-  error: number;
-}
+// API Functions
+export const getProjects = async (): Promise<Project[]> => {
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for projects');
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    return MOCK_PROJECTS;
+  }
 
-export interface DeploymentTrendItem {
-  date: string;
-  deployments: number;
-  success: number;
-  failed: number;
-}
-
-export interface ActivityItem {
-  id: string;
-  type: 'deployment' | 'domain' | 'error' | string;
-  project: string;
-  message: string;
-  created_at: string;
-  status: 'success' | 'error' | 'warning' | string;
-}
-
-export interface DashboardStats {
-  projectStats: ProjectStats;
-  deploymentTrend: DeploymentTrendItem[];
-  recentActivity: ActivityItem[];
-}
-
-export interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: 'info' | 'warning' | 'error' | 'success' | 'debug';
-  message: string;
-  source: string;
-  metadata?: any;
-  projectName?: string;
-  projectId: string;
-  deploymentId: string;
-  deploymentStatus?: string;
-}
-
-export interface LogFilters {
-  project_id?: string;
-  deployment_id?: string;
-  level?: string;
-  limit?: number;
-}
+  try {
+    console.log('🌐 Fetching projects from API:', `${API_URL}/projects`);
+    const response = await fetch(`${API_URL}/projects`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('✅ Successfully fetched projects from API');
+    
+    // Add lastDeploy field for ProjectCard compatibility
+    const projectsWithLastDeploy = data.map((project: any) => ({
+      ...project,
+      lastDeploy: new Date(project.created_at).toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }));
+    
+    return projectsWithLastDeploy;
+  } catch (error) {
+    console.error('❌ Error fetching projects from API, falling back to mock data:', error);
+    
+    // Add lastDeploy field for ProjectCard compatibility  
+    const projectsWithLastDeploy = MOCK_PROJECTS.map(project => ({
+      ...project,
+      lastDeploy: new Date(project.created_at).toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }));
+    
+    return projectsWithLastDeploy;
+  }
+};
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for dashboard stats');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return MOCK_DASHBOARD_STATS;
+  }
+
   try {
-    if (USE_MOCK_DATA) {
-      return MOCK_DASHBOARD_STATS;
-    }
-    
+    console.log('🌐 Fetching dashboard stats from API:', `${API_URL}/dashboard/stats`);
     const response = await fetch(`${API_URL}/dashboard/stats`);
     if (!response.ok) {
-      console.warn('API fallback: usando datos mock para dashboard');
-      return MOCK_DASHBOARD_STATS;
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response.json();
+    const data = await response.json();
+    console.log('✅ Successfully fetched dashboard stats from API');
+    return data;
   } catch (error) {
-    console.error('Error al obtener estadísticas:', error);
-    console.warn('API fallback: usando datos mock para dashboard');
+    console.error('❌ Error fetching dashboard stats from API, falling back to mock data:', error);
     return MOCK_DASHBOARD_STATS;
   }
 };
 
-export const getLogs = async (filters: LogFilters = {}): Promise<LogEntry[]> => {
-  try {
-    if (USE_MOCK_DATA) {
-      return MOCK_LOGS;
-    }
-    
-    const params = new URLSearchParams();
-    if (filters.project_id) params.append('project_id', filters.project_id);
-    if (filters.deployment_id) params.append('deployment_id', filters.deployment_id);
-    if (filters.level) params.append('level', filters.level);
-    if (filters.limit) params.append('limit', filters.limit.toString());
-
-    const response = await fetch(`${API_URL}/logs?${params.toString()}`);
-    if (!response.ok) {
-      console.warn('API fallback: usando datos mock para logs');
-      return MOCK_LOGS;
-    }
-    return response.json();
-  } catch (error) {
-    console.error('Error al obtener logs:', error);
-    console.warn('API fallback: usando datos mock para logs');
-    return MOCK_LOGS;
-  }
-};
-
-export const getProjectLogs = async (projectId: string, filters: Omit<LogFilters, 'project_id'> = {}): Promise<LogEntry[]> => {
-  try {
-    const params = new URLSearchParams();
-    if (filters.level) params.append('level', filters.level);
-    if (filters.limit) params.append('limit', filters.limit.toString());
-
-    const response = await fetch(`${API_URL}/projects/${projectId}/logs?${params.toString()}`);
-    if (!response.ok) {
-      throw new Error('Error al cargar los logs del proyecto');
-    }
-    return response.json();
-  } catch (error) {
-    console.error('Error al obtener logs del proyecto:', error);
-    throw new Error('Error al cargar los logs del proyecto');
-  }
-};
-
-export interface Domain {
-  id: string;
-  domain: string;
-  projectName: string;
-  projectId: string;
-  status: 'verified' | 'pending' | 'failed';
-  ssl: boolean;
-  dnsRecords?: any;
-  verificationToken?: string;
-  lastChecked?: string;
-  createdAt: string;
-}
-
-export interface CreateDomainRequest {
-  domain: string;
-  projectId: string;
-}
-
-export const getProjects = async (): Promise<Project[]> => {
-  try {
-    if (USE_MOCK_DATA) {
-      return MOCK_PROJECTS;
-    }
-    
-    const response = await fetch(`${API_URL}/projects`);
-    if (!response.ok) {
-      console.warn('API fallback: usando datos mock para proyectos');
-      return MOCK_PROJECTS;
-    }
-    return response.json();
-  } catch (error) {
-    console.error('Error al obtener proyectos:', error);
-    console.warn('API fallback: usando datos mock para proyectos');
-    return MOCK_PROJECTS;
-  }
-};
-
 export const getDomains = async (): Promise<Domain[]> => {
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for domains');
+    await new Promise(resolve => setTimeout(resolve, 400));
+    return MOCK_DOMAINS;
+  }
+
   try {
-    if (USE_MOCK_DATA) {
-      return MOCK_DOMAINS;
-    }
-    
+    console.log('🌐 Fetching domains from API:', `${API_URL}/domains`);
     const response = await fetch(`${API_URL}/domains`);
     if (!response.ok) {
-      console.warn('API fallback: usando datos mock para dominios');
-      return MOCK_DOMAINS;
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response.json();
+    const data = await response.json();
+    console.log('✅ Successfully fetched domains from API');
+    return data;
   } catch (error) {
-    console.error('Error al obtener dominios:', error);
-    console.warn('API fallback: usando datos mock para dominios');
+    console.error('❌ Error fetching domains from API, falling back to mock data:', error);
     return MOCK_DOMAINS;
   }
 };
 
-export const createDomain = async (domainData: CreateDomainRequest): Promise<Domain> => {
+export const getLogs = async (): Promise<Log[]> => {
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for logs');
+    await new Promise(resolve => setTimeout(resolve, 350));
+    return MOCK_LOGS;
+  }
+
   try {
+    console.log('🌐 Fetching logs from API:', `${API_URL}/logs`);
+    const response = await fetch(`${API_URL}/logs`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('✅ Successfully fetched logs from API');
+    return data;
+  } catch (error) {
+    console.error('❌ Error fetching logs from API, falling back to mock data:', error);
+    return MOCK_LOGS;
+  }
+};
+
+// Domain-related functions
+export const createDomain = async (domainData: { domain: string; project_id: string }): Promise<Domain> => {
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for create domain');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const newDomain: Domain = {
+      id: `domain-${Date.now()}`,
+      domain: domainData.domain,
+      project_id: domainData.project_id,
+      project_name: MOCK_PROJECTS.find(p => p.id === domainData.project_id)?.name || 'Unknown Project',
+      status: 'pending',
+      ssl_status: 'pending',
+      created_at: new Date().toISOString()
+    };
+    return newDomain;
+  }
+
+  try {
+    console.log('🌐 Creating domain via API:', `${API_URL}/domains`);
     const response = await fetch(`${API_URL}/domains`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(domainData),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(domainData)
     });
-
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al crear el dominio');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    return response.json();
+    const data = await response.json();
+    console.log('✅ Successfully created domain via API');
+    return data;
   } catch (error) {
-    console.error('Error al crear dominio:', error);
+    console.error('❌ Error creating domain via API:', error);
     throw error;
   }
 };
 
 export const deleteDomain = async (domainId: string): Promise<void> => {
-  try {
-    const response = await fetch(`${API_URL}/domains/${domainId}`, {
-      method: 'DELETE',
-    });
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for delete domain');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return;
+  }
 
+  try {
+    console.log('🌐 Deleting domain via API:', `${API_URL}/domains/${domainId}`);
+    const response = await fetch(`${API_URL}/domains/${domainId}`, {
+      method: 'DELETE'
+    });
     if (!response.ok) {
-      throw new Error('Error al eliminar el dominio');
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    console.log('✅ Successfully deleted domain via API');
   } catch (error) {
-    console.error('Error al eliminar dominio:', error);
-    throw new Error('Error al eliminar el dominio');
+    console.error('❌ Error deleting domain via API:', error);
+    throw error;
   }
 };
 
-export const verifyDomain = async (domainId: string): Promise<{ success: boolean; status: string; ssl: boolean; message: string }> => {
-  try {
-    const response = await fetch(`${API_URL}/domains/${domainId}/verify`, {
-      method: 'POST',
-    });
-
-    if (!response.ok) {
-      throw new Error('Error al verificar el dominio');
+export const verifyDomain = async (domainId: string): Promise<Domain> => {
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for verify domain');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const mockDomain = MOCK_DOMAINS.find(d => d.id === domainId);
+    if (mockDomain) {
+      return {
+        ...mockDomain,
+        status: 'verified',
+        ssl_status: 'active'
+      };
     }
+    throw new Error('Domain not found');
+  }
 
-    return response.json();
+  try {
+    console.log('🌐 Verifying domain via API:', `${API_URL}/domains/${domainId}/verify`);
+    const response = await fetch(`${API_URL}/domains/${domainId}/verify`, {
+      method: 'POST'
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('✅ Successfully verified domain via API');
+    return data;
   } catch (error) {
-    console.error('Error al verificar dominio:', error);
-    throw new Error('Error al verificar el dominio');
+    console.error('❌ Error verifying domain via API:', error);
+    throw error;
   }
 };
