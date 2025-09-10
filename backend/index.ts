@@ -503,6 +503,123 @@ app.delete('/projects/:id', async (req, res) => {
   }
 });
 
+// Get deployment logs
+app.get('/logs', async (req, res) => {
+  try {
+    const { project_id, deployment_id, level, limit = 100 } = req.query;
+
+    let query = supabase
+      .from('deployment_logs')
+      .select(`
+        id,
+        timestamp,
+        level,
+        message,
+        source,
+        metadata,
+        deployment_id,
+        project_id,
+        projects!inner(name)
+      `)
+      .order('timestamp', { ascending: false });
+
+    // Apply filters
+    if (project_id) {
+      query = query.eq('project_id', project_id);
+    }
+    
+    if (deployment_id) {
+      query = query.eq('deployment_id', deployment_id);
+    }
+    
+    if (level && level !== 'all') {
+      query = query.eq('level', level);
+    }
+
+    // Limit results
+    query = query.limit(Number(limit));
+
+    const { data: logs, error } = await query;
+
+    if (error) {
+      console.error('Error fetching logs:', error);
+      return res.status(500).json({ error: 'Failed to fetch logs' });
+    }
+
+    // Transform data for frontend
+    const transformedLogs = logs?.map(log => ({
+      id: log.id,
+      timestamp: log.timestamp,
+      level: log.level,
+      message: log.message,
+      source: log.source,
+      metadata: log.metadata,
+      projectName: (log.projects as any)?.name || 'Unknown Project',
+      projectId: log.project_id,
+      deploymentId: log.deployment_id
+    })) || [];
+
+    res.json(transformedLogs);
+
+  } catch (error: any) {
+    console.error('Error in /logs endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get logs for a specific project
+app.get('/projects/:id/logs', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { level, limit = 50 } = req.query;
+
+    let query = supabase
+      .from('deployment_logs')
+      .select(`
+        id,
+        timestamp,
+        level,
+        message,
+        source,
+        metadata,
+        deployment_id,
+        deployments!inner(status)
+      `)
+      .eq('project_id', id)
+      .order('timestamp', { ascending: false });
+
+    if (level && level !== 'all') {
+      query = query.eq('level', level);
+    }
+
+    query = query.limit(Number(limit));
+
+    const { data: logs, error } = await query;
+
+    if (error) {
+      console.error('Error fetching project logs:', error);
+      return res.status(500).json({ error: 'Failed to fetch logs' });
+    }
+
+    const transformedLogs = logs?.map(log => ({
+      id: log.id,
+      timestamp: log.timestamp,
+      level: log.level,
+      message: log.message,
+      source: log.source,
+      metadata: log.metadata,
+      deploymentId: log.deployment_id,
+      deploymentStatus: (log.deployments as any)?.status
+    })) || [];
+
+    res.json(transformedLogs);
+
+  } catch (error: any) {
+    console.error('Error in project logs endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Backend listening at http://localhost:${port}`);
 });
