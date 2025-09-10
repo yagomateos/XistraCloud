@@ -13,7 +13,7 @@ COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
 # Copy source code
-COPY index.js ./
+COPY server.js ./
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
@@ -33,4 +33,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start the application
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "index.js"]
+CMD ["node", "server.js"]
