@@ -14,7 +14,7 @@ interface ProjectCardProps {
     name: string;
     repository: string;
     framework: string;
-    status: 'deployed' | 'building' | 'failed';
+    status: 'deployed' | 'building' | 'failed' | 'stopped';
     lastDeploy: string;
     url?: string;
   };
@@ -31,6 +31,8 @@ const ProjectCard = ({ project, onViewDetails, onDeploy }: ProjectCardProps) => 
         return 'bg-warning-bg text-warning border-warning/20';
       case 'failed':
         return 'bg-error-bg text-error border-error/20';
+      case 'stopped':
+        return 'bg-muted text-muted-foreground border-muted/20';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -44,6 +46,8 @@ const ProjectCard = ({ project, onViewDetails, onDeploy }: ProjectCardProps) => 
         return 'Construyendo';
       case 'failed':
         return 'Falló';
+      case 'stopped':
+        return 'Detenido';
       default:
         return status;
     }
@@ -74,7 +78,12 @@ const ProjectCard = ({ project, onViewDetails, onDeploy }: ProjectCardProps) => 
 
           <div className="flex items-center justify-between">
             <Badge className={getStatusColor(project.status)}>
-              <div className={`status-dot mr-1 status-${project.status === 'deployed' ? 'success' : project.status === 'building' ? 'warning' : 'error'}`} />
+              <div className={`status-dot mr-1 status-${
+                project.status === 'deployed' ? 'success' : 
+                project.status === 'building' ? 'warning' : 
+                project.status === 'stopped' ? 'muted' : 
+                'error'
+              }`} />
               {getStatusText(project.status)}
             </Badge>
             

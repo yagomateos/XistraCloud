@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, RotateCcw, ExternalLink, Calendar, Trash2 } from 'lucide-react';
+import { getProjects } from '@/lib/api';
 
 // Updated interface to match backend data
 interface Deployment {
@@ -23,27 +25,21 @@ interface Deployment {
 }
 
 const Deployments = () => {
-  const [deployments, setDeployments] = useState<Deployment[]>([]);
   const [buildingProjects, setBuildingProjects] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const fetchDeployments = useCallback(async () => {
-    try {
-      const response = await fetch('http://localhost:3001/projects');
-      if (!response.ok) {
-        throw new Error('Failed to fetch projects');
-      }
-      const data = await response.json();
-      setDeployments(data.sort((a: Deployment, b: Deployment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    } catch (error) {
-      console.error('Error fetching deployments:', error);
-    }
-  }, []);
+  // Use React Query with our API function that has mock data support
+  const { data: deployments = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['deployments'],
+    queryFn: getProjects,
+    refetchInterval: 10000, // Refetch every 10 seconds
+  });
 
-  useEffect(() => {
-    fetchDeployments();
-  }, [fetchDeployments]);
+  // Sort deployments by created_at
+  const sortedDeployments = deployments.sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   const handleRedeploy = async (deployment: Deployment) => {
     setBuildingProjects(prev => [...prev, deployment.id]);
@@ -69,8 +65,8 @@ const Deployments = () => {
 
       // --- Polling Mechanism ---
       const pollStatus = async () => {
-        // Fetch the latest list of deployments
-        await fetchDeployments(); 
+        // Refetch the latest list of deployments
+        await refetch(); 
 
         // Find the specific deployment we are interested in
         const currentDeployment = deployments.find(d => d.id === deployment.id);
@@ -109,7 +105,7 @@ const Deployments = () => {
       }
 
       alert('Proyecto eliminado con éxito.');
-      fetchDeployments(); // Refresh the list immediately
+      refetch(); // Refresh the list immediately
     } catch (error: any) {
       console.error('Error deleting project:', error);
       alert('Error al eliminar el proyecto.');
@@ -193,7 +189,31 @@ const Deployments = () => {
         </Select>
       </div>
 
-      {filteredDeployments.length === 0 && buildingProjects.length === 0 ? (
+      {isLoading ? (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <RotateCcw className="h-8 w-8 text-muted-foreground animate-spin" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            Cargando despliegues...
+          </h3>
+          <p className="text-muted-foreground">
+            Obteniendo la lista de proyectos y despliegues.
+          </p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 bg-error rounded-full flex items-center justify-center mx-auto mb-4">
+            <RotateCcw className="h-8 w-8 text-error-foreground" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            Error al cargar despliegues
+          </h3>
+          <p className="text-muted-foreground">
+            {error?.message || 'Ha ocurrido un error inesperado. Inténtalo de nuevo.'}
+          </p>
+        </div>
+      ) : filteredDeployments.length === 0 && buildingProjects.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <RotateCcw className="h-8 w-8 text-muted-foreground" />
