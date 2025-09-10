@@ -3,6 +3,12 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "env": {
-    "VITE_API_URL": "https://tu-backend-en-railway.up.railway.app"
-  }
+    "VITE_API_URL": "https://xistracloud-production.up.railway.app"
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
