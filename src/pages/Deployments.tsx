@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,71 +9,100 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, RotateCcw, ExternalLink, Calendar } from 'lucide-react';
+import { Search, RotateCcw, ExternalLink, Calendar, Trash2 } from 'lucide-react';
 
+// Updated interface to match backend data
 interface Deployment {
   id: string;
-  projectName: string;
-  projectId: string;
-  status: 'success' | 'failed' | 'building';
-  createdAt: string;
-  duration: string;
+  name: string;
+  status: string;
+  created_at: string;
   url?: string;
-  branch: string;
-  commit: string;
+  repository: string; // This is the gitUrl
+  framework: string;
 }
 
 const Deployments = () => {
-  const [deployments] = useState<Deployment[]>([
-    {
-      id: '1',
-      projectName: 'mi-app-web',
-      projectId: '1',
-      status: 'success',
-      createdAt: '2024-01-15T10:30:00Z',
-      duration: '2m 15s',
-      url: 'https://mi-app-web-abc123.vercel.app',
-      branch: 'main',
-      commit: 'feat: add new homepage design'
-    },
-    {
-      id: '2',
-      projectName: 'api-backend',
-      projectId: '2',
-      status: 'building',
-      createdAt: '2024-01-15T10:25:00Z',
-      duration: '1m 45s',
-      branch: 'main',
-      commit: 'fix: update API endpoints'
-    },
-    {
-      id: '3',
-      projectName: 'landing-page',
-      projectId: '3',
-      status: 'failed',
-      createdAt: '2024-01-14T15:20:00Z',
-      duration: '45s',
-      branch: 'main',
-      commit: 'refactor: optimize images'
-    },
-    {
-      id: '4',
-      projectName: 'mi-app-web',
-      projectId: '1',
-      status: 'success',
-      createdAt: '2024-01-14T08:15:00Z',
-      duration: '1m 30s',
-      url: 'https://mi-app-web-def456.vercel.app',
-      branch: 'main',
-      commit: 'chore: update dependencies'
-    }
-  ]);
-
+  const [deployments, setDeployments] = useState<Deployment[]>([]);
+  const [buildingProjects, setBuildingProjects] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  const fetchDeployments = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:3001/projects');
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+      const data = await response.json();
+      setDeployments(data.sort((a: Deployment, b: Deployment) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+    } catch (error) {
+      console.error('Error fetching deployments:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDeployments();
+  }, [fetchDeployments]);
+
+  const handleRedeploy = async (deployment: Deployment) => {
+    setBuildingProjects(prev => [...prev, deployment.id]);
+
+    try {
+      const response = await fetch('http://localhost:3001/deploy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gitUrl: deployment.repository,
+          name: deployment.name,
+          framework: deployment.framework,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Redeployment failed');
+      }
+      
+      console.log('Redeployment request sent successfully');
+
+    } catch (error) {
+      console.error('Error redeploying:', error);
+      alert('El redespliegue ha fallado.');
+    } finally {
+      setTimeout(() => {
+        fetchDeployments();
+        setBuildingProjects(prev => prev.filter(id => id !== deployment.id));
+      }, 5000); // Refresh after 5 seconds
+    }
+  };
+
+  const handleDelete = async (deploymentId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción es irreversible y eliminará el contenedor asociado.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/projects/${deploymentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete project');
+      }
+
+      alert('Proyecto eliminado con éxito.');
+      fetchDeployments(); // Refresh the list immediately
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      alert('Error al eliminar el proyecto.');
+    }
+  };
+
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
+      case 'deployed':
       case 'success':
         return 'bg-success-bg text-success border-success/20';
       case 'building':
@@ -86,7 +115,8 @@ const Deployments = () => {
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
+      case 'deployed':
       case 'success':
         return 'Exitoso';
       case 'building':
@@ -110,9 +140,8 @@ const Deployments = () => {
   };
 
   const filteredDeployments = deployments.filter(deployment => {
-    const matchesSearch = deployment.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         deployment.commit.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || deployment.status === statusFilter;
+    const matchesSearch = deployment.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || deployment.status.toLowerCase() === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -129,7 +158,7 @@ const Deployments = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar por proyecto o commit..."
+            placeholder="Buscar por proyecto..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -141,14 +170,14 @@ const Deployments = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="success">Exitosos</SelectItem>
+            <SelectItem value="deployed">Exitosos</SelectItem>
             <SelectItem value="building">En progreso</SelectItem>
             <SelectItem value="failed">Fallidos</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {filteredDeployments.length === 0 ? (
+      {filteredDeployments.length === 0 && buildingProjects.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <RotateCcw className="h-8 w-8 text-muted-foreground" />
@@ -157,60 +186,63 @@ const Deployments = () => {
             No se encontraron despliegues
           </h3>
           <p className="text-muted-foreground">
-            Prueba ajustando los filtros de búsqueda
+            Prueba ajustando los filtros de búsqueda o despliega un nuevo proyecto.
           </p>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredDeployments.map((deployment) => (
-            <div key={deployment.id} className="deploy-card">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="font-semibold text-foreground">
-                      {deployment.projectName}
-                    </h3>
-                    <Badge className={getStatusColor(deployment.status)}>
-                      <div className={`status-dot mr-1 status-${deployment.status === 'success' ? 'success' : deployment.status === 'building' ? 'warning' : 'error'}`} />
-                      {getStatusText(deployment.status)}
-                    </Badge>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground mb-2 truncate">
-                    {deployment.commit}
-                  </p>
-
-                  <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                    <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {formatDate(deployment.createdAt)}
+          {filteredDeployments.map((deployment) => {
+            const isBuilding = buildingProjects.includes(deployment.id);
+            return (
+              <div key={deployment.id} className="deploy-card">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="font-semibold text-foreground">
+                        {deployment.name}
+                      </h3>
+                      <Badge className={getStatusColor(isBuilding ? 'building' : deployment.status)}>
+                        <div className={`status-dot mr-1 status-${isBuilding ? 'warning' : deployment.status.toLowerCase() === 'deployed' ? 'success' : 'error'}`} />
+                        {isBuilding ? 'En progreso' : getStatusText(deployment.status)}
+                      </Badge>
                     </div>
-                    <span>•</span>
-                    <span>{deployment.duration}</span>
-                    <span>•</span>
-                    <span className="font-mono">{deployment.branch}</span>
-                  </div>
-                </div>
 
-                <div className="flex items-center space-x-2">
-                  {deployment.url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(deployment.url, '_blank')}
-                    >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Ver
+                    <p className="text-sm text-muted-foreground mb-2 truncate">
+                      {deployment.repository}
+                    </p>
+
+                    <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                      <div className="flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {formatDate(deployment.created_at)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    {deployment.url && !isBuilding && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(deployment.url, '_blank')}
+                      >
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Ver
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={() => handleRedeploy(deployment)} disabled={isBuilding}>
+                      <RotateCcw className={`h-3 w-3 mr-1 ${isBuilding ? 'animate-spin' : ''}`} />
+                      {isBuilding ? 'Desplegando...' : 'Redesplegar'}
                     </Button>
-                  )}
-                  <Button variant="ghost" size="sm">
-                    <RotateCcw className="h-3 w-3 mr-1" />
-                    Redesplegar
-                  </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(deployment.id)} disabled={isBuilding}>
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Borrar
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
