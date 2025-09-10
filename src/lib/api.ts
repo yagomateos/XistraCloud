@@ -1,5 +1,19 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
+export interface Project {
+  id: string;
+  name: string;
+  repository: string;
+  framework: string;
+  status: string;
+  url: string | null;
+  user_id: string | null;
+  created_at: string;
+  container_id: string | null;
+  deploy_type: string | null;
+  compose_path: string | null;
+}
+
 export interface ProjectStats {
   active: number;
   building: number;
@@ -114,6 +128,19 @@ export interface CreateDomainRequest {
   domain: string;
   projectId: string;
 }
+
+export const getProjects = async (): Promise<Project[]> => {
+  try {
+    const response = await fetch(`${API_URL}/projects`);
+    if (!response.ok) {
+      throw new Error('Error al cargar los proyectos');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error al obtener proyectos:', error);
+    throw error;
+  }
+};
 
 export const getDomains = async (): Promise<Domain[]> => {
   try {

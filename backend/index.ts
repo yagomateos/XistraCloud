@@ -667,16 +667,19 @@ app.get('/domains', async (req, res) => {
 // Add new domain
 app.post('/domains', async (req, res) => {
   try {
+    console.log('Creating domain with body:', req.body);
     const { domain, projectId } = req.body;
 
     if (!domain || !projectId) {
+      console.log('Missing required fields:', { domain, projectId });
       return res.status(400).json({ error: 'Domain and projectId are required' });
     }
 
-    // Validate domain format
-    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*$/;
-    if (!domainRegex.test(domain)) {
-      return res.status(400).json({ error: 'Invalid domain format' });
+    // Validate domain format - more flexible regex
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!domain || domain.length < 1 || domain.length > 253 || !domainRegex.test(domain)) {
+      console.log('Invalid domain:', domain, 'Test result:', domainRegex.test(domain));
+      return res.status(400).json({ error: 'Invalid domain format. Please use a valid domain like example.com' });
     }
 
     // Check if domain already exists
@@ -794,7 +797,25 @@ app.post('/domains/:id/verify', async (req, res) => {
     }
 
     // Simulate DNS verification (in a real app, you'd check actual DNS records)
-    const verified = Math.random() > 0.3; // 70% success rate for demo
+    // For demo purposes: real domains that might actually be configured fail
+    // Test domains or very specific patterns succeed
+    let verified = false;
+    let message = '';
+    
+    if (domain.domain.includes('test') || domain.domain.includes('demo') || domain.domain.includes('ejemplo')) {
+      // Test domains usually succeed
+      verified = Math.random() > 0.2; // 80% success rate for test domains
+      message = verified ? 'Dominio de prueba verificado correctamente' : 'Error temporal en la verificación de prueba';
+    } else if (domain.domain.includes('sinaptiks.com') || domain.domain.includes('real-domain')) {
+      // Real domains might fail because they're already configured elsewhere
+      verified = false;
+      message = 'Este dominio parece estar configurado para otro servicio. Para verificarlo realmente, necesitarías configurar los registros DNS específicos de XistraCloud.';
+    } else {
+      // Other domains: random for demo
+      verified = Math.random() > 0.4; // 60% success rate
+      message = verified ? 'Dominio verificado correctamente' : 'No se pudieron verificar los registros DNS. Asegúrate de haber configurado los registros CNAME y TXT correctamente.';
+    }
+    
     const newStatus = verified ? 'verified' : 'failed';
     const sslEnabled = verified; // Enable SSL if verified
 
@@ -817,9 +838,7 @@ app.post('/domains/:id/verify', async (req, res) => {
       success: verified,
       status: newStatus,
       ssl: sslEnabled,
-      message: verified 
-        ? 'Domain verified successfully' 
-        : 'Domain verification failed. Please check your DNS records.'
+      message: message
     });
 
   } catch (error: any) {
