@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Download, AlertCircle, Info, CheckCircle, XCircle, Bug, RefreshCw } from 'lucide-react';
-import { getLogs } from '@/lib/api';
+import { Search, Download, AlertCircle, Info, CheckCircle, XCircle, Bug } from 'lucide-react';
+import { getLogs, LogEntry } from '@/lib/api';
 
 const Logs = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,18 +59,33 @@ const Logs = () => {
     }
   };
 
+  const getLevelColor = (level: string) => {
+    switch (level) {
+      case 'success':
+        return 'bg-success-bg text-success border-success/20';
+      case 'info':
+        return 'bg-primary-50 text-primary border-primary/20';
+      case 'warning':
+        return 'bg-warning-bg text-warning border-warning/20';
+      case 'error':
+        return 'bg-error-bg text-error border-error/20';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
   const getLevelBadgeVariant = (level: string) => {
     switch (level) {
       case 'success':
-        return 'default' as const;
+        return 'default' as const; // Green
       case 'info':
-        return 'secondary' as const;
+        return 'secondary' as const; // Blue  
       case 'warning':
-        return 'outline' as const;
+        return 'outline' as const; // Yellow
       case 'error':
-        return 'destructive' as const;
+        return 'destructive' as const; // Red
       case 'debug':
-        return 'outline' as const;
+        return 'outline' as const; // Gray
       default:
         return 'secondary' as const;
     }
@@ -115,7 +130,8 @@ const Logs = () => {
         log.source,
         `"${log.message.replace(/"/g, '""')}"`
       ].join(','))
-    ].join('\\n');
+    ].join('
+');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -154,31 +170,44 @@ const Logs = () => {
     );
   }
 
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  const filteredLogs = logs.filter(log => {
+    const matchesSearch = log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.projectName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesProject = projectFilter === 'all' || log.projectName === projectFilter;
+    const matchesLevel = levelFilter === 'all' || log.level === levelFilter;
+    return matchesSearch && matchesProject && matchesLevel;
+  });
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Logs</h1>
           <p className="text-muted-foreground">
-            Registro en tiempo real de actividades y eventos del sistema
+            Registro detallado de actividades y eventos del sistema
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualizar
-          </Button>
-          <Button variant="outline" onClick={exportLogs}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-        </div>
+        <Button variant="outline">
+          <Download className="h-4 w-4 mr-2" />
+          Exportar logs
+        </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row gap-4 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar en logs..."
             value={searchTerm}
@@ -186,107 +215,76 @@ const Logs = () => {
             className="pl-10"
           />
         </div>
-        
         <Select value={projectFilter} onValueChange={setProjectFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Todos los proyectos" />
+          <SelectTrigger className="w-full lg:w-48">
+            <SelectValue placeholder="Filtrar por proyecto" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los proyectos</SelectItem>
             {projects.map((project) => (
-              <SelectItem key={project} value={project!}>
+              <SelectItem key={project} value={project}>
                 {project}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-
         <Select value={levelFilter} onValueChange={setLevelFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Todos los niveles" />
+          <SelectTrigger className="w-full lg:w-48">
+            <SelectValue placeholder="Filtrar por nivel" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="all">Todos los niveles</SelectItem>
             <SelectItem value="success">Éxito</SelectItem>
             <SelectItem value="info">Info</SelectItem>
             <SelectItem value="warning">Advertencia</SelectItem>
             <SelectItem value="error">Error</SelectItem>
-            <SelectItem value="debug">Debug</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Logs List */}
-      <div className="bg-card border border-border rounded-lg">
-        {filteredLogs.length === 0 ? (
-          <div className="text-center py-12">
-            <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay logs disponibles</h3>
-            <p className="text-muted-foreground">
-              {logs.length === 0 
-                ? "No se han generado logs aún" 
-                : "No se encontraron logs que coincidan con los filtros aplicados"
-              }
-            </p>
+      {filteredLogs.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="h-8 w-8 text-muted-foreground" />
           </div>
-        ) : (
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            No se encontraron logs
+          </h3>
+          <p className="text-muted-foreground">
+            Prueba ajustando los filtros de búsqueda
+          </p>
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="divide-y divide-border">
             {filteredLogs.map((log) => (
-              <div key={log.id} className="p-4 hover:bg-accent/50 transition-colors">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
+              <div key={log.id} className="p-4 hover:bg-card-hover transition-colors">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
                     {getLevelIcon(log.level)}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant={getLevelBadgeVariant(log.level)}>
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Badge className={getLevelColor(log.level)}>
                         {getLevelText(log.level)}
                       </Badge>
-                      
-                      {log.projectName && (
-                        <Badge variant="outline">
-                          {log.projectName}
-                        </Badge>
-                      )}
-                      
-                      <Badge variant="secondary">
-                        {log.source}
-                      </Badge>
-                      
-                      <span className="text-xs text-muted-foreground ml-auto">
+                      <span className="text-sm font-medium text-foreground">
+                        {log.projectName}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-mono">
                         {formatTimestamp(log.timestamp)}
                       </span>
                     </div>
                     
-                    <p className="text-sm text-foreground break-words">
+                    <p className="text-sm text-foreground font-mono bg-muted/30 rounded p-2 break-all">
                       {log.message}
                     </p>
-                    
-                    {log.metadata && Object.keys(log.metadata).length > 0 && (
-                      <details className="mt-2">
-                        <summary className="text-xs text-muted-foreground cursor-pointer">
-                          Ver metadatos
-                        </summary>
-                        <pre className="text-xs bg-accent p-2 rounded mt-1 overflow-x-auto">
-                          {JSON.stringify(log.metadata, null, 2)}
-                        </pre>
-                      </details>
-                    )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </div>
-      
-      {filteredLogs.length > 0 && (
-        <div className="mt-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Mostrando {filteredLogs.length} de {logs.length} logs
-            {logs.length >= 200 && " (últimos 200)"}
-          </p>
         </div>
       )}
     </div>
