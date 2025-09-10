@@ -34,7 +34,7 @@ import {
   RefreshCw,
   Loader2
 } from 'lucide-react';
-import { getDomains, createDomain, deleteDomain as apiDeleteDomain, verifyDomain, type Domain } from '@/lib/api';
+import { getDomains, createDomain, deleteDomain as apiDeleteDomain, verifyDomain, getProjects, type Domain } from '@/lib/api';
 
 const Domains = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -52,12 +52,11 @@ const Domains = () => {
     queryFn: getDomains,
   });
 
-  // Mock projects for now
-  const projects = [
-    { id: '1', name: 'mi-app-web' },
-    { id: '2', name: 'api-backend' },
-    { id: '3', name: 'landing-page' }
-  ];
+  // Fetch real projects from API
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: getProjects,
+  });
 
   // Create domain mutation
   const createDomainMutation = useMutation({
@@ -129,8 +128,30 @@ const Domains = () => {
       return;
     }
 
+    // Validar formato del dominio
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!domainRegex.test(newDomain.domain)) {
+      toast({
+        title: "Error de formato",
+        description: "Por favor introduce un dominio válido (ej: ejemplo.com)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar que el dominio no exista ya
+    const existingDomain = domains?.find(d => d.domain.toLowerCase() === newDomain.domain.toLowerCase());
+    if (existingDomain) {
+      toast({
+        title: "Dominio duplicado",
+        description: "Este dominio ya está registrado en tu cuenta",
+        variant: "destructive",
+      });
+      return;
+    }
+
     createDomainMutation.mutate({
-      domain: newDomain.domain,
+      domain: newDomain.domain.toLowerCase(),
       projectId: newDomain.projectId,
     });
   };
@@ -234,11 +255,15 @@ const Domains = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                  <p><strong>💡 Tip:</strong> Para pruebas, usa dominios como "mi-test.com" o "demo-app.com".</p>
+                  <p>Los dominios reales requieren configuración DNS específica.</p>
+                </div>
                 <div>
                   <Label htmlFor="domain">Dominio</Label>
                   <Input
                     id="domain"
-                    placeholder="ejemplo.com"
+                    placeholder="mi-proyecto-test.com"
                     value={newDomain.domain}
                     onChange={(e) => setNewDomain(prev => ({ ...prev, domain: e.target.value }))}
                   />
