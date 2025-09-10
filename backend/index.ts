@@ -47,6 +47,66 @@ app.get('/projects', async (req, res) => {
   }
 });
 
+app.get('/dashboard/stats', async (req, res) => {
+  try {
+    // Obtener proyectos y su estado
+    const { data: projects, error: projectsError } = await supabase
+      .from('projects')
+      .select('*');
+    if (projectsError) throw projectsError;
+
+    // Obtener despliegues de los últimos 7 días
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const { data: deployments, error: deploymentsError } = await supabase
+      .from('deployments')
+      .select('*')
+      .gte('created_at', sevenDaysAgo.toISOString());
+    if (deploymentsError) throw deploymentsError;
+
+    // Obtener actividad reciente
+    const { data: recentActivity, error: activityError } = await supabase
+      .from('activity_log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (activityError) throw activityError;
+
+    // Calcular estadísticas
+    const projectStats = {
+      active: projects.filter(p => p.status === 'deployed').length,
+      building: projects.filter(p => p.status === 'building').length,
+      error: projects.filter(p => p.status === 'error').length
+    };
+
+    // Agrupar despliegues por día
+    const deploymentTrend = deployments.reduce((acc, dep) => {
+      const date = new Date(dep.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+      if (!acc[date]) {
+        acc[date] = { deployments: 0, success: 0, failed: 0 };
+      }
+      acc[date].deployments++;
+      acc[date][dep.status === 'success' ? 'success' : 'failed']++;
+      return acc;
+    }, {});
+
+    res.json({
+      projectStats,
+      deploymentTrend: Object.entries(deploymentTrend).map(([date, stats]) => ({
+        date,
+        deployments: (stats as any).deployments,
+        success: (stats as any).success,
+        failed: (stats as any).failed
+      })),
+      recentActivity
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).send('Failed to fetch dashboard stats');
+  }
+});
+
 // --- Claude's Universal Deployer (Adapted) ---
 
 interface DeploymentResult {

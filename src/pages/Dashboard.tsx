@@ -11,67 +11,60 @@ import {
   BarChart3,
   Zap
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+
+import { useQuery } from '@tanstack/react-query';
+import { getDashboardStats } from '@/lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const Dashboard = () => {
-  // Mock data for charts
-  const deploymentTrend = Array.from({ length: 7 }, (_, i) => ({
-    date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }),
-    deployments: Math.floor(Math.random() * 10) + 5,
-    success: Math.floor(Math.random() * 8) + 7,
-    failed: Math.floor(Math.random() * 3) + 1
-  }));
+  const { data: dashboardData, isLoading, error } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: getDashboardStats,
+    refetchInterval: 30000 // Actualizar cada 30 segundos
+  });
 
-  const uptimeData = Array.from({ length: 24 }, (_, i) => ({
-    hour: `${i}:00`,
-    uptime: 98 + Math.random() * 2
-  }));
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-full">Cargando...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">Error al cargar los datos del dashboard</div>;
+  }
 
   const projectsStatus = [
-    { name: 'Activos', value: 8, color: 'hsl(var(--success))' },
-    { name: 'En construcción', value: 2, color: 'hsl(var(--warning))' },
-    { name: 'Con errores', value: 1, color: 'hsl(var(--error))' }
+    { name: 'Activos', value: dashboardData?.projectStats.active || 0, color: 'hsl(var(--success))' },
+    { name: 'En construcción', value: dashboardData?.projectStats.building || 0, color: 'hsl(var(--warning))' },
+    { name: 'Con errores', value: dashboardData?.projectStats.error || 0, color: 'hsl(var(--error))' }
   ];
 
-  const recentActivity = [
-    {
-      id: '1',
-      type: 'deployment',
-      project: 'mi-app-web',
-      message: 'Despliegue exitoso',
-      time: 'hace 5 min',
-      status: 'success'
-    },
-    {
-      id: '2',
-      type: 'domain',
-      project: 'landing-page',
-      message: 'Dominio verificado: landing.com',
-      time: 'hace 1 hora',
-      status: 'success'
-    },
-    {
-      id: '3',
-      type: 'error',
-      project: 'api-backend',
-      message: 'Build falló: dependencias',
-      time: 'hace 2 horas',
-      status: 'error'
-    },
-    {
-      id: '4',
-      type: 'deployment',
-      project: 'dashboard',
-      message: 'Nuevo proyecto creado',
-      time: 'hace 3 horas',
-      status: 'info'
-    }
+  const deploymentTrend = dashboardData?.deploymentTrend || [];
+  const recentActivity = (dashboardData?.recentActivity || []).map(activity => ({
+    id: activity.id,
+    type: activity.type,
+    project: activity.project_name,
+    message: activity.message,
+    status: activity.status,
+    time: formatDistanceToNow(new Date(activity.created_at), { locale: es, addSuffix: true })
+  }));
+
+  // Datos de ejemplo para uptime
+  const uptimeData = [
+    { date: 'Hace 7d', uptime: 99.9 },
+    { date: 'Hace 6d', uptime: 99.8 },
+    { date: 'Hace 5d', uptime: 99.9 },
+    { date: 'Hace 4d', uptime: 100 },
+    { date: 'Hace 3d', uptime: 99.7 },
+    { date: 'Hace 2d', uptime: 99.9 },
+    { date: 'Hoy', uptime: 100 },
   ];
 
+  // Datos de ejemplo para proyectos principales
   const topProjects = [
-    { name: 'mi-app-web', requests: '12.4K', uptime: '99.9%', status: 'deployed' },
-    { name: 'api-backend', requests: '8.2K', uptime: '99.5%', status: 'deployed' },
-    { name: 'landing-page', requests: '5.1K', uptime: '98.8%', status: 'deployed' }
+    { name: 'landing-page', requests: '5.1K', uptime: '98.8%', status: 'deployed' },
+    { name: 'api-service', requests: '3.2K', uptime: '99.9%', status: 'deployed' },
+    { name: 'dashboard', requests: '1.8K', uptime: '99.5%', status: 'deployed' },
   ];
 
   const getActivityIcon = (type: string) => {
@@ -117,7 +110,7 @@ const Dashboard = () => {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">11</div>
+            <div className="text-2xl font-bold">{(dashboardData?.projectStats.active || 0) + (dashboardData?.projectStats.building || 0) + (dashboardData?.projectStats.error || 0)}</div>
             <p className="text-xs text-success">+2 este mes</p>
           </CardContent>
         </Card>
@@ -128,7 +121,7 @@ const Dashboard = () => {
             <Rocket className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">23</div>
+            <div className="text-2xl font-bold">{dashboardData?.projectStats.active || 0}</div>
             <p className="text-xs text-success">+15% vs ayer</p>
           </CardContent>
         </Card>
