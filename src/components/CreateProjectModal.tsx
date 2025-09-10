@@ -57,7 +57,11 @@ const CreateProjectModal = ({ open, onOpenChange, onCreateProject }: CreateProje
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ gitUrl: data.repository }),
+        body: JSON.stringify({ 
+          gitUrl: data.repository,
+          name: data.name,
+          framework: data.framework
+        }),
       });
 
       if (response.ok) {
