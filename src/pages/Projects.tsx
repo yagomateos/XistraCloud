@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,13 +6,26 @@ import ProjectCard from '@/components/ProjectCard';
 import CreateProjectModal from '@/components/CreateProjectModal';
 import { useNavigate } from 'react-router-dom';
 import { Project } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
-  
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const { data, error } = await supabase.from('projects').select('*');
+      if (error) {
+        console.error('Error fetching projects:', error);
+      } else {
+        setProjects(data as Project[]);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const filteredProjects = projects.filter(project =>
     project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -21,7 +34,7 @@ const Projects = () => {
 
   const handleCreateProject = (projectData: { name: string; repository: string; framework: string }) => {
     const newProject: Project = {
-      id: Date.now().toString(),
+      id: Date.now().toString(), // Temporary ID for optimistic update
       ...projectData,
       status: 'building',
       lastDeploy: 'hace pocos segundos'
@@ -35,19 +48,8 @@ const Projects = () => {
   };
 
   const handleDeploy = (projectId: string) => {
-    setProjects(prev => prev.map(p => 
-      p.id === projectId 
-        ? { ...p, status: 'building', lastDeploy: 'hace pocos segundos' }
-        : p
-    ));
-
-    setTimeout(() => {
-      setProjects(prev => prev.map(p => 
-        p.id === projectId 
-          ? { ...p, status: 'deployed' }
-          : p
-      ));
-    }, 2000);
+    // This should be implemented to call the backend
+    console.log('Redeploying project:', projectId);
   };
 
   return (
