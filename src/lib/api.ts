@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export interface ProjectStats {
   active: number;
@@ -94,5 +94,90 @@ export const getProjectLogs = async (projectId: string, filters: Omit<LogFilters
   } catch (error) {
     console.error('Error al obtener logs del proyecto:', error);
     throw new Error('Error al cargar los logs del proyecto');
+  }
+};
+
+export interface Domain {
+  id: string;
+  domain: string;
+  projectName: string;
+  projectId: string;
+  status: 'verified' | 'pending' | 'failed';
+  ssl: boolean;
+  dnsRecords?: any;
+  verificationToken?: string;
+  lastChecked?: string;
+  createdAt: string;
+}
+
+export interface CreateDomainRequest {
+  domain: string;
+  projectId: string;
+}
+
+export const getDomains = async (): Promise<Domain[]> => {
+  try {
+    const response = await fetch(`${API_URL}/domains`);
+    if (!response.ok) {
+      throw new Error('Error al cargar los dominios');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error al obtener dominios:', error);
+    throw new Error('Error al cargar los dominios');
+  }
+};
+
+export const createDomain = async (domainData: CreateDomainRequest): Promise<Domain> => {
+  try {
+    const response = await fetch(`${API_URL}/domains`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(domainData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al crear el dominio');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error al crear dominio:', error);
+    throw error;
+  }
+};
+
+export const deleteDomain = async (domainId: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_URL}/domains/${domainId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al eliminar el dominio');
+    }
+  } catch (error) {
+    console.error('Error al eliminar dominio:', error);
+    throw new Error('Error al eliminar el dominio');
+  }
+};
+
+export const verifyDomain = async (domainId: string): Promise<{ success: boolean; status: string; ssl: boolean; message: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/domains/${domainId}/verify`, {
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al verificar el dominio');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error al verificar dominio:', error);
+    throw new Error('Error al verificar el dominio');
   }
 };

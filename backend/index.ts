@@ -620,6 +620,214 @@ app.get('/projects/:id/logs', async (req, res) => {
   }
 });
 
+// Get all domains
+app.get('/domains', async (req, res) => {
+  try {
+    const { data: domains, error } = await supabase
+      .from('domains')
+      .select(`
+        id,
+        domain,
+        status,
+        ssl_enabled,
+        dns_records,
+        verification_token,
+        last_checked_at,
+        created_at,
+        projects!inner(name, id)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching domains:', error);
+      return res.status(500).json({ error: 'Failed to fetch domains' });
+    }
+
+    const transformedDomains = domains?.map(domain => ({
+      id: domain.id,
+      domain: domain.domain,
+      projectName: (domain.projects as any)?.name || 'Unknown Project',
+      projectId: (domain.projects as any)?.id || '',
+      status: domain.status,
+      ssl: domain.ssl_enabled,
+      dnsRecords: domain.dns_records,
+      verificationToken: domain.verification_token,
+      lastChecked: domain.last_checked_at,
+      createdAt: domain.created_at
+    })) || [];
+
+    res.json(transformedDomains);
+
+  } catch (error: any) {
+    console.error('Error in /domains endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add new domain
+app.post('/domains', async (req, res) => {
+  try {
+    const { domain, projectId } = req.body;
+
+    if (!domain || !projectId) {
+      return res.status(400).json({ error: 'Domain and projectId are required' });
+    }
+
+    // Validate domain format
+    const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*$/;
+    if (!domainRegex.test(domain)) {
+      return res.status(400).json({ error: 'Invalid domain format' });
+    }
+
+    // Check if domain already exists
+    const { data: existingDomain } = await supabase
+      .from('domains')
+      .select('id')
+      .eq('domain', domain)
+      .single();
+
+    if (existingDomain) {
+      return res.status(409).json({ error: 'Domain already exists' });
+    }
+
+    // Verify project exists
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id, name')
+      .eq('id', projectId)
+      .single();
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Generate verification token
+    const verificationToken = Math.random().toString(36).substring(2, 22);
+
+    // Create DNS records configuration
+    const dnsRecords = {
+      cname: {
+        name: domain,
+        value: 'xistracloud.app'
+      },
+      txt: {
+        name: `_xistracloud.${domain}`,
+        value: `xistracloud-verification=${verificationToken}`
+      }
+    };
+
+    // Insert domain
+    const { data: newDomain, error } = await supabase
+      .from('domains')
+      .insert({
+        domain,
+        project_id: projectId,
+        status: 'pending',
+        ssl_enabled: false,
+        dns_records: dnsRecords,
+        verification_token: verificationToken
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating domain:', error);
+      return res.status(500).json({ error: 'Failed to create domain' });
+    }
+
+    // Return domain with DNS instructions
+    res.status(201).json({
+      id: newDomain.id,
+      domain: newDomain.domain,
+      projectName: project.name,
+      projectId: project.id,
+      status: newDomain.status,
+      ssl: newDomain.ssl_enabled,
+      dnsRecords: newDomain.dns_records,
+      verificationToken: newDomain.verification_token,
+      createdAt: newDomain.created_at
+    });
+
+  } catch (error: any) {
+    console.error('Error in POST /domains endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete domain
+app.delete('/domains/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('domains')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting domain:', error);
+      return res.status(500).json({ error: 'Failed to delete domain' });
+    }
+
+    res.status(200).json({ message: 'Domain deleted successfully' });
+
+  } catch (error: any) {
+    console.error('Error in DELETE /domains endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Verify domain (check DNS records)
+app.post('/domains/:id/verify', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get domain info
+    const { data: domain, error: fetchError } = await supabase
+      .from('domains')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !domain) {
+      return res.status(404).json({ error: 'Domain not found' });
+    }
+
+    // Simulate DNS verification (in a real app, you'd check actual DNS records)
+    const verified = Math.random() > 0.3; // 70% success rate for demo
+    const newStatus = verified ? 'verified' : 'failed';
+    const sslEnabled = verified; // Enable SSL if verified
+
+    // Update domain status
+    const { error: updateError } = await supabase
+      .from('domains')
+      .update({
+        status: newStatus,
+        ssl_enabled: sslEnabled,
+        last_checked_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      console.error('Error updating domain:', updateError);
+      return res.status(500).json({ error: 'Failed to update domain' });
+    }
+
+    res.json({
+      success: verified,
+      status: newStatus,
+      ssl: sslEnabled,
+      message: verified 
+        ? 'Domain verified successfully' 
+        : 'Domain verification failed. Please check your DNS records.'
+    });
+
+  } catch (error: any) {
+    console.error('Error in domain verification endpoint:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Backend listening at http://localhost:${port}`);
 });
