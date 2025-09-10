@@ -11,7 +11,7 @@ import util from 'util';
 const execAsync = util.promisify(exec);
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
 const socket = process.env.DOCKER_SOCKET || path.join(os.homedir(), '.docker', 'run', 'docker.sock');
 const docker = new Docker({ socketPath: socket });
