@@ -238,7 +238,7 @@ class UniversalDeployer {
   }
 
   // Helper: Find compose file
-  private async findComposeFile(tempDir: string): Promise<string | null> {
+  public async findComposeFile(tempDir: string): Promise<string | null> {
     try {
       const { stdout } = await execAsync(
         'find . -maxdepth 3 -name "docker-compose.yml" -o -name "docker-compose.yaml" -print -quit',
@@ -253,7 +253,7 @@ class UniversalDeployer {
   }
 
   // Helper: Find Dockerfile
-  private async findDockerfile(tempDir: string): Promise<string | null> {
+  public async findDockerfile(tempDir: string): Promise<string | null> {
     try {
       const { stdout } = await execAsync(
         'find . -maxdepth 3 -name "Dockerfile" -print -quit',
@@ -307,7 +307,8 @@ app.post('/deploy', async (req, res) => {
   }
   gitUrl = gitUrl.trim();
 
-  console.log(`\n--- New Deployment Request: ${gitUrl} ---`);
+  console.log(`
+--- New Deployment Request: ${gitUrl} ---`);
   const repoName = gitUrl.split('/').pop()?.replace('.git', '') || 'repository';
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), `${repoName}-`));
   
@@ -380,7 +381,8 @@ app.post('/deploy', async (req, res) => {
 
 app.delete('/projects/:id', async (req, res) => {
   const { id } = req.params;
-  console.log(`\n--- Deletion Request: ${id} ---`);
+  console.log(`
+--- Deletion Request: ${id} ---`);
   let tempDir: string | null = null;
 
   try {
