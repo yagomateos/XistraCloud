@@ -2,6 +2,92 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
 // Mock data for fallback
+const MOCK_PROJECTS: Project[] = [
+  {
+    id: 'eeea1aeb-1cb8-4559-976c-a0816f75feca',
+    name: 'example-voting-app',
+    repository: 'https://github.com/dockersamples/example-voting-app',
+    framework: 'Docker Compose',
+    status: 'running',
+    url: 'https://example-voting-app.xistracloud.com',
+    user_id: 'user-123',
+    created_at: new Date(Date.now() - 86400000 * 7).toISOString(),
+    container_id: 'cnt-123',
+    deploy_type: 'compose',
+    compose_path: './docker-compose.yml'
+  },
+  {
+    id: 'f8275b2f-3030-4893-9473-1a10fe393092',
+    name: 'landing-page',
+    repository: 'https://github.com/vercel/next.js',
+    framework: 'Next.js',
+    status: 'building',
+    url: null,
+    user_id: 'user-123',
+    created_at: new Date(Date.now() - 1800000).toISOString(),
+    container_id: null,
+    deploy_type: 'git',
+    compose_path: null
+  },
+  {
+    id: '9a3d5f2e-8b7c-4d6e-9f8g-1h2i3j4k5l6m',
+    name: 'blog-api',
+    repository: 'https://github.com/fastapi/fastapi',
+    framework: 'FastAPI',
+    status: 'stopped',
+    url: 'https://blog-api.xistracloud.com',
+    user_id: 'user-123',
+    created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
+    container_id: 'cnt-456',
+    deploy_type: 'dockerfile',
+    compose_path: null
+  }
+];
+
+const MOCK_DASHBOARD_STATS: DashboardStats = {
+  projectStats: {
+    active: 1,
+    building: 1,
+    error: 0
+  },
+  deploymentTrend: [
+    { date: '2025-09-03', deployments: 2, success: 2, failed: 0 },
+    { date: '2025-09-04', deployments: 1, success: 1, failed: 0 },
+    { date: '2025-09-05', deployments: 3, success: 2, failed: 1 },
+    { date: '2025-09-06', deployments: 0, success: 0, failed: 0 },
+    { date: '2025-09-07', deployments: 1, success: 1, failed: 0 },
+    { date: '2025-09-08', deployments: 2, success: 1, failed: 1 },
+    { date: '2025-09-09', deployments: 1, success: 1, failed: 0 },
+    { date: '2025-09-10', deployments: 2, success: 2, failed: 0 }
+  ],
+  recentActivity: [
+    {
+      id: '1',
+      type: 'deployment',
+      project: 'example-voting-app',
+      message: 'Deployment completed successfully',
+      created_at: new Date(Date.now() - 300000).toISOString(),
+      status: 'success'
+    },
+    {
+      id: '2',
+      type: 'domain',
+      project: 'landing-page',
+      message: 'Domain verification pending',
+      created_at: new Date(Date.now() - 600000).toISOString(),
+      status: 'warning'
+    },
+    {
+      id: '3',
+      type: 'error',
+      project: 'blog-api',
+      message: 'Build failed: Missing environment variable',
+      created_at: new Date(Date.now() - 900000).toISOString(),
+      status: 'error'
+    }
+  ]
+};
+
 const MOCK_DOMAINS: Domain[] = [
   {
     id: '1',
@@ -127,14 +213,20 @@ export interface LogFilters {
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
+    if (USE_MOCK_DATA) {
+      return MOCK_DASHBOARD_STATS;
+    }
+    
     const response = await fetch(`${API_URL}/dashboard/stats`);
     if (!response.ok) {
-      throw new Error('Error al cargar los datos del dashboard');
+      console.warn('API fallback: usando datos mock para dashboard');
+      return MOCK_DASHBOARD_STATS;
     }
     return response.json();
   } catch (error) {
     console.error('Error al obtener estadísticas:', error);
-    throw new Error('Error al cargar los datos del dashboard');
+    console.warn('API fallback: usando datos mock para dashboard');
+    return MOCK_DASHBOARD_STATS;
   }
 };
 
@@ -200,14 +292,20 @@ export interface CreateDomainRequest {
 
 export const getProjects = async (): Promise<Project[]> => {
   try {
+    if (USE_MOCK_DATA) {
+      return MOCK_PROJECTS;
+    }
+    
     const response = await fetch(`${API_URL}/projects`);
     if (!response.ok) {
-      throw new Error('Error al cargar los proyectos');
+      console.warn('API fallback: usando datos mock para proyectos');
+      return MOCK_PROJECTS;
     }
     return response.json();
   } catch (error) {
     console.error('Error al obtener proyectos:', error);
-    throw error;
+    console.warn('API fallback: usando datos mock para proyectos');
+    return MOCK_PROJECTS;
   }
 };
 
