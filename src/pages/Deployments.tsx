@@ -65,16 +65,32 @@ const Deployments = () => {
         throw new Error('Redeployment failed');
       }
       
-      console.log('Redeployment request sent successfully');
+      console.log('Redeployment request sent successfully. Starting polling for status update.');
 
-    } catch (error) {
+      // --- Polling Mechanism ---
+      const pollStatus = async () => {
+        // Fetch the latest list of deployments
+        await fetchDeployments(); 
+
+        // Find the specific deployment we are interested in
+        const currentDeployment = deployments.find(d => d.id === deployment.id);
+
+        // If the deployment is not found or its status is not 'building' (or similar), stop polling
+        if (currentDeployment && (currentDeployment.status === 'building' || currentDeployment.status === 'in progress')) {
+            setTimeout(pollStatus, 3000); // Poll every 3 seconds
+        } else {
+            // Status has changed or deployment not found, remove from buildingProjects
+            setBuildingProjects(prev => prev.filter(id => id !== deployment.id)); 
+        }
+      };
+
+      // Start polling after a short delay to allow backend to update status
+      setTimeout(pollStatus, 1000); 
+
+    } catch (error: any) {
       console.error('Error redeploying:', error);
       alert('El redespliegue ha fallado.');
-    } finally {
-      setTimeout(() => {
-        fetchDeployments();
-        setBuildingProjects(prev => prev.filter(id => id !== deployment.id));
-      }, 5000); // Refresh after 5 seconds
+      setBuildingProjects(prev => prev.filter(id => id !== deployment.id)); // Remove yellow tag on error
     }
   };
 
@@ -94,7 +110,7 @@ const Deployments = () => {
 
       alert('Proyecto eliminado con éxito.');
       fetchDeployments(); // Refresh the list immediately
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting project:', error);
       alert('Error al eliminar el proyecto.');
     }
