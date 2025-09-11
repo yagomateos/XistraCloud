@@ -1,8 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://metzjfocvkelucinstul.supabase.co'
-// IMPORTANT: This should be the SERVICE_ROLE_KEY, not the anon key.
-// I will ask the user for it.
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ldHpqZm9jdmtlbHVjaW5zdHVsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzQxMzAxOSwiZXhwIjoyMDcyOTg5MDE5fQ.oLmAm48uUpwKjH_LhJtNaNrvo5nE9cEkAyfjQtkwCKg'
+const supabaseUrl = process.env.SUPABASE_URL || 'https://dlxgauxhgzgsbsqmlqfi.supabase.co'
+const supabaseKey = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRseGdhdXhoZ3pnc2JzcW1scWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU5NzY0MzksImV4cCI6MjA0MTU1MjQzOX0.XLSz_rUbYi1dHGl3XLFGjl_fQVcShXQK0wnJVpqv2fI'
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
