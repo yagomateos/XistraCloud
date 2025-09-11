@@ -66,9 +66,16 @@ const Settings: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Estados para formularios
-  const [profileForm, setProfileForm] = useState({
-    name: userData.name,
-    email: userData.email
+  const [profileForm, setProfileForm] = useState(() => {
+    const storeData = userStore.getUserData();
+    return {
+      name: storeData.name,
+      email: storeData.email,
+      bio: storeData.bio,
+      location: storeData.location,
+      company: storeData.company,
+      website: storeData.website
+    };
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -97,14 +104,14 @@ const Settings: React.FC = () => {
 
   // Funciones para manejar cambios
   const handleProfileSave = () => {
-    // Actualizar el store
+    // Actualizar el store con todos los campos
     userStore.updateProfile({
       name: profileForm.name,
       email: profileForm.email,
-      bio: userStore.getUserData().bio,
-      location: userStore.getUserData().location,
-      company: userStore.getUserData().company,
-      website: userStore.getUserData().website
+      bio: profileForm.bio,
+      location: profileForm.location,
+      company: profileForm.company,
+      website: profileForm.website
     });
 
     // Actualizar estado local
@@ -317,28 +324,67 @@ const Settings: React.FC = () => {
                     <DialogHeader>
                       <DialogTitle>Editar Perfil</DialogTitle>
                       <DialogDescription>
-                        Actualiza tu información personal
+                        Actualiza tu información personal completa
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="name">Nombre completo</Label>
-                        <Input
-                          id="name"
-                          value={profileForm.name}
-                          onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
-                          placeholder="Tu nombre completo"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={profileForm.email}
-                          onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
-                          placeholder="tu@email.com"
-                        />
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <Label htmlFor="name">Nombre completo</Label>
+                          <Input
+                            id="name"
+                            value={profileForm.name}
+                            onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
+                            placeholder="Tu nombre completo"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={profileForm.email}
+                            onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
+                            placeholder="tu@email.com"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="bio">Biografía</Label>
+                          <Input
+                            id="bio"
+                            value={profileForm.bio}
+                            onChange={(e) => setProfileForm({...profileForm, bio: e.target.value})}
+                            placeholder="Describe tu perfil profesional"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="company">Empresa</Label>
+                          <Input
+                            id="company"
+                            value={profileForm.company}
+                            onChange={(e) => setProfileForm({...profileForm, company: e.target.value})}
+                            placeholder="Tu empresa actual"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="location">Ubicación</Label>
+                          <Input
+                            id="location"
+                            value={profileForm.location}
+                            onChange={(e) => setProfileForm({...profileForm, location: e.target.value})}
+                            placeholder="Ciudad, País"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="website">Sitio web</Label>
+                          <Input
+                            id="website"
+                            type="url"
+                            value={profileForm.website}
+                            onChange={(e) => setProfileForm({...profileForm, website: e.target.value})}
+                            placeholder="https://tu-sitio-web.com"
+                          />
+                        </div>
                       </div>
                     </div>
                     <DialogFooter>
