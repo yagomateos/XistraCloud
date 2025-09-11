@@ -98,7 +98,7 @@ const Landing = () => {
               <Button variant="ghost" size="sm" className="text-sm px-3">Login</Button>
             </Link>
             <Link to="/register">
-              <Button size="sm" className="text-sm px-4 lg:px-6 py-2 h-9">
+              <Button size="sm" className="text-sm pl-3 pr-2 lg:px-6 py-2 h-9">
                 Empezar Gratis
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
