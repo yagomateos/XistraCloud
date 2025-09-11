@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { userStore, UserData as UserStoreData } from '@/lib/user-store';
+import { NotificationPreferences } from '@/components/settings/notification-preferences';
 import {
   User,
   Mail,
@@ -466,67 +467,7 @@ const Settings: React.FC = () => {
 
         {/* NOTIFICACIONES */}
         <TabsContent value="notifications" className="space-y-4 md:space-y-6">
-          <div className="rounded-lg border border-gray-200 bg-white shadow-sm p-6 space-y-4">
-            <h2 className="text-lg font-semibold">Preferencias de Notificaciones</h2>
-            <p className="text-sm text-gray-500">
-              Controla qué notificaciones quieres recibir
-            </p>
-            {/* Notificaciones de despliegues */}
-            <div className="flex items-center justify-between py-2 border-t border-gray-100">
-              <div>
-                <p className="font-medium">Notificaciones de despliegues</p>
-                <p className="text-sm text-gray-500">
-                  Recibe notificaciones cuando tus despliegues cambien de estado
-                </p>
-              </div>
-              <Switch
-                checked={notifications.deployments}
-                onCheckedChange={() => handleNotificationChange('deployments')}
-              />
-            </div>
-
-            {/* Alertas de seguridad */}
-            <div className="flex items-center justify-between py-2 border-t border-gray-100">
-              <div>
-                <p className="font-medium">Alertas de seguridad</p>
-                <p className="text-sm text-gray-500">
-                  Notificaciones sobre actividad sospechosa en tu cuenta
-                </p>
-              </div>
-              <Switch
-                checked={notifications.security}
-                onCheckedChange={() => handleNotificationChange('security')}
-              />
-            </div>
-
-            {/* Marketing y promociones */}
-            <div className="flex items-center justify-between py-2 border-t border-gray-100">
-              <div>
-                <p className="font-medium">Marketing y promociones</p>
-                <p className="text-sm text-gray-500">
-                  Ofertas especiales y noticias sobre nuevas funcionalidades
-                </p>
-              </div>
-              <Switch
-                checked={notifications.marketing}
-                onCheckedChange={() => handleNotificationChange('marketing')}
-              />
-            </div>
-
-            {/* Actualizaciones del producto */}
-            <div className="flex items-center justify-between py-2 border-t border-gray-100">
-              <div>
-                <p className="font-medium">Actualizaciones del producto</p>
-                <p className="text-sm text-gray-500">
-                  Información sobre nuevas funcionalidades y mejoras
-                </p>
-              </div>
-              <Switch
-                checked={notifications.updates}
-                onCheckedChange={() => handleNotificationChange('updates')}
-              />
-            </div>
-          </div>
+          <NotificationPreferences />
         </TabsContent>
 
         {/* SEGURIDAD */}
