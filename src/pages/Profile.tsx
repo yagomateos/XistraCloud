@@ -1,21 +1,32 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Mail, MapPin, Building, Link as LinkIcon, Edit } from 'lucide-react';
+import { userStore, UserData } from '@/lib/user-store';
 
 const Profile = () => {
-  const user = {
-    name: 'John Doe',
-    email: 'john@example.com',
-    avatar: '',
-    bio: 'Full-stack developer apasionado por crear aplicaciones web modernas y escalables.',
-    location: 'Madrid, España',
-    company: 'Tech Innovators S.L.',
-    website: 'https://johndoe.dev',
-    joinedAt: '2023-08-15',
-    plan: 'Pro'
+  const navigate = useNavigate();
+  const [user, setUser] = useState<UserData>(userStore.getUserData());
+
+  // Escuchar cambios en los datos del usuario
+  useEffect(() => {
+    const handleUserDataUpdate = (event: CustomEvent) => {
+      setUser(event.detail);
+    };
+
+    window.addEventListener('user-data-updated', handleUserDataUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('user-data-updated', handleUserDataUpdate as EventListener);
+    };
+  }, []);
+
+  const handleEditProfile = () => {
+    navigate('/dashboard/settings?tab=profile');
   };
 
   const stats = [
@@ -103,7 +114,7 @@ const Profile = () => {
               
               <Separator />
               
-              <Button className="w-full">
+              <Button className="w-full" onClick={handleEditProfile}>
                 <Edit className="h-4 w-4 mr-2" />
                 Editar perfil
               </Button>
