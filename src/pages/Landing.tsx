@@ -30,8 +30,8 @@ const Landing = () => {
   const pricingPlans = [
     {
       name: "Hobby",
-      price: "Gratis",
-      pricePeriod: "para siempre",
+      price: "$0",
+      pricePeriod: "/mes",
       description: "Ideal para proyectos personales, prototipos y experimentos.",
       features: [
         "1 Proyecto",
@@ -60,8 +60,8 @@ const Landing = () => {
     },
     {
       name: "Enterprise",
-      price: "Personalizado",
-      pricePeriod: "",
+      price: "$99",
+      pricePeriod: "/mes",
       description: "Para grandes empresas que necesitan seguridad, escalabilidad y soporte dedicado.",
       features: [
         "Todo lo del plan Pro",
@@ -161,13 +161,15 @@ const Landing = () => {
               {pricingPlans.map((plan) => (
                 <Card key={plan.name} className={`flex flex-col ${plan.primary ? 'border-primary shadow-lg' : ''}`}>
                   <CardHeader className="pb-4">
-                    <h3 className="text-xl lg:text-2xl font-bold">{plan.name}</h3>
-                    <p className="text-3xl lg:text-4xl font-bold">
-                      {plan.price} 
-                      <span className="text-xs lg:text-sm font-normal text-muted-foreground ml-1">
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2">{plan.name}</h3>
+                    <div className="flex items-baseline gap-1 mb-3">
+                      <span className="text-2xl sm:text-3xl lg:text-4xl font-bold">
+                        {plan.price}
+                      </span>
+                      <span className="text-xs sm:text-sm font-normal text-muted-foreground">
                         {plan.pricePeriod}
                       </span>
-                    </p>
+                    </div>
                     <p className="text-muted-foreground text-sm lg:text-base h-auto lg:h-12 leading-5">
                       {plan.description}
                     </p>
