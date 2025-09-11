@@ -235,15 +235,15 @@ const Settings: React.FC = () => {
         <TabsContent value="profile" className="space-y-4 md:space-y-6">
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                <User className="h-4 w-4 md:h-5 md:w-5" />
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <User className="h-5 w-5" />
                 Información Personal
               </CardTitle>
-              <CardDescription className="text-sm md:text-base">
+              <CardDescription className="text-base">
                 Actualiza tu información personal y avatar
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 md:space-y-6">
+            <CardContent className="space-y-6">
               {/* Avatar Section */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <Avatar className="h-16 w-16 md:h-20 md:w-20 mx-auto sm:mx-0">
@@ -466,76 +466,67 @@ const Settings: React.FC = () => {
 
         {/* NOTIFICACIONES */}
         <TabsContent value="notifications" className="space-y-4 md:space-y-6">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                <Bell className="h-4 w-4 md:h-5 md:w-5" />
-                Preferencias de Notificaciones
-              </CardTitle>
-              <CardDescription className="text-sm md:text-base">
-                Controla qué notificaciones quieres recibir
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 md:space-y-6">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <Label className="font-medium text-sm md:text-base">Notificaciones de despliegues</Label>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
-                      Recibe notificaciones cuando tus despliegues cambien de estado
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notifications.deployments}
-                    onCheckedChange={() => handleNotificationChange('deployments')}
-                    className="flex-shrink-0 ml-4"
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <Label className="font-medium text-sm md:text-base">Alertas de seguridad</Label>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
-                      Notificaciones sobre actividad sospechosa en tu cuenta
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notifications.security}
-                    onCheckedChange={() => handleNotificationChange('security')}
-                    className="flex-shrink-0 ml-4"
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <Label className="font-medium text-sm md:text-base">Marketing y promociones</Label>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
-                      Ofertas especiales y noticias sobre nuevas funcionalidades
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notifications.marketing}
-                    onCheckedChange={() => handleNotificationChange('marketing')}
-                    className="flex-shrink-0 ml-4"
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <Label className="font-medium text-sm md:text-base">Actualizaciones del producto</Label>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
-                      Información sobre nuevas funcionalidades y mejoras
-                    </p>
-                  </div>
-                  <Switch
-                    checked={notifications.updates}
-                    onCheckedChange={() => handleNotificationChange('updates')}
-                    className="flex-shrink-0 ml-4"
-                  />
-                </div>
+          <div className="rounded-lg border border-gray-200 bg-white shadow-sm p-6 space-y-4">
+            <h2 className="text-lg font-semibold">Preferencias de Notificaciones</h2>
+            <p className="text-sm text-gray-500">
+              Controla qué notificaciones quieres recibir
+            </p>
+            {/* Notificaciones de despliegues */}
+            <div className="flex items-center justify-between py-2 border-t border-gray-100">
+              <div>
+                <p className="font-medium">Notificaciones de despliegues</p>
+                <p className="text-sm text-gray-500">
+                  Recibe notificaciones cuando tus despliegues cambien de estado
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <Switch
+                checked={notifications.deployments}
+                onCheckedChange={() => handleNotificationChange('deployments')}
+              />
+            </div>
+
+            {/* Alertas de seguridad */}
+            <div className="flex items-center justify-between py-2 border-t border-gray-100">
+              <div>
+                <p className="font-medium">Alertas de seguridad</p>
+                <p className="text-sm text-gray-500">
+                  Notificaciones sobre actividad sospechosa en tu cuenta
+                </p>
+              </div>
+              <Switch
+                checked={notifications.security}
+                onCheckedChange={() => handleNotificationChange('security')}
+              />
+            </div>
+
+            {/* Marketing y promociones */}
+            <div className="flex items-center justify-between py-2 border-t border-gray-100">
+              <div>
+                <p className="font-medium">Marketing y promociones</p>
+                <p className="text-sm text-gray-500">
+                  Ofertas especiales y noticias sobre nuevas funcionalidades
+                </p>
+              </div>
+              <Switch
+                checked={notifications.marketing}
+                onCheckedChange={() => handleNotificationChange('marketing')}
+              />
+            </div>
+
+            {/* Actualizaciones del producto */}
+            <div className="flex items-center justify-between py-2 border-t border-gray-100">
+              <div>
+                <p className="font-medium">Actualizaciones del producto</p>
+                <p className="text-sm text-gray-500">
+                  Información sobre nuevas funcionalidades y mejoras
+                </p>
+              </div>
+              <Switch
+                checked={notifications.updates}
+                onCheckedChange={() => handleNotificationChange('updates')}
+              />
+            </div>
+          </div>
         </TabsContent>
 
         {/* SEGURIDAD */}
