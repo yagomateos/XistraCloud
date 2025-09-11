@@ -57,55 +57,61 @@ const Projects = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 lg:p-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 space-y-4 lg:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Proyectos</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Proyectos</h1>
+          <p className="text-sm lg:text-base text-muted-foreground">
             Gestiona y despliega tus proyectos desde repositorios de Git
           </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
+        <Button 
+          onClick={() => setIsCreateModalOpen(true)}
+          className="w-full lg:w-auto"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Proyecto
         </Button>
       </div>
 
       <div className="mb-6">
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full lg:max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar proyectos..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-11"
           />
         </div>
       </div>
 
       {filteredProjects.length === 0 ? (
         <div className="text-center py-12">
-          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-            <Plus className="h-8 w-8 text-muted-foreground" />
+          <div className="w-20 h-20 lg:w-24 lg:h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <Plus className="h-6 w-6 lg:h-8 lg:w-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-medium text-foreground mb-2">
             {searchTerm ? 'No se encontraron proyectos' : 'No tienes proyectos aún'}
           </h3>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-sm lg:text-base text-muted-foreground mb-6 px-4">
             {searchTerm 
               ? 'Prueba con otros términos de búsqueda'
               : 'Crea tu primer proyecto conectando un repositorio de Git'
             }
           </p>
           {!searchTerm && (
-            <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Button 
+              onClick={() => setIsCreateModalOpen(true)}
+              className="w-full lg:w-auto"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Crear primer proyecto
             </Button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
           {filteredProjects.map(project => (
             <ProjectCard
               key={project.id}

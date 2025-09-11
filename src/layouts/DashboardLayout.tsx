@@ -15,8 +15,10 @@ const DashboardLayout = () => {
   return (
     <div className="flex min-h-screen w-full bg-background">
       <Sidebar user={user} />
-      <main className="flex-1 overflow-auto">
-        <Outlet />
+      <main className="flex-1 overflow-auto lg:pt-0 pt-16">
+        <div className="w-full max-w-full">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

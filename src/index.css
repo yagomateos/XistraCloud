@@ -143,7 +143,7 @@
 /* Custom component styles using design system */
 @layer components {
   .deploy-card {
-    @apply bg-card border border-border rounded-lg p-4 transition-colors duration-200 hover:bg-card-hover;
+    @apply bg-card border border-border rounded-lg p-3 lg:p-4 transition-colors duration-200 hover:bg-card-hover;
     box-shadow: var(--shadow-sm);
   }
   
@@ -167,6 +167,10 @@
     @apply bg-error;
   }
   
+  .status-muted {
+    @apply bg-muted-foreground;
+  }
+  
   .sidebar-item {
     @apply flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200;
   }
@@ -177,5 +181,36 @@
   
   .sidebar-item-inactive {
     @apply text-muted-foreground hover:text-foreground hover:bg-accent;
+  }
+
+  /* Mobile optimizations */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Touch improvements */
+  @media (max-width: 768px) {
+    .deploy-card {
+      @apply active:scale-[0.98] transition-transform;
+    }
+    
+    button, .sidebar-item {
+      min-height: 44px; /* iOS minimum touch target */
+    }
+  }
+
+  /* Chart responsiveness */
+  .recharts-responsive-container {
+    @apply !w-full;
+  }
+}
+
+/* Viewport specific styles */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
   }
 }

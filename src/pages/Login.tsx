@@ -69,51 +69,68 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Login en XistraCloud</CardTitle>
-          <CardDescription>Introduce tus credenciales para acceder a tu panel.</CardDescription>
+    <div className="flex items-center justify-center min-h-screen bg-background px-4 py-8">
+      <Card className="w-full max-w-sm mx-auto">
+        <CardHeader className="space-y-1 pb-6">
+          <CardTitle className="text-2xl font-semibold text-center">XistraCloud</CardTitle>
+          <CardDescription className="text-center text-muted-foreground">
+            Introduce tus credenciales para acceder a tu panel de control
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="m@example.com" 
+                placeholder="tu@email.com" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
+                className="h-11"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Contraseña</Label>
               <Input 
                 id="password" 
                 type="password" 
+                placeholder="••••••••"
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
+                className="h-11"
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full h-11 text-base font-medium" 
               disabled={isLoading}
             >
-              {isLoading ? "Iniciando sesión..." : "Login"}
+              {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
           </form>
-          <p className="text-center text-sm text-muted-foreground mt-4">
-            ¿No tienes una cuenta?{" "}
-            <Link to="/register" className="text-primary hover:underline">
-              Regístrate
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                ¿Nuevo en XistraCloud?
+              </span>
+            </div>
+          </div>
+          <div className="text-center">
+            <Link 
+              to="/register" 
+              className="text-primary hover:text-primary-hover transition-colors font-medium"
+            >
+              Crear una cuenta nueva
             </Link>
-          </p>
+          </div>
         </CardContent>
       </Card>
     </div>
