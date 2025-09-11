@@ -144,10 +144,27 @@ const Settings: React.FC = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validar tipo de archivo
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Tipo de archivo no válido. Solo se permiten JPG, PNG y WEBP.');
+        return;
+      }
+
+      // Validar tamaño (5MB máximo)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast.error('El archivo es demasiado grande. Tamaño máximo: 5MB.');
+        return;
+      }
+
       setAvatarFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         setAvatarPreview(e.target?.result as string);
+      };
+      reader.onerror = () => {
+        toast.error('Error al leer el archivo. Inténtalo de nuevo.');
       };
       reader.readAsDataURL(file);
     }
@@ -186,7 +203,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 p-4 lg:p-6">
+    <div className="space-y-4 md:space-y-6 pt-6 px-4 pb-4 lg:p-6">
       <div>
         <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Configuración</h1>
         <p className="text-sm md:text-base text-muted-foreground mt-1">
@@ -245,40 +262,78 @@ const Settings: React.FC = () => {
                         Cambiar Avatar
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="w-[95vw] max-w-md">
+                    <DialogContent className="w-[95vw] max-w-lg">
                       <DialogHeader>
-                        <DialogTitle className="text-lg">Cambiar Avatar</DialogTitle>
-                        <DialogDescription className="text-sm">
-                          Selecciona una nueva imagen para tu perfil
+                        <DialogTitle className="text-xl">Cambiar Avatar</DialogTitle>
+                        <DialogDescription>
+                          Sube una imagen cuadrada para obtener los mejores resultados
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="flex justify-center">
-                          <Avatar className="h-20 w-20 md:h-24 md:w-24">
-                            <AvatarImage src={avatarPreview || userData.avatar} />
-                            <AvatarFallback className="text-lg md:text-xl">
-                              {userData.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
+                      <div className="space-y-6">
+                        {/* Preview Section */}
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="relative">
+                            <Avatar className="h-32 w-32 ring-4 ring-background shadow-lg">
+                              <AvatarImage src={avatarPreview || userData.avatar} />
+                              <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                {userData.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            {avatarPreview && (
+                              <div className="absolute -top-2 -right-2">
+                                <div className="bg-green-500 text-white rounded-full p-1">
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground text-center">
+                            {avatarPreview ? 'Nueva imagen seleccionada' : 'Imagen actual'}
+                          </p>
                         </div>
-                        <div>
-                          <Label htmlFor="avatar-upload">Seleccionar imagen</Label>
-                          <Input
-                            id="avatar-upload"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleAvatarChange}
-                            className="mt-1"
-                          />
+
+                        {/* Upload Section */}
+                        <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                          <div className="space-y-3">
+                            <div className="mx-auto w-12 h-12 text-muted-foreground">
+                              <svg fill="none" stroke="currentColor" viewBox="0 0 48 48">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" />
+                              </svg>
+                            </div>
+                            <div>
+                              <Label htmlFor="avatar-upload" className="cursor-pointer">
+                                <span className="text-sm font-medium text-primary hover:text-primary/80">
+                                  Seleccionar archivo
+                                </span>
+                                <span className="text-sm text-muted-foreground"> o arrastra aquí</span>
+                              </Label>
+                              <Input
+                                id="avatar-upload"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={handleAvatarChange}
+                                className="hidden"
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              PNG, JPG, WEBP hasta 5MB
+                            </p>
+                          </div>
                         </div>
                       </div>
-                      <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsAvatarModalOpen(false)}>
+                      <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+                        <Button variant="outline" onClick={() => {
+                          setIsAvatarModalOpen(false);
+                          setAvatarPreview('');
+                          setAvatarFile(null);
+                        }} className="w-full sm:w-auto">
                           Cancelar
                         </Button>
-                        <Button onClick={handleAvatarSave} disabled={!avatarPreview}>
+                        <Button onClick={handleAvatarSave} disabled={!avatarPreview} className="w-full sm:w-auto">
                           <Save className="h-4 w-4 mr-2" />
-                          Guardar Avatar
+                          Guardar Cambios
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -422,8 +477,8 @@ const Settings: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 md:space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <Label className="font-medium text-sm md:text-base">Notificaciones de despliegues</Label>
                     <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
@@ -433,11 +488,11 @@ const Settings: React.FC = () => {
                   <Switch
                     checked={notifications.deployments}
                     onCheckedChange={() => handleNotificationChange('deployments')}
-                    className="flex-shrink-0"
+                    className="flex-shrink-0 ml-4"
                   />
                 </div>
                 <Separator />
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <Label className="font-medium text-sm md:text-base">Alertas de seguridad</Label>
                     <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
@@ -447,11 +502,11 @@ const Settings: React.FC = () => {
                   <Switch
                     checked={notifications.security}
                     onCheckedChange={() => handleNotificationChange('security')}
-                    className="flex-shrink-0"
+                    className="flex-shrink-0 ml-4"
                   />
                 </div>
                 <Separator />
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <Label className="font-medium text-sm md:text-base">Marketing y promociones</Label>
                     <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
@@ -461,19 +516,21 @@ const Settings: React.FC = () => {
                   <Switch
                     checked={notifications.marketing}
                     onCheckedChange={() => handleNotificationChange('marketing')}
+                    className="flex-shrink-0 ml-4"
                   />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-medium">Actualizaciones del producto</Label>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <Label className="font-medium text-sm md:text-base">Actualizaciones del producto</Label>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
                       Información sobre nuevas funcionalidades y mejoras
                     </p>
                   </div>
                   <Switch
                     checked={notifications.updates}
                     onCheckedChange={() => handleNotificationChange('updates')}
+                    className="flex-shrink-0 ml-4"
                   />
                 </div>
               </div>
