@@ -186,77 +186,77 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-4 lg:p-6">
+    <div className="space-y-4 md:space-y-6 p-4 lg:p-6">
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold">Configuración</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Configuración</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-1">
           Gestiona tu cuenta y preferencias de XistraCloud
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Perfil</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+        <TabsList className="grid w-full grid-cols-4 h-auto p-1 md:h-10 lg:w-auto">
+          <TabsTrigger value="profile" className="flex flex-col md:flex-row items-center gap-1 md:gap-2 p-2 md:px-3 text-xs md:text-sm">
+            <User className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden xs:inline">Perfil</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Notificaciones</span>
+          <TabsTrigger value="notifications" className="flex flex-col md:flex-row items-center gap-1 md:gap-2 p-2 md:px-3 text-xs md:text-sm">
+            <Bell className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden xs:inline">Avisos</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Seguridad</span>
+          <TabsTrigger value="security" className="flex flex-col md:flex-row items-center gap-1 md:gap-2 p-2 md:px-3 text-xs md:text-sm">
+            <Shield className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden xs:inline">Seguridad</span>
           </TabsTrigger>
-          <TabsTrigger value="billing" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Facturación</span>
+          <TabsTrigger value="billing" className="flex flex-col md:flex-row items-center gap-1 md:gap-2 p-2 md:px-3 text-xs md:text-sm">
+            <CreditCard className="h-3 w-3 md:h-4 md:w-4" />
+            <span className="hidden xs:inline">Plan</span>
           </TabsTrigger>
         </TabsList>
 
         {/* PERFIL */}
-        <TabsContent value="profile" className="space-y-6">
+        <TabsContent value="profile" className="space-y-4 md:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <User className="h-4 w-4 md:h-5 md:w-5" />
                 Información Personal
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm md:text-base">
                 Actualiza tu información personal y avatar
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 md:space-y-6">
               {/* Avatar Section */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <Avatar className="h-20 w-20">
+                <Avatar className="h-16 w-16 md:h-20 md:w-20 mx-auto sm:mx-0">
                   <AvatarImage src={userData.avatar} />
-                  <AvatarFallback className="text-lg">
+                  <AvatarFallback className="text-base md:text-lg">
                     {userData.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col gap-2">
-                  <h3 className="font-semibold">{userData.name}</h3>
-                  <p className="text-sm text-muted-foreground">{userData.email}</p>
+                <div className="flex flex-col gap-2 text-center sm:text-left flex-1 min-w-0">
+                  <h3 className="font-semibold text-base md:text-lg truncate">{userData.name}</h3>
+                  <p className="text-sm md:text-base text-muted-foreground truncate">{userData.email}</p>
                   <Dialog open={isAvatarModalOpen} onOpenChange={setIsAvatarModalOpen}>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="w-fit">
-                        <Camera className="h-4 w-4 mr-2" />
+                      <Button variant="outline" size="sm" className="w-full sm:w-fit text-xs md:text-sm">
+                        <Camera className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                         Cambiar Avatar
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="w-[95vw] max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Cambiar Avatar</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-lg">Cambiar Avatar</DialogTitle>
+                        <DialogDescription className="text-sm">
                           Selecciona una nueva imagen para tu perfil
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div className="flex justify-center">
-                          <Avatar className="h-24 w-24">
+                          <Avatar className="h-20 w-20 md:h-24 md:w-24">
                             <AvatarImage src={avatarPreview || userData.avatar} />
-                            <AvatarFallback className="text-xl">
+                            <AvatarFallback className="text-lg md:text-xl">
                               {userData.name.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
@@ -312,87 +312,93 @@ const Settings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
                 <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
                   <DialogTrigger asChild>
-                    <Button>
-                      <Settings2 className="h-4 w-4 mr-2" />
+                    <Button className="w-full sm:w-auto">
+                      <Settings2 className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                       Editar Perfil
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="w-[95vw] max-w-md md:max-w-lg">
                     <DialogHeader>
-                      <DialogTitle>Editar Perfil</DialogTitle>
-                      <DialogDescription>
+                      <DialogTitle className="text-lg md:text-xl">Editar Perfil</DialogTitle>
+                      <DialogDescription className="text-sm md:text-base">
                         Actualiza tu información personal completa
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                      <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-3 md:space-y-4 max-h-[50vh] md:max-h-[400px] overflow-y-auto pr-2">
+                      <div className="grid grid-cols-1 gap-3 md:gap-4">
                         <div>
-                          <Label htmlFor="name">Nombre completo</Label>
+                          <Label htmlFor="name" className="text-sm font-medium">Nombre completo</Label>
                           <Input
                             id="name"
                             value={profileForm.name}
                             onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
                             placeholder="Tu nombre completo"
+                            className="text-sm md:text-base"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="email">Email</Label>
+                          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                           <Input
                             id="email"
                             type="email"
                             value={profileForm.email}
                             onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
                             placeholder="tu@email.com"
+                            className="text-sm md:text-base"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="bio">Biografía</Label>
+                          <Label htmlFor="bio" className="text-sm font-medium">Biografía</Label>
                           <Input
                             id="bio"
                             value={profileForm.bio}
                             onChange={(e) => setProfileForm({...profileForm, bio: e.target.value})}
                             placeholder="Describe tu perfil profesional"
+                            className="text-sm md:text-base"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="company">Empresa</Label>
+                          <Label htmlFor="company" className="text-sm font-medium">Empresa</Label>
                           <Input
                             id="company"
                             value={profileForm.company}
                             onChange={(e) => setProfileForm({...profileForm, company: e.target.value})}
                             placeholder="Tu empresa actual"
+                            className="text-sm md:text-base"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="location">Ubicación</Label>
+                          <Label htmlFor="location" className="text-sm font-medium">Ubicación</Label>
                           <Input
                             id="location"
                             value={profileForm.location}
                             onChange={(e) => setProfileForm({...profileForm, location: e.target.value})}
                             placeholder="Ciudad, País"
+                            className="text-sm md:text-base"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="website">Sitio web</Label>
+                          <Label htmlFor="website" className="text-sm font-medium">Sitio web</Label>
                           <Input
                             id="website"
                             type="url"
                             value={profileForm.website}
                             onChange={(e) => setProfileForm({...profileForm, website: e.target.value})}
                             placeholder="https://tu-sitio-web.com"
+                            className="text-sm md:text-base"
                           />
                         </div>
                       </div>
                     </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsProfileModalOpen(false)}>
+                    <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+                      <Button variant="outline" onClick={() => setIsProfileModalOpen(false)} className="w-full sm:w-auto">
                         Cancelar
                       </Button>
-                      <Button onClick={handleProfileSave}>
-                        <Save className="h-4 w-4 mr-2" />
+                      <Button onClick={handleProfileSave} className="w-full sm:w-auto">
+                        <Save className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                         Guardar Cambios
                       </Button>
                     </DialogFooter>
@@ -404,49 +410,51 @@ const Settings: React.FC = () => {
         </TabsContent>
 
         {/* NOTIFICACIONES */}
-        <TabsContent value="notifications" className="space-y-6">
+        <TabsContent value="notifications" className="space-y-4 md:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <Bell className="h-4 w-4 md:h-5 md:w-5" />
                 Preferencias de Notificaciones
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm md:text-base">
                 Controla qué notificaciones quieres recibir
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 md:space-y-6">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-medium">Notificaciones de despliegues</Label>
-                    <p className="text-sm text-muted-foreground">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <Label className="font-medium text-sm md:text-base">Notificaciones de despliegues</Label>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
                       Recibe notificaciones cuando tus despliegues cambien de estado
                     </p>
                   </div>
                   <Switch
                     checked={notifications.deployments}
                     onCheckedChange={() => handleNotificationChange('deployments')}
+                    className="flex-shrink-0"
                   />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-medium">Alertas de seguridad</Label>
-                    <p className="text-sm text-muted-foreground">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <Label className="font-medium text-sm md:text-base">Alertas de seguridad</Label>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
                       Notificaciones sobre actividad sospechosa en tu cuenta
                     </p>
                   </div>
                   <Switch
                     checked={notifications.security}
                     onCheckedChange={() => handleNotificationChange('security')}
+                    className="flex-shrink-0"
                   />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-medium">Marketing y promociones</Label>
-                    <p className="text-sm text-muted-foreground">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <Label className="font-medium text-sm md:text-base">Marketing y promociones</Label>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
                       Ofertas especiales y noticias sobre nuevas funcionalidades
                     </p>
                   </div>
