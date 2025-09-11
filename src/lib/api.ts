@@ -62,7 +62,7 @@ export interface DashboardStats {
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
-const USE_MOCK_DATA = false; // Always use real data through backend proxy
+const USE_MOCK_DATA = true; // Temporarily use mocks while fixing Supabase connectivity
 
 // Debug logs
 console.log('🔧 DEBUG - API Configuration:');
