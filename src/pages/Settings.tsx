@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { userStore, UserData as UserStoreData } from '@/lib/user-store';
 import {
   User,
   Mail,
@@ -41,13 +43,20 @@ interface NotificationSettings {
 }
 
 const Settings: React.FC = () => {
-  // Estado del usuario (simularemos que viene de una API)
-  const [userData, setUserData] = useState<UserData>({
-    name: 'Yago Mateos',
-    email: 'yago@xistracloud.com',
-    avatar: '/placeholder.svg',
-    plan: 'Pro',
-    joinedDate: 'Enero 2024'
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
+
+  // Estado del usuario desde el store
+  const [userData, setUserData] = useState<UserData>(() => {
+    const storeData = userStore.getUserData();
+    return {
+      name: storeData.name,
+      email: storeData.email,
+      avatar: storeData.avatar,
+      plan: storeData.plan,
+      joinedDate: new Date(storeData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })
+    };
   });
 
   // Estados para los modales
@@ -88,11 +97,23 @@ const Settings: React.FC = () => {
 
   // Funciones para manejar cambios
   const handleProfileSave = () => {
+    // Actualizar el store
+    userStore.updateProfile({
+      name: profileForm.name,
+      email: profileForm.email,
+      bio: userStore.getUserData().bio,
+      location: userStore.getUserData().location,
+      company: userStore.getUserData().company,
+      website: userStore.getUserData().website
+    });
+
+    // Actualizar estado local
     setUserData({
       ...userData,
       name: profileForm.name,
       email: profileForm.email
     });
+
     setIsProfileModalOpen(false);
     toast.success('Perfil actualizado correctamente');
   };
@@ -127,10 +148,15 @@ const Settings: React.FC = () => {
 
   const handleAvatarSave = () => {
     if (avatarPreview) {
+      // Actualizar el store
+      userStore.updateAvatar(avatarPreview);
+
+      // Actualizar estado local
       setUserData({
         ...userData,
         avatar: avatarPreview
       });
+
       setIsAvatarModalOpen(false);
       setAvatarFile(null);
       setAvatarPreview('');
@@ -161,7 +187,7 @@ const Settings: React.FC = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="h-4 w-4" />
