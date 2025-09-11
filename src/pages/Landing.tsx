@@ -47,7 +47,7 @@ const Landing = () => {
       name: "Pro",
       price: "$20",
       pricePeriod: "/mes",
-      description: "Para startups y aplicaciones que necesitan más potencia y dominios personalizados.",
+      description: "Para startups y aplicaciones con más potencia y dominios personalizados.",
       features: [
         "Proyectos ilimitados",
         "Mayor ancho de banda y memoria",
@@ -170,7 +170,7 @@ const Landing = () => {
                         {plan.pricePeriod}
                       </span>
                     </div>
-                    <p className="text-muted-foreground text-sm lg:text-base h-auto lg:h-12 leading-5">
+                    <p className="text-muted-foreground text-sm lg:text-base leading-5 min-h-[3rem] lg:min-h-[4rem]">
                       {plan.description}
                     </p>
                   </CardHeader>
@@ -178,7 +178,7 @@ const Landing = () => {
                     <ul className="space-y-2 lg:space-y-3 mb-6 lg:mb-8 flex-1">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-center text-sm lg:text-base">
-                          <Check className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
+                          <Check className="h-4 w-4 text-green-500 mr-3 lg:mr-4 flex-shrink-0" />
                           <span>{feature}</span>
                         </li>
                       ))}
