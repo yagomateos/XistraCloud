@@ -61,8 +61,8 @@ export interface DashboardStats {
   }>;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
+const USE_MOCK_DATA = false; // Always use real data through backend proxy
 
 // Debug logs
 console.log('🔧 DEBUG - API Configuration:');
