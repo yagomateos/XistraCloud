@@ -158,26 +158,26 @@ const Deployments = () => {
   });
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Despliegues</h1>
-        <p className="text-muted-foreground">
+    <div className="p-4 lg:p-6">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Despliegues</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
           Historial completo de todos los despliegues realizados
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3 mb-6">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar por proyecto..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-11"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-48">
+          <SelectTrigger className="h-11">
             <SelectValue placeholder="Filtrar por estado" />
           </SelectTrigger>
           <SelectContent>
@@ -191,87 +191,100 @@ const Deployments = () => {
 
       {isLoading ? (
         <div className="text-center py-12">
-          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-            <RotateCcw className="h-8 w-8 text-muted-foreground animate-spin" />
+          <div className="w-16 h-16 lg:w-24 lg:h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <RotateCcw className="h-6 w-6 lg:h-8 lg:w-8 text-muted-foreground animate-spin" />
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
+          <h3 className="text-base lg:text-lg font-medium text-foreground mb-2">
             Cargando despliegues...
           </h3>
-          <p className="text-muted-foreground">
+          <p className="text-sm lg:text-base text-muted-foreground px-4">
             Obteniendo la lista de proyectos y despliegues.
           </p>
         </div>
       ) : error ? (
         <div className="text-center py-12">
-          <div className="w-24 h-24 bg-error rounded-full flex items-center justify-center mx-auto mb-4">
-            <RotateCcw className="h-8 w-8 text-error-foreground" />
+          <div className="w-16 h-16 lg:w-24 lg:h-24 bg-error rounded-full flex items-center justify-center mx-auto mb-4">
+            <RotateCcw className="h-6 w-6 lg:h-8 lg:w-8 text-error-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
+          <h3 className="text-base lg:text-lg font-medium text-foreground mb-2">
             Error al cargar despliegues
           </h3>
-          <p className="text-muted-foreground">
+          <p className="text-sm lg:text-base text-muted-foreground px-4">
             {error?.message || 'Ha ocurrido un error inesperado. Inténtalo de nuevo.'}
           </p>
         </div>
       ) : filteredDeployments.length === 0 && buildingProjects.length === 0 ? (
         <div className="text-center py-12">
-          <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-            <RotateCcw className="h-8 w-8 text-muted-foreground" />
+          <div className="w-16 h-16 lg:w-24 lg:h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <RotateCcw className="h-6 w-6 lg:h-8 lg:w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
+          <h3 className="text-base lg:text-lg font-medium text-foreground mb-2">
             No se encontraron despliegues
           </h3>
-          <p className="text-muted-foreground">
+          <p className="text-sm lg:text-base text-muted-foreground px-4">
             Prueba ajustando los filtros de búsqueda o despliega un nuevo proyecto.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 lg:space-y-4">
           {filteredDeployments.map((deployment) => {
             const isBuilding = buildingProjects.includes(deployment.id);
             return (
               <div key={deployment.id} className="deploy-card">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-semibold text-foreground">
-                        {deployment.name}
-                      </h3>
-                      <Badge className={getStatusColor(isBuilding ? 'building' : deployment.status)}>
-                        <div className={`status-dot mr-1 status-${isBuilding ? 'warning' : deployment.status.toLowerCase() === 'deployed' ? 'success' : 'error'}`} />
-                        {isBuilding ? 'En progreso' : getStatusText(deployment.status)}
-                      </Badge>
-                    </div>
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-3 mb-2">
+                        <h3 className="font-semibold text-foreground text-base lg:text-lg">
+                          {deployment.name}
+                        </h3>
+                        <Badge className={`${getStatusColor(isBuilding ? 'building' : deployment.status)} mt-1 lg:mt-0 w-fit`}>
+                          <div className={`status-dot mr-1 status-${isBuilding ? 'warning' : deployment.status.toLowerCase() === 'deployed' ? 'success' : 'error'}`} />
+                          {isBuilding ? 'En progreso' : getStatusText(deployment.status)}
+                        </Badge>
+                      </div>
 
-                    <p className="text-sm text-muted-foreground mb-2 truncate">
-                      {deployment.repository}
-                    </p>
+                      <p className="text-xs lg:text-sm text-muted-foreground mb-2 truncate">
+                        {deployment.repository}
+                      </p>
 
-                    <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {formatDate(deployment.created_at)}
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                        <span className="truncate">{formatDate(deployment.created_at)}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-col lg:flex-row gap-2 lg:gap-2 lg:justify-end">
                     {deployment.url && !isBuilding && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => window.open(deployment.url, '_blank')}
+                        className="w-full lg:w-auto h-9 text-xs"
                       >
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Ver
+                        <ExternalLink className="h-3 w-3 mr-2" />
+                        Ver sitio
                       </Button>
                     )}
-                    <Button variant="ghost" size="sm" onClick={() => handleRedeploy(deployment)} disabled={isBuilding}>
-                      <RotateCcw className={`h-3 w-3 mr-1 ${isBuilding ? 'animate-spin' : ''}`} />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleRedeploy(deployment)} 
+                      disabled={isBuilding}
+                      className="w-full lg:w-auto h-9 text-xs"
+                    >
+                      <RotateCcw className={`h-3 w-3 mr-2 ${isBuilding ? 'animate-spin' : ''}`} />
                       {isBuilding ? 'Desplegando...' : 'Redesplegar'}
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(deployment.id)} disabled={isBuilding}>
-                      <Trash2 className="h-3 w-3 mr-1" />
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => handleDelete(deployment.id)} 
+                      disabled={isBuilding}
+                      className="w-full lg:w-auto h-9 text-xs"
+                    >
+                      <Trash2 className="h-3 w-3 mr-2" />
                       Borrar
                     </Button>
                   </div>
