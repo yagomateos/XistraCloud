@@ -94,79 +94,107 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">
+    <div className="p-4 lg:p-6">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
           Vista general de todos tus proyectos y métricas de rendimiento
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6 lg:mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Proyectos totales</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs lg:text-sm font-medium">Proyectos totales</CardTitle>
+            <BarChart3 className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{(dashboardData?.projectStats.active || 0) + (dashboardData?.projectStats.building || 0) + (dashboardData?.projectStats.error || 0) + (dashboardData?.projectStats.stopped || 0)}</div>
+            <div className="text-lg lg:text-2xl font-bold">{(dashboardData?.projectStats.active || 0) + (dashboardData?.projectStats.building || 0) + (dashboardData?.projectStats.error || 0) + (dashboardData?.projectStats.stopped || 0)}</div>
             <p className="text-xs text-success">+2 este mes</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Deployments hoy</CardTitle>
-            <Rocket className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs lg:text-sm font-medium">Deployments hoy</CardTitle>
+            <Rocket className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.projectStats.active || 0}</div>
+            <div className="text-lg lg:text-2xl font-bold">{dashboardData?.projectStats.active || 0}</div>
             <p className="text-xs text-success">+15% vs ayer</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Uptime promedio</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs lg:text-sm font-medium">Uptime promedio</CardTitle>
+            <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">99.2%</div>
+            <div className="text-lg lg:text-2xl font-bold">99.2%</div>
             <p className="text-xs text-muted-foreground">Últimos 30 días</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tiempo respuesta</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs lg:text-sm font-medium">Tiempo respuesta</CardTitle>
+            <Zap className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">189ms</div>
+            <div className="text-lg lg:text-2xl font-bold">189ms</div>
             <p className="text-xs text-success">-12ms vs semana pasada</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
         {/* Main Charts Column */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-4 lg:space-y-8">
           {/* Deployment Trend */}
           <Card>
             <CardHeader>
-              <CardTitle>Tendencia de deployments</CardTitle>
-              <CardDescription>Deployments exitosos vs fallidos en los últimos 7 días</CardDescription>
+              <CardTitle className="text-lg lg:text-xl">Tendencia de deployments</CardTitle>
+              <CardDescription className="text-sm">Deployments exitosos vs fallidos en los últimos 7 días</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={deploymentTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="success" stroke="hsl(var(--success))" strokeWidth={2} />
-                  <Line type="monotone" dataKey="failed" stroke="hsl(var(--error))" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis 
+                    dataKey="date" 
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="success" 
+                    stroke="hsl(var(--success))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--success))', strokeWidth: 2, r: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="failed" 
+                    stroke="hsl(var(--error))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--error))', strokeWidth: 2, r: 4 }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -175,17 +203,40 @@ const Dashboard = () => {
           {/* Uptime Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Uptime últimas 24 horas</CardTitle>
-              <CardDescription>Disponibilidad promedio de todos los proyectos</CardDescription>
+              <CardTitle className="text-lg lg:text-xl">Uptime últimas 24 horas</CardTitle>
+              <CardDescription className="text-sm">Disponibilidad promedio de todos los proyectos</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={uptimeData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hour" />
-                  <YAxis domain={[95, 100]} />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="uptime" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis 
+                    dataKey="date" 
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    domain={[95, 100]} 
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="uptime" 
+                    stroke="hsl(var(--primary))" 
+                    fill="hsl(var(--primary))" 
+                    fillOpacity={0.2} 
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -194,8 +245,8 @@ const Dashboard = () => {
           {/* Top Projects */}
           <Card>
             <CardHeader>
-              <CardTitle>Proyectos con más tráfico</CardTitle>
-              <CardDescription>Ranking por número de requests</CardDescription>
+              <CardTitle className="text-lg lg:text-xl">Proyectos con más tráfico</CardTitle>
+              <CardDescription className="text-sm">Ranking por número de requests</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -205,13 +256,13 @@ const Dashboard = () => {
                       <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-sm font-bold text-primary">#{index + 1}</span>
                       </div>
-                      <div>
-                        <p className="font-medium">{project.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{project.name}</p>
                         <p className="text-sm text-muted-foreground">{project.requests} requests</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <Badge className="bg-success-bg text-success border-success/20">
+                    <div className="text-right flex-shrink-0">
+                      <Badge className="bg-success-bg text-success border-success/20 text-xs">
                         {project.uptime}
                       </Badge>
                     </div>
@@ -223,28 +274,35 @@ const Dashboard = () => {
         </div>
 
         {/* Sidebar Column */}
-        <div className="space-y-8">
+        <div className="space-y-4 lg:space-y-8">
           {/* Project Status Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle>Estado de proyectos</CardTitle>
-              <CardDescription>Distribución actual</CardDescription>
+              <CardTitle className="text-lg lg:text-xl">Estado de proyectos</CardTitle>
+              <CardDescription className="text-sm">Distribución actual</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
                   <Pie
                     data={projectsStatus}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={60}
                     dataKey="value"
                   >
                     {projectsStatus.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px',
+                      fontSize: '12px'
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
               <div className="mt-4 space-y-2">
@@ -252,12 +310,12 @@ const Dashboard = () => {
                   <div key={index} className="flex items-center justify-between text-sm">
                     <div className="flex items-center space-x-2">
                       <div 
-                        className="w-3 h-3 rounded-full" 
+                        className="w-3 h-3 rounded-full flex-shrink-0" 
                         style={{ backgroundColor: status.color }}
                       />
-                      <span>{status.name}</span>
+                      <span className="truncate">{status.name}</span>
                     </div>
-                    <span className="font-medium">{status.value}</span>
+                    <span className="font-medium flex-shrink-0">{status.value}</span>
                   </div>
                 ))}
               </div>
@@ -267,23 +325,23 @@ const Dashboard = () => {
           {/* Recent Activity */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Clock className="h-5 w-5 mr-2" />
+              <CardTitle className="flex items-center text-lg lg:text-xl">
+                <Clock className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
                 Actividad reciente
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivity.map((activity) => (
+                {recentActivity.slice(0, 5).map((activity) => (
                   <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`mt-1 ${getActivityColor(activity.status)}`}>
+                    <div className={`mt-1 flex-shrink-0 ${getActivityColor(activity.status)}`}>
                       {getActivityIcon(activity.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {activity.project}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs lg:text-sm text-muted-foreground line-clamp-2">
                         {activity.message}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
@@ -293,7 +351,7 @@ const Dashboard = () => {
                   </div>
                 ))}
               </div>
-              <Button variant="outline" className="w-full mt-4">
+              <Button variant="outline" className="w-full mt-4 text-sm">
                 Ver toda la actividad
               </Button>
             </CardContent>
