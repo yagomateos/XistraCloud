@@ -50,7 +50,7 @@ const Sidebar = ({ user }: SidebarProps) => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('user');
-    navigate('/login');
+    navigate('/');
   };
 
   const navigation = [

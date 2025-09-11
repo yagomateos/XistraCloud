@@ -29,15 +29,15 @@ const Logs = () => {
   });
 
   // Get unique project names for filter
-  const projects = Array.from(new Set(logs.map(log => log.projectName).filter(Boolean)));
+  const projects = Array.from(new Set(logs.map(log => log.project_name).filter(Boolean)));
 
   // Filter logs based on search and project filter
   const filteredLogs = logs.filter(log => {
     const matchesSearch = searchTerm === '' || 
       log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.projectName?.toLowerCase().includes(searchTerm.toLowerCase());
+      log.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesProject = projectFilter === 'all' || log.projectName === projectFilter;
+    const matchesProject = projectFilter === 'all' || log.project_name === projectFilter;
     
     return matchesSearch && matchesProject;
   });
@@ -109,9 +109,9 @@ const Logs = () => {
     const csvContent = [
       ['Timestamp', 'Level', 'Project', 'Source', 'Message'].join(','),
       ...filteredLogs.map(log => [
-        log.timestamp,
+        log.created_at,
         log.level,
-        log.projectName || 'Unknown',
+        log.project_name || 'Unknown',
         log.source,
         `"${log.message.replace(/"/g, '""')}"`
       ].join(','))
@@ -155,74 +155,76 @@ const Logs = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 lg:p-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 space-y-4 lg:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Logs</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Logs</h1>
+          <p className="text-sm lg:text-base text-muted-foreground">
             Registro en tiempo real de actividades y eventos del sistema
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualizar
+          <Button variant="outline" onClick={() => refetch()} size="sm" className="h-9">
+            <RefreshCw className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+            <span className="hidden lg:inline">Actualizar</span>
           </Button>
-          <Button variant="outline" onClick={exportLogs}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
+          <Button variant="outline" onClick={exportLogs} size="sm" className="h-9">
+            <Download className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+            <span className="hidden lg:inline">Exportar</span>
           </Button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3 mb-6">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Buscar en logs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-11"
           />
         </div>
         
-        <Select value={projectFilter} onValueChange={setProjectFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Todos los proyectos" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los proyectos</SelectItem>
-            {projects.map((project) => (
-              <SelectItem key={project} value={project!}>
-                {project}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={projectFilter} onValueChange={setProjectFilter}>
+            <SelectTrigger className="flex-1 h-11">
+              <SelectValue placeholder="Todos los proyectos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los proyectos</SelectItem>
+              {projects.map((project) => (
+                <SelectItem key={project} value={project!}>
+                  {project}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={levelFilter} onValueChange={setLevelFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Todos los niveles" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="success">Éxito</SelectItem>
-            <SelectItem value="info">Info</SelectItem>
-            <SelectItem value="warning">Advertencia</SelectItem>
-            <SelectItem value="error">Error</SelectItem>
-            <SelectItem value="debug">Debug</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={levelFilter} onValueChange={setLevelFilter}>
+            <SelectTrigger className="flex-1 h-11">
+              <SelectValue placeholder="Todos los niveles" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="success">Éxito</SelectItem>
+              <SelectItem value="info">Info</SelectItem>
+              <SelectItem value="warning">Advertencia</SelectItem>
+              <SelectItem value="error">Error</SelectItem>
+              <SelectItem value="debug">Debug</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Logs List */}
       <div className="bg-card border border-border rounded-lg">
         {filteredLogs.length === 0 ? (
           <div className="text-center py-12">
-            <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay logs disponibles</h3>
-            <p className="text-muted-foreground">
+            <Info className="h-10 w-10 lg:h-12 lg:w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-base lg:text-lg font-semibold mb-2">No hay logs disponibles</h3>
+            <p className="text-sm lg:text-base text-muted-foreground px-4">
               {logs.length === 0 
                 ? "No se han generado logs aún" 
                 : "No se encontraron logs que coincidan con los filtros aplicados"
@@ -232,47 +234,38 @@ const Logs = () => {
         ) : (
           <div className="divide-y divide-border">
             {filteredLogs.map((log) => (
-              <div key={log.id} className="p-4 hover:bg-accent/50 transition-colors">
+              <div key={log.id} className="p-3 lg:p-4 hover:bg-accent/50 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">
                     {getLevelIcon(log.level)}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant={getLevelBadgeVariant(log.level)}>
-                        {getLevelText(log.level)}
-                      </Badge>
-                      
-                      {log.projectName && (
-                        <Badge variant="outline">
-                          {log.projectName}
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-2 mb-2">
+                      <div className="flex flex-wrap items-center gap-1 lg:gap-2">
+                        <Badge variant={getLevelBadgeVariant(log.level)} className="text-xs">
+                          {getLevelText(log.level)}
                         </Badge>
-                      )}
+                        
+                        {log.project_name && (
+                          <Badge variant="outline" className="text-xs">
+                            {log.project_name}
+                          </Badge>
+                        )}
+                        
+                        <Badge variant="secondary" className="text-xs">
+                          {log.source}
+                        </Badge>
+                      </div>
                       
-                      <Badge variant="secondary">
-                        {log.source}
-                      </Badge>
-                      
-                      <span className="text-xs text-muted-foreground ml-auto">
-                        {formatTimestamp(log.timestamp)}
+                      <span className="text-xs text-muted-foreground lg:ml-auto">
+                        {formatTimestamp(log.created_at)}
                       </span>
                     </div>
                     
-                    <p className="text-sm text-foreground break-words">
+                    <p className="text-xs lg:text-sm text-foreground break-words leading-relaxed">
                       {log.message}
                     </p>
-                    
-                    {log.metadata && Object.keys(log.metadata).length > 0 && (
-                      <details className="mt-2">
-                        <summary className="text-xs text-muted-foreground cursor-pointer">
-                          Ver metadatos
-                        </summary>
-                        <pre className="text-xs bg-accent p-2 rounded mt-1 overflow-x-auto">
-                          {JSON.stringify(log.metadata, null, 2)}
-                        </pre>
-                      </details>
-                    )}
                   </div>
                 </div>
               </div>
@@ -283,7 +276,7 @@ const Logs = () => {
       
       {filteredLogs.length > 0 && (
         <div className="mt-4 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs lg:text-sm text-muted-foreground">
             Mostrando {filteredLogs.length} de {logs.length} logs
             {logs.length >= 200 && " (últimos 200)"}
           </p>

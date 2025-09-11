@@ -104,15 +104,14 @@ const Domains = () => {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['domains'] });
       toast({
-        title: result.success ? "Dominio verificado" : "Verificación fallida",
-        description: result.message,
-        variant: result.success ? "default" : "destructive",
+        title: "Verificación iniciada",
+        description: "Se está verificando el dominio. Esto puede tomar unos minutos.",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "No se pudo verificar el dominio",
         variant: "destructive",
       });
     },
@@ -152,7 +151,7 @@ const Domains = () => {
 
     createDomainMutation.mutate({
       domain: newDomain.domain.toLowerCase(),
-      projectId: newDomain.projectId,
+      project_id: newDomain.projectId,
     });
   };
 
@@ -174,8 +173,8 @@ const Domains = () => {
     });
   };
 
-  const getStatusIcon = (status: string, ssl: boolean) => {
-    if (status === 'verified' && ssl) {
+  const getStatusIcon = (status: string, sslStatus: string) => {
+    if (status === 'verified' && sslStatus === 'active') {
       return <CheckCircle className="h-4 w-4 text-green-500" />;
     } else if (status === 'pending') {
       return <AlertCircle className="h-4 w-4 text-yellow-500" />;
@@ -184,8 +183,8 @@ const Domains = () => {
     }
   };
 
-  const getStatusBadge = (status: string, ssl: boolean) => {
-    if (status === 'verified' && ssl) {
+  const getStatusBadge = (status: string, sslStatus: string) => {
+    if (status === 'verified' && sslStatus === 'active') {
       return <Badge className="bg-green-100 text-green-800">Verificado + SSL</Badge>;
     } else if (status === 'verified') {
       return <Badge className="bg-yellow-100 text-yellow-800">Verificado</Badge>;
@@ -198,12 +197,12 @@ const Domains = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6">
+      <div className="p-4 lg:p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-6 lg:h-8 bg-gray-200 rounded w-1/2 lg:w-1/4 mb-4"></div>
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              <div key={i} className="h-20 lg:h-24 bg-gray-200 rounded"></div>
             ))}
           </div>
         </div>
@@ -213,68 +212,73 @@ const Domains = () => {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="text-center py-12">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+      <div className="p-4 lg:p-6">
+        <div className="text-center py-8 lg:py-12">
+          <AlertCircle className="h-10 w-10 lg:h-12 lg:w-12 text-red-500 mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Error al cargar dominios</h3>
-          <p className="text-gray-600 mb-4">No se pudieron cargar los dominios</p>
-          <Button onClick={() => refetch()}>Intentar de nuevo</Button>
+          <p className="text-gray-600 mb-4 text-sm lg:text-base px-4">No se pudieron cargar los dominios</p>
+          <Button onClick={() => refetch()} className="w-full sm:w-auto">Intentar de nuevo</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 lg:p-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 lg:mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Dominios</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Dominios</h1>
+          <p className="text-muted-foreground text-sm lg:text-base">
             Gestiona los dominios personalizados de tus proyectos
           </p>
         </div>
         
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => refetch()}>
+        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+          <Button 
+            variant="outline" 
+            onClick={() => refetch()}
+            className="w-full sm:w-auto"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
           
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Agregar dominio
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md mx-4 sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Agregar dominio personalizado</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-lg lg:text-xl">Agregar dominio personalizado</DialogTitle>
+                <DialogDescription className="text-sm lg:text-base">
                   Conecta un dominio personalizado a uno de tus proyectos
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs lg:text-sm text-blue-800">
                   <p><strong>💡 Tip:</strong> Para pruebas, usa dominios como "mi-test.com" o "demo-app.com".</p>
-                  <p>Los dominios reales requieren configuración DNS específica.</p>
+                  <p className="mt-1">Los dominios reales requieren configuración DNS específica.</p>
                 </div>
-                <div>
-                  <Label htmlFor="domain">Dominio</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="domain" className="text-sm font-medium">Dominio</Label>
                   <Input
                     id="domain"
                     placeholder="mi-proyecto-test.com"
                     value={newDomain.domain}
                     onChange={(e) => setNewDomain(prev => ({ ...prev, domain: e.target.value }))}
+                    className="h-10"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="project">Proyecto</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="project" className="text-sm font-medium">Proyecto</Label>
                   <Select
                     value={newDomain.projectId}
                     onValueChange={(value) => setNewDomain(prev => ({ ...prev, projectId: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Selecciona un proyecto" />
                     </SelectTrigger>
                     <SelectContent>
@@ -286,16 +290,18 @@ const Domains = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex flex-col-reverse sm:flex-row justify-end space-y-2 space-y-reverse sm:space-y-0 sm:space-x-3 pt-4">
                   <Button
                     variant="outline"
                     onClick={() => setIsAddModalOpen(false)}
+                    className="w-full sm:w-auto"
                   >
                     Cancelar
                   </Button>
                   <Button 
                     onClick={handleAddDomain}
                     disabled={createDomainMutation.isPending}
+                    className="w-full sm:w-auto"
                   >
                     {createDomainMutation.isPending && (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -309,21 +315,24 @@ const Domains = () => {
         </div>
       </div>
 
-      <Separator className="mb-8" />
+      <Separator className="mb-6 lg:mb-8" />
 
       {domains.length === 0 ? (
         <Card>
-          <CardContent className="text-center py-12">
+          <CardContent className="text-center py-8 lg:py-12 px-4">
             <div className="flex justify-center mb-4">
               <Globe className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
               No tienes dominios configurados
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-6 text-sm lg:text-base">
               Agrega tu primer dominio personalizado para mejorar tu presencia online
             </p>
-            <Button onClick={() => setIsAddModalOpen(true)}>
+            <Button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="w-full sm:w-auto"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Agregar primer dominio
             </Button>
@@ -333,40 +342,41 @@ const Domains = () => {
         <div className="space-y-4">
           {domains.map((domain) => (
             <Card key={domain.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {getStatusIcon(domain.status, domain.ssl)}
-                    <div>
-                      <div className="flex items-center space-x-3">
-                        <h3 className="font-semibold text-foreground">{domain.domain}</h3>
-                        {getStatusBadge(domain.status, domain.ssl)}
+              <CardContent className="p-4 lg:p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex items-start lg:items-center space-x-4">
+                    {getStatusIcon(domain.status, domain.ssl_status)}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-3 gap-2">
+                        <h3 className="font-semibold text-foreground break-all lg:break-normal">{domain.domain}</h3>
+                        {getStatusBadge(domain.status, domain.ssl_status)}
                       </div>
-                      <div className="flex items-center space-x-2 mt-1">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-2 mt-1 gap-1 lg:gap-0">
                         <span className="text-sm text-muted-foreground">
-                          Proyecto: {domain.projectName}
+                          Proyecto: {domain.project_name}
                         </span>
-                        <span className="text-muted-foreground">•</span>
+                        <span className="text-muted-foreground hidden lg:inline">•</span>
                         <span className="text-sm text-muted-foreground">
-                          Agregado: {new Date(domain.createdAt).toLocaleDateString('es-ES')}
+                          Agregado: {new Date(domain.created_at).toLocaleDateString('es-ES')}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 justify-start lg:justify-end">
                     {domain.status === 'pending' && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleVerifyDomain(domain.id)}
                         disabled={verifyDomainMutation.isPending}
+                        className="h-8 px-2 lg:px-3"
                       >
                         {verifyDomainMutation.isPending && (
                           <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                         )}
-                        <RefreshCw className="h-4 w-4 mr-1" />
-                        Verificar
+                        <RefreshCw className="h-4 w-4 lg:mr-1" />
+                        <span className="hidden sm:inline">Verificar</span>
                       </Button>
                     )}
                     
@@ -375,9 +385,10 @@ const Domains = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => window.open(`https://${domain.domain}`, '_blank')}
+                        className="h-8 px-2 lg:px-3"
                       >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Visitar
+                        <ExternalLink className="h-4 w-4 lg:mr-1" />
+                        <span className="hidden sm:inline">Visitar</span>
                       </Button>
                     )}
                     
@@ -386,6 +397,7 @@ const Domains = () => {
                       size="sm"
                       onClick={() => handleDeleteDomain(domain.id)}
                       disabled={deleteDomainMutation.isPending}
+                      className="h-8 w-8 lg:w-auto lg:px-3"
                     >
                       {deleteDomainMutation.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -396,8 +408,8 @@ const Domains = () => {
                   </div>
                 </div>
 
-                {domain.status === 'pending' && domain.dnsRecords && (
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                {domain.status === 'pending' && (
+                  <div className="mt-4 p-3 lg:p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div className="flex items-center mb-3">
                       <AlertCircle className="h-4 w-4 text-yellow-600 mr-2" />
                       <span className="text-sm text-yellow-800 font-medium">
@@ -408,40 +420,30 @@ const Domains = () => {
                     <div className="space-y-3 text-sm">
                       <div>
                         <p className="text-yellow-800 font-medium mb-1">Registro CNAME:</p>
-                        <div className="bg-white p-2 rounded border flex items-center justify-between">
-                          <span className="font-mono text-xs">{domain.dnsRecords.cname?.name} → {domain.dnsRecords.cname?.value}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(`${domain.dnsRecords.cname?.name} CNAME ${domain.dnsRecords.cname?.value}`)}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
+                        <div className="bg-white p-2 lg:p-3 rounded border text-xs lg:text-sm">
+                          <span className="font-mono break-all">
+                            {domain.domain} → xistracloud.com
+                          </span>
                         </div>
                       </div>
                       
                       <div>
                         <p className="text-yellow-800 font-medium mb-1">Registro TXT (verificación):</p>
-                        <div className="bg-white p-2 rounded border flex items-center justify-between">
-                          <span className="font-mono text-xs">{domain.dnsRecords.txt?.name} → {domain.dnsRecords.txt?.value}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(`${domain.dnsRecords.txt?.name} TXT ${domain.dnsRecords.txt?.value}`)}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
+                        <div className="bg-white p-2 lg:p-3 rounded border text-xs lg:text-sm">
+                          <span className="font-mono break-all">
+                            _xistracloud-verification.{domain.domain} → xistracloud-verify-{domain.id.slice(0, 8)}
+                          </span>
                         </div>
                       </div>
                     </div>
                     
-                    <p className="text-xs text-yellow-700 mt-3">
+                    <p className="text-xs lg:text-sm text-yellow-700 mt-3">
                       Puede tomar hasta 48 horas en propagarse. Haz clic en "Verificar" una vez configurados los registros DNS.
                     </p>
                   </div>
                 )}
 
-                {domain.status === 'verified' && domain.ssl && (
+                {domain.status === 'verified' && domain.ssl_status === 'active' && (
                   <div className="mt-4 flex items-center space-x-2 text-sm text-green-600">
                     <Shield className="h-4 w-4" />
                     <span>SSL/TLS habilitado automáticamente</span>
