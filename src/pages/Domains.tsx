@@ -224,7 +224,7 @@ const Domains = () => {
   }
 
   return (
-    <div className="p-4 lg:p-6">
+    <div className="pt-6 px-4 pb-4 lg:p-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 lg:mb-8 gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Dominios</h1>
