@@ -11,8 +11,9 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { userStore, UserData as UserStoreData } from '@/lib/user-store';
 import { NotificationPreferences } from '@/components/settings/notification-preferences';
+import { PlanLimitCard } from '@/components/limits/plan-limits';
+import { useUserData } from '@/hooks/useUserData';
 import {
   User,
   Mail,
@@ -47,18 +48,18 @@ const Settings: React.FC = () => {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') || 'profile';
   const [activeTab, setActiveTab] = useState(tabFromUrl);
+  
+  // Use the new user data hook
+  const { userData, userPlan, updateProfile, updateAvatar, loading } = useUserData();
 
-  // Estado del usuario desde el store
-  const [userData, setUserData] = useState<UserData>(() => {
-    const storeData = userStore.getUserData();
-    return {
-      name: storeData.name,
-      email: storeData.email,
-      avatar: storeData.avatar,
-      plan: storeData.plan,
-      joinedDate: new Date(storeData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' })
-    };
-  });
+  // Estado del usuario desde el hook
+  const [localUserData, setLocalUserData] = useState<UserData>(() => ({
+    name: userData.name || '',
+    email: userData.email || '',
+    avatar: userData.avatar || '',
+    plan: userPlan,
+    joinedDate: userData.joinedAt ? new Date(userData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' }) : ''
+  }));
 
   // Estados para los modales
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -67,17 +68,14 @@ const Settings: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Estados para formularios
-  const [profileForm, setProfileForm] = useState(() => {
-    const storeData = userStore.getUserData();
-    return {
-      name: storeData.name,
-      email: storeData.email,
-      bio: storeData.bio,
-      location: storeData.location,
-      company: storeData.company,
-      website: storeData.website
-    };
-  });
+  const [profileForm, setProfileForm] = useState(() => ({
+    name: userData.name || '',
+    email: userData.email || '',
+    bio: userData.bio || '',
+    location: userData.location || '',
+    company: userData.company || '',
+    website: userData.website || ''
+  }));
 
   const [passwordForm, setPasswordForm] = useState({
     current: '',
@@ -99,31 +97,54 @@ const Settings: React.FC = () => {
     updates: true
   });
 
+  // Update local data when userData changes
+  useEffect(() => {
+    setLocalUserData({
+      name: userData.name || '',
+      email: userData.email || '',
+      avatar: userData.avatar || '',
+      plan: userPlan,
+      joinedDate: userData.joinedAt ? new Date(userData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' }) : ''
+    });
+    
+    setProfileForm({
+      name: userData.name || '',
+      email: userData.email || '',
+      bio: userData.bio || '',
+      location: userData.location || '',
+      company: userData.company || '',
+      website: userData.website || ''
+    });
+  }, [userData, userPlan]);
+
   // Estado para archivo de avatar
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
 
   // Funciones para manejar cambios
-  const handleProfileSave = () => {
-    // Actualizar el store con todos los campos
-    userStore.updateProfile({
-      name: profileForm.name,
-      email: profileForm.email,
-      bio: profileForm.bio,
-      location: profileForm.location,
-      company: profileForm.company,
-      website: profileForm.website
-    });
+  const handleProfileSave = async () => {
+    try {
+      await updateProfile({
+        name: profileForm.name,
+        email: profileForm.email,
+        bio: profileForm.bio,
+        location: profileForm.location,
+        company: profileForm.company,
+        website: profileForm.website
+      });
 
-    // Actualizar estado local
-    setUserData({
-      ...userData,
-      name: profileForm.name,
-      email: profileForm.email
-    });
+      // Actualizar estado local
+      setLocalUserData({
+        ...localUserData,
+        name: profileForm.name,
+        email: profileForm.email
+      });
 
-    setIsProfileModalOpen(false);
-    toast.success('Perfil actualizado correctamente');
+      setIsProfileModalOpen(false);
+      toast.success('Perfil actualizado correctamente');
+    } catch (error) {
+      toast.error('Error al actualizar el perfil');
+    }
   };
 
   const handlePasswordSave = () => {
@@ -171,21 +192,24 @@ const Settings: React.FC = () => {
     }
   };
 
-  const handleAvatarSave = () => {
+  const handleAvatarSave = async () => {
     if (avatarPreview) {
-      // Actualizar el store
-      userStore.updateAvatar(avatarPreview);
+      try {
+        await updateAvatar(avatarPreview);
 
-      // Actualizar estado local
-      setUserData({
-        ...userData,
-        avatar: avatarPreview
-      });
+        // Actualizar estado local
+        setLocalUserData({
+          ...localUserData,
+          avatar: avatarPreview
+        });
 
-      setIsAvatarModalOpen(false);
-      setAvatarFile(null);
-      setAvatarPreview('');
-      toast.success('Avatar actualizado correctamente');
+        setIsAvatarModalOpen(false);
+        setAvatarFile(null);
+        setAvatarPreview('');
+        toast.success('Avatar actualizado correctamente');
+      } catch (error) {
+        toast.error('Error al actualizar el avatar');
+      }
     }
   };
 
@@ -248,7 +272,7 @@ const Settings: React.FC = () => {
               {/* Avatar Section */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <Avatar className="h-16 w-16 md:h-20 md:w-20 mx-auto sm:mx-0">
-                  <AvatarImage src={userData.avatar} />
+                  <AvatarImage src={localUserData.avatar} />
                   <AvatarFallback className="text-base md:text-lg">
                     {userData.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
@@ -275,7 +299,7 @@ const Settings: React.FC = () => {
                         <div className="flex flex-col items-center space-y-4">
                           <div className="relative">
                             <Avatar className="h-32 w-32 ring-4 ring-background shadow-lg">
-                              <AvatarImage src={avatarPreview || userData.avatar} />
+                              <AvatarImage src={avatarPreview || localUserData.avatar} />
                               <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                                 {userData.name.split(' ').map(n => n[0]).join('')}
                               </AvatarFallback>
@@ -348,23 +372,23 @@ const Settings: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Nombre completo</Label>
-                  <p className="text-sm text-muted-foreground mt-1">{userData.name}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{localUserData.name}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Email</Label>
-                  <p className="text-sm text-muted-foreground mt-1">{userData.email}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{localUserData.email}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Plan actual</Label>
                   <div className="mt-1">
-                    <Badge variant={userData.plan === 'Pro' ? 'default' : 'secondary'}>
-                      {userData.plan}
+                    <Badge variant={localUserData.plan === 'pro' ? 'default' : 'secondary'}>
+                      {localUserData.plan}
                     </Badge>
                   </div>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Miembro desde</Label>
-                  <p className="text-sm text-muted-foreground mt-1">{userData.joinedDate}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{localUserData.joinedDate}</p>
                 </div>
               </div>
 
@@ -659,30 +683,36 @@ const Settings: React.FC = () => {
 
         {/* FACTURACIÓN */}
         <TabsContent value="billing" className="space-y-6">
+          <PlanLimitCard 
+            userPlan={userData.plan as any}
+            currentProjects={0} // TODO: obtener del API
+            currentDomains={0} // TODO: obtener del API
+          />
+          
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Plan y Facturación
+                Facturación
               </CardTitle>
               <CardDescription>
-                Gestiona tu suscripción y métodos de pago
+                Gestiona tus métodos de pago y historial de facturación
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
-                  <h3 className="font-semibold">Plan {userData.plan}</h3>
+                  <h3 className="font-semibold">Próxima facturación</h3>
                   <p className="text-sm text-muted-foreground">
-                    $20/mes • Próxima facturación: 15 Oct 2025
+                    15 Oct 2025 • Plan {userData.plan}
                   </p>
                 </div>
-                <Badge variant="default">Activo</Badge>
+                <Badge variant="default">Al día</Badge>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button variant="outline">
-                  Cambiar Plan
+                  Actualizar Plan
                 </Button>
                 <Button variant="outline">
                   Ver Historial de Pagos

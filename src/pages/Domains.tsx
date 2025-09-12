@@ -35,6 +35,9 @@ import {
   Loader2
 } from 'lucide-react';
 import { getDomains, createDomain, deleteDomain as apiDeleteDomain, verifyDomain, getProjects, type Domain } from '@/lib/api';
+import { useUserData } from '@/hooks/useUserData';
+import { checkDomainLimit } from '@/lib/plans';
+import { showPlanLimitToast } from '@/lib/toast-helpers';
 
 const Domains = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -45,6 +48,7 @@ const Domains = () => {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { userData, userPlan } = useUserData();
 
   // Fetch domains from API
   const { data: domains = [], isLoading, error, refetch } = useQuery({
@@ -124,6 +128,13 @@ const Domains = () => {
         description: "Por favor completa todos los campos",
         variant: "destructive",
       });
+      return;
+    }
+
+    // Check domain limit before creating
+    const canCreate = checkDomainLimit(userPlan, domains?.length || 0);
+    if (!canCreate) {
+      showPlanLimitToast.domainLimit(userPlan, domains?.length || 0);
       return;
     }
 

@@ -14,6 +14,7 @@ import Logs from "@/pages/Logs";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import Domains from "@/pages/Domains";
+import Pricing from "@/pages/Pricing";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="domains" element={<Domains />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="pricing" element={<Pricing />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               </Route>
               <Route path="*" element={<NotFound />} />

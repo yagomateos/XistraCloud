@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PlanLimitCard } from '@/components/limits/plan-limits';
 import { 
   Activity, 
   Rocket, 
@@ -17,8 +18,11 @@ import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '@/lib/api';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useUserData } from '@/hooks/useUserData';
 
 const Dashboard = () => {
+  const { userData, userPlan } = useUserData();
+
   const { data: dashboardData, isLoading, error } = useQuery({
     queryKey: ['dashboardStats'],
     queryFn: getDashboardStats,
@@ -148,6 +152,17 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Plan Limits Card */}
+      {userData && userPlan && (
+        <div className="mb-6 lg:mb-8">
+          <PlanLimitCard 
+            userPlan={userPlan}
+            currentProjects={(dashboardData?.projectStats.active || 0) + (dashboardData?.projectStats.building || 0) + (dashboardData?.projectStats.error || 0)}
+            currentDomains={0} // TODO: obtener de la API
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
         {/* Main Charts Column */}
