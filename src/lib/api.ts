@@ -425,6 +425,28 @@ export const getProjects = async (): Promise<Project[]> => {
   }
 };
 
+export const deleteProject = async (projectId: string): Promise<void> => {
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for delete project');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return;
+  }
+
+  try {
+    console.log('🌐 Deleting project via API:', `${API_URL}/projects/${projectId}`);
+    const response = await fetch(`${API_URL}/projects/${projectId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    console.log('✅ Successfully deleted project via API');
+  } catch (error) {
+    console.error('❌ Error deleting project via API:', error);
+    throw error;
+  }
+};
+
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   if (USE_MOCK_DATA) {
     console.log('🔄 Using mock data for dashboard stats');

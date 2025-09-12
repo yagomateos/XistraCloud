@@ -1,10 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, ExternalLink, GitBranch } from 'lucide-react';
+import { MoreHorizontal, ExternalLink, GitBranch, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -20,9 +21,10 @@ interface ProjectCardProps {
   };
   onViewDetails: (projectId: string) => void;
   onDeploy: (projectId: string) => void;
+  onDelete?: (projectId: string) => void;
 }
 
-const ProjectCard = ({ project, onViewDetails, onDeploy }: ProjectCardProps) => {
+const ProjectCard = ({ project, onViewDetails, onDeploy, onDelete }: ProjectCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'deployed':
@@ -102,6 +104,18 @@ const ProjectCard = ({ project, onViewDetails, onDeploy }: ProjectCardProps) => 
                     Abrir sitio
                   </a>
                 </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => onDelete(project.id)}
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Eliminar proyecto
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
