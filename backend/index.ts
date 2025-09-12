@@ -25,6 +25,22 @@ app.get('/', (req, res) => {
   res.send('Hello from XistraCloud backend!');
 });
 
+// FORCED UPDATE TEST - v2025-01-12-18:50
+app.get('/debug/health', (req, res) => {
+  res.json({
+    status: 'LATEST_CODE_DEPLOYED',
+    timestamp: new Date().toISOString(),
+    version: '2025-01-12-18:50-FORCED-UPDATE',
+    message: 'If you see this, Railway IS running the latest code!',
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT,
+      SUPABASE_URL: process.env.SUPABASE_URL ? 'configured' : 'missing',
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'configured' : 'missing'
+    }
+  });
+});
+
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
   console.log('Login attempt:', { email, password });
