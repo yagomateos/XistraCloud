@@ -768,11 +768,14 @@ app.get('/domains', async (req, res) => {
 app.post('/domains', async (req, res) => {
   try {
     console.log('Creating domain with body:', req.body);
-    const { domain, projectId } = req.body;
+    const { domain, project_id, projectId } = req.body;
+    
+    // Usar project_id o projectId (compatibilidad)
+    const projectIdValue = project_id || projectId;
 
-    if (!domain || !projectId) {
-      console.log('Missing required fields:', { domain, projectId });
-      return res.status(400).json({ error: 'Domain and projectId are required' });
+    if (!domain || !projectIdValue) {
+      console.log('Missing required fields:', { domain, project_id, projectId, projectIdValue });
+      return res.status(400).json({ error: 'Domain and project_id are required' });
     }
 
     // Validate domain format - more flexible regex
@@ -797,7 +800,7 @@ app.post('/domains', async (req, res) => {
     const { data: project } = await supabase
       .from('projects')
       .select('id, name')
-      .eq('id', projectId)
+      .eq('id', projectIdValue)
       .single();
 
     if (!project) {
@@ -824,7 +827,7 @@ app.post('/domains', async (req, res) => {
       .from('domains')
       .insert({
         domain,
-        project_id: projectId,
+        project_id: projectIdValue,
         status: 'pending',
         ssl_enabled: false,
         dns_records: dnsRecords,

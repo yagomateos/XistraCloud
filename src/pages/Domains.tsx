@@ -138,9 +138,20 @@ const Domains = () => {
       return;
     }
 
-    // Validar formato del dominio
+    // Limpiar y validar formato del dominio
+    let cleanDomain = newDomain.domain.trim();
+    
+    // Eliminar protocolo si existe (http:// o https://)
+    cleanDomain = cleanDomain.replace(/^https?:\/\//, '');
+    
+    // Eliminar trailing slash si existe
+    cleanDomain = cleanDomain.replace(/\/$/, '');
+    
+    // Actualizar el valor limpio
+    setNewDomain(prev => ({ ...prev, domain: cleanDomain }));
+    
     const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    if (!domainRegex.test(newDomain.domain)) {
+    if (!domainRegex.test(cleanDomain)) {
       toast({
         title: "Error de formato",
         description: "Por favor introduce un dominio válido (ej: ejemplo.com)",
@@ -150,7 +161,7 @@ const Domains = () => {
     }
 
     // Verificar que el dominio no exista ya
-    const existingDomain = domains?.find(d => d.domain.toLowerCase() === newDomain.domain.toLowerCase());
+    const existingDomain = domains?.find(d => d.domain.toLowerCase() === cleanDomain.toLowerCase());
     if (existingDomain) {
       toast({
         title: "Dominio duplicado",
@@ -161,7 +172,7 @@ const Domains = () => {
     }
 
     createDomainMutation.mutate({
-      domain: newDomain.domain.toLowerCase(),
+      domain: cleanDomain.toLowerCase(),
       project_id: newDomain.projectId,
     });
   };
@@ -277,11 +288,12 @@ const Domains = () => {
                   <Label htmlFor="domain" className="text-sm font-medium">Dominio</Label>
                   <Input
                     id="domain"
-                    placeholder="mi-proyecto-test.com"
+                    placeholder="ejemplo.com o https://ejemplo.com"
                     value={newDomain.domain}
                     onChange={(e) => setNewDomain(prev => ({ ...prev, domain: e.target.value }))}
                     className="h-10"
                   />
+                  <p className="text-xs text-muted-foreground">Puedes incluir https:// si quieres, se eliminará automáticamente</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="project" className="text-sm font-medium">Proyecto</Label>
