@@ -7,8 +7,8 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // Supabase configuration
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || 'https://metzjfocvkelucinstul.supabase.co';
+const supabaseKey = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ldHpqZm9jdmtlbHVjaW5zdHVsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzQxMzAxOSwiZXhwIjoyMDcyOTg5MDE5fQ.TAlKZI-3YcL6rHQzO-8dZqAhWEg7t5uPzpGlBhPJgpE';
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('SUPABASE_URL and SUPABASE_KEY must be set in environment variables');
