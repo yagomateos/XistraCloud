@@ -769,50 +769,79 @@ app.get('/domains', async (req, res) => {
 // Add new domain
 app.post('/domains', async (req, res) => {
   try {
-    console.log('Creating domain with body:', req.body);
+    console.log('🚀 === DOMAIN CREATION STARTED ===');
+    console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
+    
     const { domain, project_id, projectId } = req.body;
     
     // Usar project_id o projectId (compatibilidad)
     const projectIdValue = project_id || projectId;
+    
+    console.log('🔍 Extracted values:');
+    console.log('  - domain:', domain);
+    console.log('  - project_id:', project_id);
+    console.log('  - projectId:', projectId);
+    console.log('  - projectIdValue:', projectIdValue);
 
     if (!domain || !projectIdValue) {
-      console.log('Missing required fields:', { domain, project_id, projectId, projectIdValue });
+      console.log('❌ Missing required fields:', { domain, project_id, projectId, projectIdValue });
       return res.status(400).json({ error: 'Domain and project_id are required' });
     }
 
     // Validate domain format - more flexible regex
+    console.log('🔍 Validating domain format...');
     const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     if (!domain || domain.length < 1 || domain.length > 253 || !domainRegex.test(domain)) {
-      console.log('Invalid domain:', domain, 'Test result:', domainRegex.test(domain));
+      console.log('❌ Invalid domain:', domain, 'Test result:', domainRegex.test(domain));
       return res.status(400).json({ error: 'Invalid domain format. Please use a valid domain like example.com' });
     }
+    console.log('✅ Domain format is valid');
 
     // Check if domain already exists
-    const { data: existingDomain } = await supabase
+    console.log('🔍 Checking if domain already exists...');
+    const { data: existingDomain, error: checkError } = await supabase
       .from('domains')
       .select('id')
       .eq('domain', domain)
       .single();
 
-    if (existingDomain) {
-      return res.status(409).json({ error: 'Domain already exists' });
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows found
+      console.error('❌ Error checking existing domain:', checkError);
+      return res.status(500).json({ error: 'Database error checking existing domain' });
     }
 
+    if (existingDomain) {
+      console.log('❌ Domain already exists:', existingDomain.id);
+      return res.status(409).json({ error: 'Domain already exists' });
+    }
+    console.log('✅ Domain does not exist yet');
+
     // Verify project exists
-    const { data: project } = await supabase
+    console.log('🔍 Verifying project exists...');
+    const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('id, name')
       .eq('id', projectIdValue)
       .single();
 
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
+    if (projectError) {
+      console.error('❌ Error finding project:', projectError);
+      return res.status(500).json({ error: 'Database error finding project' });
     }
 
+    if (!project) {
+      console.log('❌ Project not found:', projectIdValue);
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    console.log('✅ Project found:', project.name, '(', project.id, ')');
+
     // Generate verification token
+    console.log('🔍 Generating verification token...');
     const verificationToken = Math.random().toString(36).substring(2, 22);
+    console.log('✅ Verification token generated:', verificationToken);
 
     // Create DNS records configuration
+    console.log('🔍 Creating DNS records configuration...');
     const dnsRecords = {
       cname: {
         name: domain,
@@ -823,6 +852,19 @@ app.post('/domains', async (req, res) => {
         value: `xistracloud-verification=${verificationToken}`
       }
     };
+    console.log('✅ DNS records created:', JSON.stringify(dnsRecords, null, 2));
+
+    // Insert domain
+    console.log('🔍 Inserting domain into database...');
+    const insertData = {
+      domain,
+      project_id: projectIdValue,
+      status: 'pending',
+      ssl_enabled: false,
+      dns_records: dnsRecords,
+      verification_token: verificationToken
+    };
+    console.log('📤 Insert data:', JSON.stringify(insertData, null, 2));
 
     // Insert domain
     const { data: newDomain, error } = await supabase
@@ -839,12 +881,20 @@ app.post('/domains', async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Error creating domain:', error);
-      return res.status(500).json({ error: 'Failed to create domain' });
+      console.error('❌ Database insert error:', JSON.stringify(error, null, 2));
+      console.error('❌ Error details:');
+      console.error('   - Code:', error.code);
+      console.error('   - Message:', error.message);
+      console.error('   - Details:', error.details);
+      console.error('   - Hint:', error.hint);
+      return res.status(500).json({ error: 'Failed to create domain', dbError: error.message });
     }
+    
+    console.log('✅ Domain inserted successfully:', JSON.stringify(newDomain, null, 2));
 
     // Return domain with DNS instructions
-    res.status(201).json({
+    console.log('🎉 Returning success response...');
+    const responseData = {
       id: newDomain.id,
       domain: newDomain.domain,
       projectName: project.name,
@@ -854,11 +904,17 @@ app.post('/domains', async (req, res) => {
       dnsRecords: newDomain.dns_records,
       verificationToken: newDomain.verification_token,
       createdAt: newDomain.created_at
-    });
+    };
+    console.log('📤 Response data:', JSON.stringify(responseData, null, 2));
+    
+    res.status(201).json(responseData);
+    console.log('🚀 === DOMAIN CREATION COMPLETED ===');
 
   } catch (error: any) {
-    console.error('Error in POST /domains endpoint:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ === DOMAIN CREATION FAILED ===');
+    console.error('❌ Unexpected error in POST /domains endpoint:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
