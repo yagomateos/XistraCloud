@@ -18,6 +18,7 @@ import Pricing from "@/pages/Pricing";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import EmailConfirmed from "@/pages/EmailConfirmed";
 import NotFound from "@/pages/NotFound";
 // import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/email-confirmed" element={<EmailConfirmed />} />
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="projects" element={<Projects />} />
