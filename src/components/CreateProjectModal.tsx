@@ -52,7 +52,8 @@ const CreateProjectModal = ({ open, onOpenChange, onCreateProject }: CreateProje
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:3001/deploy', {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
+      const response = await fetch(`${API_URL}/deploy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
