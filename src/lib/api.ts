@@ -542,13 +542,31 @@ export const createDomain = async (domainData: { domain: string; project_id: str
 
   try {
     console.log('🌐 Creating domain via API:', `${API_URL}/domains`);
+    console.log('🔧 API_URL value:', API_URL);
+    console.log('⚙️ USE_MOCK_DATA:', USE_MOCK_DATA);
+    
+    // Enviar ambos formatos para compatibilidad con backend
+    const requestBody = {
+      domain: domainData.domain,
+      project_id: domainData.project_id,
+      projectId: domainData.project_id  // Duplicar para compatibilidad
+    };
+    
+    console.log('📤 Request body:', JSON.stringify(requestBody, null, 2));
+    
     const response = await fetch(`${API_URL}/domains`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(domainData)
+      body: JSON.stringify(requestBody)
     });
+    
+    console.log('📡 Response status:', response.status, response.statusText);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ Server response:', response.status, response.statusText, errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
     const data = await response.json();
     console.log('✅ Successfully created domain via API');

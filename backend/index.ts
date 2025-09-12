@@ -8,6 +8,8 @@ import os from 'os';
 import { exec } from 'child_process';
 import util from 'util';
 
+// Version: 2025-01-27 - Fixed domain creation compatibility
+
 const execAsync = util.promisify(exec);
 
 const app = express();
