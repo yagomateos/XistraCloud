@@ -23,7 +23,7 @@ app.use(express.json());
 
 // Root endpoint
 app.get('/', (req, res) => {
-  res.send('Hello from XistraCloud backend!');
+  res.send('Hello from XistraCloud backend! v2.0 - Delete projects enabled');
 });
 
 // Projects endpoints

@@ -52,13 +52,13 @@ const Settings: React.FC = () => {
   // Use the new user data hook
   const { userData, userPlan, updateProfile, updateAvatar, loading } = useUserData();
 
-  // Estado del usuario desde el hook
+  // Estado del usuario desde el hook con valores por defecto seguros
   const [localUserData, setLocalUserData] = useState<UserData>(() => ({
-    name: userData.name || '',
-    email: userData.email || '',
-    avatar: userData.avatar || '',
-    plan: userPlan,
-    joinedDate: userData.joinedAt ? new Date(userData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' }) : ''
+    name: userData?.name || '',
+    email: userData?.email || '',
+    avatar: userData?.avatar || '',
+    plan: userPlan || 'free',
+    joinedDate: userData?.joinedAt ? new Date(userData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' }) : ''
   }));
 
   // Estados para los modales
@@ -67,14 +67,14 @@ const Settings: React.FC = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // Estados para formularios
+  // Estados para formularios con valores seguros
   const [profileForm, setProfileForm] = useState(() => ({
-    name: userData.name || '',
-    email: userData.email || '',
-    bio: userData.bio || '',
-    location: userData.location || '',
-    company: userData.company || '',
-    website: userData.website || ''
+    name: userData?.name || '',
+    email: userData?.email || '',
+    bio: userData?.bio || '',
+    location: userData?.location || '',
+    company: userData?.company || '',
+    website: userData?.website || ''
   }));
 
   const [passwordForm, setPasswordForm] = useState({
@@ -99,22 +99,24 @@ const Settings: React.FC = () => {
 
   // Update local data when userData changes
   useEffect(() => {
-    setLocalUserData({
-      name: userData.name || '',
-      email: userData.email || '',
-      avatar: userData.avatar || '',
-      plan: userPlan,
-      joinedDate: userData.joinedAt ? new Date(userData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' }) : ''
-    });
-    
-    setProfileForm({
-      name: userData.name || '',
-      email: userData.email || '',
-      bio: userData.bio || '',
-      location: userData.location || '',
-      company: userData.company || '',
-      website: userData.website || ''
-    });
+    if (userData) {
+      setLocalUserData({
+        name: userData.name || '',
+        email: userData.email || '',
+        avatar: userData.avatar || '',
+        plan: userPlan || 'free',
+        joinedDate: userData.joinedAt ? new Date(userData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' }) : ''
+      });
+      
+      setProfileForm({
+        name: userData.name || '',
+        email: userData.email || '',
+        bio: userData.bio || '',
+        location: userData.location || '',
+        company: userData.company || '',
+        website: userData.website || ''
+      });
+    }
   }, [userData, userPlan]);
 
   // Estado para archivo de avatar
@@ -226,6 +228,23 @@ const Settings: React.FC = () => {
     toast.success('Proceso de eliminación iniciado. Recibirás un email de confirmación.');
     setIsDeleteModalOpen(false);
   };
+
+  // Mostrar loading mientras se cargan los datos del usuario
+  if (loading || !userData) {
+    return (
+      <div className="space-y-4 md:space-y-6 pt-6 px-4 pb-4 lg:p-6">
+        <div>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Configuración</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Cargando configuración...
+          </p>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 md:space-y-6 pt-6 px-4 pb-4 lg:p-6">
