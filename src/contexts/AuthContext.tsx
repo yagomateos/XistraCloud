@@ -31,7 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         userStore.loadUserData(session.user.id)
       } else {
-        userStore.clearUserData()
+        // En desarrollo, cargar datos mock automáticamente
+        if (import.meta.env.DEV) {
+          console.log('🔄 Loading mock user data for development');
+          userStore.loadUserData('mock-user-123');
+        } else {
+          userStore.clearUserData()
+        }
       }
     })
 
@@ -46,7 +52,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (event === 'SIGNED_IN' && session?.user) {
           await userStore.loadUserData(session.user.id)
         } else if (event === 'SIGNED_OUT') {
-          userStore.clearUserData()
+          // En desarrollo, mantener datos mock después del signOut
+          if (import.meta.env.DEV) {
+            console.log('🔄 Keeping mock user data after signOut in development');
+            userStore.loadUserData('mock-user-123');
+          } else {
+            userStore.clearUserData()
+          }
         }
       }
     )

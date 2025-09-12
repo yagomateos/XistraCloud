@@ -7,7 +7,7 @@ import CreateProjectModal from '@/components/CreateProjectModal';
 import { LimitReached } from '@/components/protected/plan-protected-route';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProjects, deleteProject, Project } from '@/lib/api';
+import { getProjects, deleteProject, redeployProject, Project } from '@/lib/api';
 import { useUserData } from '@/hooks/useUserData';
 import { checkProjectLimit } from '@/lib/plans';
 import { showPlanLimitToast } from '@/lib/toast-helpers';
@@ -37,6 +37,23 @@ const Projects = () => {
     onError: (error) => {
       console.error('Error deleting project:', error);
       toast.error('Error al eliminar el proyecto');
+    },
+  });
+
+  // Redeploy project mutation
+  const redeployProjectMutation = useMutation({
+    mutationFn: redeployProject,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['deployments'] }); // También actualizar deployments
+      toast.success('Nuevo despliegue iniciado');
+      setTimeout(() => {
+        toast.success('Despliegue completado exitosamente');
+      }, 3000);
+    },
+    onError: (error) => {
+      console.error('Error redeploying project:', error);
+      toast.error('Error al crear nuevo despliegue');
     },
   });
 
@@ -72,8 +89,7 @@ const Projects = () => {
   };
 
   const handleDeploy = (projectId: string) => {
-    // This should be implemented to call the backend
-    console.log('Redeploying project:', projectId);
+    redeployProjectMutation.mutate(projectId);
   };
 
   const handleDeleteProject = async (projectId: string) => {
