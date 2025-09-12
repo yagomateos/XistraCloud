@@ -6,23 +6,38 @@ import ProjectCard from '@/components/ProjectCard';
 import CreateProjectModal from '@/components/CreateProjectModal';
 import { LimitReached } from '@/components/protected/plan-protected-route';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { getProjects, Project } from '@/lib/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getProjects, deleteProject, Project } from '@/lib/api';
 import { useUserData } from '@/hooks/useUserData';
 import { checkProjectLimit } from '@/lib/plans';
 import { showPlanLimitToast } from '@/lib/toast-helpers';
+import { toast } from 'sonner';
 
 const Projects = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { userData, userPlan } = useUserData();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Use React Query with our API function that has mock data support
   const { data: projects = [], isLoading, error, refetch } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
     refetchInterval: 10000, // Refetch every 10 seconds
+  });
+
+  // Delete project mutation
+  const deleteProjectMutation = useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('Proyecto eliminado exitosamente');
+    },
+    onError: (error) => {
+      console.error('Error deleting project:', error);
+      toast.error('Error al eliminar el proyecto');
+    },
   });
 
   if (isLoading) {
@@ -59,6 +74,12 @@ const Projects = () => {
   const handleDeploy = (projectId: string) => {
     // This should be implemented to call the backend
     console.log('Redeploying project:', projectId);
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) {
+      deleteProjectMutation.mutate(projectId);
+    }
   };
 
   return (
@@ -151,6 +172,7 @@ const Projects = () => {
               project={project}
               onViewDetails={handleViewDetails}
               onDeploy={handleDeploy}
+              onDelete={handleDeleteProject}
             />
           ))}
         </div>

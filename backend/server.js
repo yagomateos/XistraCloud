@@ -118,6 +118,47 @@ app.post('/projects', async (req, res) => {
   }
 });
 
+app.delete('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // First check if the project exists and belongs to the user
+    const { data: projectData, error: projectError } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', id)
+      .single();
+    
+    if (projectError || !projectData) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    // Delete associated domains first (due to foreign key constraint)
+    const { error: domainsError } = await supabase
+      .from('domains')
+      .delete()
+      .eq('project_id', id);
+    
+    if (domainsError) {
+      console.error('Error deleting associated domains:', domainsError);
+      return res.status(500).json({ error: 'Failed to delete associated domains' });
+    }
+    
+    // Then delete the project
+    const { data, error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id)
+      .select();
+    
+    if (error) throw error;
+    res.json({ message: 'Project deleted successfully', id });
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
 // Domains endpoints
 app.get('/domains', async (req, res) => {
   try {
