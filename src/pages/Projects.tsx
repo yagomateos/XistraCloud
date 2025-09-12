@@ -1,16 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ProjectCard from '@/components/ProjectCard';
 import CreateProjectModal from '@/components/CreateProjectModal';
+import { LimitReached } from '@/components/protected/plan-protected-route';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getProjects, Project } from '@/lib/api';
+import { useUserData } from '@/hooks/useUserData';
+import { checkProjectLimit } from '@/lib/plans';
+import { showPlanLimitToast } from '@/lib/toast-helpers';
 
 const Projects = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const { userData, userPlan } = useUserData();
   const navigate = useNavigate();
 
   // Use React Query with our API function that has mock data support
@@ -66,13 +71,41 @@ const Projects = () => {
           </p>
         </div>
         <Button 
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={() => {
+            if (userData && userPlan) {
+              const canCreate = showPlanLimitToast.projectLimit(userPlan, filteredProjects.length);
+              if (canCreate) {
+                setIsCreateModalOpen(true);
+              }
+            } else {
+              setIsCreateModalOpen(true);
+            }
+          }}
           className="w-full lg:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Proyecto
         </Button>
       </div>
+
+      {/* Mostrar límite alcanzado si es necesario */}
+      {userData && userPlan && (() => {
+        const projectLimit = checkProjectLimit(userPlan, filteredProjects.length);
+        return !projectLimit.canCreate ? (
+          <div className="mb-6">
+            <LimitReached
+              title="Límite de Proyectos Alcanzado"
+              description={`Has alcanzado el límite de ${projectLimit.limit} proyectos en tu plan ${userData.plan}.`}
+              currentCount={filteredProjects.length}
+              limit={projectLimit.limit}
+              upgradeAction={() => {
+                // TODO: Navegar a la página de planes
+                console.log('Navegar a actualización de plan');
+              }}
+            />
+          </div>
+        ) : null;
+      })()}
 
       <div className="mb-6">
         <div className="relative w-full lg:max-w-sm">

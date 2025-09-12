@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User, Session } from '@supabase/supabase-js'
+import { userStore } from '@/lib/user-store'
 
 interface AuthContextType {
   user: User | null
@@ -25,6 +26,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
+      
+      // Cargar datos del usuario si está autenticado
+      if (session?.user) {
+        userStore.loadUserData(session.user.id)
+      } else {
+        userStore.clearUserData()
+      }
     })
 
     // Listen for auth changes
@@ -33,6 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
+        
+        // Manejar cambios de autenticación
+        if (event === 'SIGNED_IN' && session?.user) {
+          await userStore.loadUserData(session.user.id)
+        } else if (event === 'SIGNED_OUT') {
+          userStore.clearUserData()
+        }
       }
     )
 
