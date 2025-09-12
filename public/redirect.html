@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XistraCloud - Redirigiendo...</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-left-color: #fff;
+            animation: spin 1s ease infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h1 {
+            margin: 0 0 0.5rem;
+            font-size: 1.5rem;
+        }
+        p {
+            margin: 0;
+            opacity: 0.8;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <h1>¡Email confirmado!</h1>
+        <p>Redirigiendo a XistraCloud...</p>
+    </div>
+
+    <script>
+        // Get URL parameters from hash
+        const urlParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = urlParams.get('access_token');
+        const refreshToken = urlParams.get('refresh_token');
+        const type = urlParams.get('type');
+        
+        // Production URL
+        const productionUrl = 'https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app';
+        
+        if (accessToken && refreshToken && type) {
+            // Redirect to production with the same parameters
+            const redirectUrl = `${productionUrl}/email-confirmed?access_token=${accessToken}&refresh_token=${refreshToken}&type=${type}`;
+            console.log('Redirecting to:', redirectUrl);
+            window.location.href = redirectUrl;
+        } else {
+            // Just redirect to production
+            setTimeout(() => {
+                window.location.href = productionUrl;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

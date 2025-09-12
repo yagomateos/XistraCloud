@@ -5,45 +5,60 @@
 Para que los usuarios sean redirigidos correctamente después de confirmar su email, necesitas configurar estas URLs en tu panel de Supabase:
 
 ### 1. **Ir a Supabase Dashboard**
-- Ve a https://supabase.com/dashboard
-- Selecciona tu proyecto: **metzjfocvkelucinstul**
+- Ve a https://supabase.com/dashboard/project/metzjfocvkelucinstul/auth/url-configuration
+- O usa el enlace directo que abrimos arriba
 
-### 2. **Configurar Authentication URLs**
-Ve a: `Authentication` → `URL Configuration`
-
-### 3. **Agregar Site URL**
+### 2. **Configurar Site URL**
 ```
-Site URL: https://xistracloud-f4ui2wq4e-yagomateos-projects.vercel.app
+https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app
 ```
 
-### 4. **Configurar Redirect URLs**
-Agregar en "Redirect URLs":
+### 3. **Configurar Redirect URLs**
+Agregar estas líneas en "Redirect URLs" (una por línea):
 ```
-https://xistracloud-f4ui2wq4e-yagomateos-projects.vercel.app/email-confirmed
-https://xistracloud-f4ui2wq4e-yagomateos-projects.vercel.app/dashboard
-https://xistracloud-f4ui2wq4e-yagomateos-projects.vercel.app/**
+https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app/email-confirmed
+https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app/dashboard  
+https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app/login
+https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app/**
+http://localhost:3000/redirect.html
 ```
 
-### 5. **Email Templates (Opcional)**
+### 4. **Email Templates (Opcional)**
 Si quieres personalizar el email de confirmación, ve a:
 `Authentication` → `Email Templates` → `Confirm signup`
 
 Cambia la URL de confirmación a:
 ```
-{{ .SiteURL }}/email-confirmed?token={{ .Token }}&type=signup&redirect_to={{ .RedirectTo }}
+{{ .SiteURL }}/email-confirmed#access_token={{ .Token }}&type=signup&redirect_to={{ .RedirectTo }}
 ```
 
-## 🔄 Resultado
+## 🔄 **Solución Temporal**
+
+Mientras configuras las URLs en Supabase, hemos creado:
+
+### `redirect.html` 
+- Página que maneja automáticamente las redirecciones desde localhost:3000
+- Captura los parámetros de confirmación
+- Redirige automáticamente a producción con los tokens
+
+### `EmailConfirmed.tsx` mejorado
+- Maneja parámetros tanto de query string como de hash
+- Mejor logging para debugging
+- Limpia la URL después de procesar los tokens
+
+## 🚀 **Resultado**
 
 Después de esta configuración:
 1. ✅ Usuario se registra
 2. ✅ Recibe email de confirmación  
 3. ✅ Hace clic en el enlace
-4. ✅ Es redirigido a `/email-confirmed`
+4. ✅ Es redirigido a la URL correcta (production)
 5. ✅ Ve mensaje de "Email confirmado exitosamente"
 6. ✅ Es redirigido automáticamente al Dashboard
 
-## 🚨 Importante
+## 🚨 **ACCIÓN REQUERIDA**
 
-- Reemplaza las URLs con tu dominio final cuando tengas un dominio personalizado
-- Para desarrollo local, también agregar: `http://localhost:8080/email-confirmed`
+**DEBES configurar las URLs en Supabase AHORA:**
+1. Ve a: https://supabase.com/dashboard/project/metzjfocvkelucinstul/auth/url-configuration
+2. Cambiar Site URL a: `https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app`
+3. Agregar las Redirect URLs listadas arriba
