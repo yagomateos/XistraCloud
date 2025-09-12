@@ -34,7 +34,7 @@ app.post('/login', (req, res) => {
   }
 });
 
-import { supabase } from './lib/supabase';
+import { supabase, supabaseAdmin } from './lib/supabase';
 
 app.get('/projects', async (req, res) => {
   try {
@@ -62,7 +62,7 @@ app.post('/projects', async (req, res) => {
       container_id: null
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('projects')
       .insert([projectData])
       .select();
@@ -81,7 +81,7 @@ app.delete('/projects/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('projects')
       .delete()
       .eq('id', id);
@@ -101,7 +101,7 @@ app.post('/projects/:id/redeploy', async (req, res) => {
     const { id } = req.params;
     
     // Obtener el proyecto original
-    const { data: project, error: fetchError } = await supabase
+    const { data: project, error: fetchError } = await supabaseAdmin
       .from('projects')
       .select('*')
       .eq('id', id)
@@ -124,7 +124,7 @@ app.post('/projects/:id/redeploy', async (req, res) => {
       container_id: null
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('projects')
       .insert([newDeployment])
       .select();
@@ -133,7 +133,7 @@ app.post('/projects/:id/redeploy', async (req, res) => {
 
     // Simular tiempo de despliegue y luego actualizar a 'deployed'
     setTimeout(async () => {
-      await supabase
+      await supabaseAdmin
         .from('projects')
         .update({ status: 'deployed' })
         .eq('id', data[0].id);
