@@ -767,6 +767,48 @@ app.get('/domains', async (req, res) => {
 });
 
 // Add new domain
+// Debug endpoint for testing database connection
+app.post('/debug/domains', async (req, res) => {
+  try {
+    console.log('🔍 DEBUG: Testing domain creation');
+    console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
+    console.log('🔧 Environment check:');
+    console.log('  - SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
+    console.log('  - SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing');
+    
+    // Test database connection
+    const { data: testConnection, error: connectionError } = await supabase
+      .from('projects')
+      .select('id, name')
+      .limit(1);
+      
+    if (connectionError) {
+      console.error('❌ Database connection failed:', connectionError);
+      return res.status(500).json({ 
+        error: 'Database connection failed', 
+        details: connectionError.message 
+      });
+    }
+    
+    console.log('✅ Database connection successful');
+    console.log('📊 Sample project:', testConnection?.[0]?.name);
+    
+    res.json({
+      status: 'debug_success',
+      database_connection: 'ok',
+      sample_project: testConnection?.[0],
+      environment_vars: {
+        supabase_url: !!process.env.SUPABASE_URL,
+        service_key: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Debug endpoint error:', error);
+    res.status(500).json({ error: 'Debug failed', details: error.message });
+  }
+});
+
 app.post('/domains', async (req, res) => {
   try {
     console.log('🚀 === DOMAIN CREATION STARTED ===');
