@@ -16,10 +16,26 @@ const EmailConfirmed = () => {
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       try {
-        // Get URL parameters
-        const accessToken = searchParams.get('access_token');
-        const refreshToken = searchParams.get('refresh_token');
-        const type = searchParams.get('type');
+        // Get URL parameters - handle both hash and query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        // Try to get tokens from either location
+        const accessToken = searchParams.get('access_token') || 
+                           urlParams.get('access_token') || 
+                           hashParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token') || 
+                           urlParams.get('refresh_token') || 
+                           hashParams.get('refresh_token');
+        const type = searchParams.get('type') || 
+                    urlParams.get('type') || 
+                    hashParams.get('type');
+
+        console.log('Email confirmation params:', { 
+          accessToken: !!accessToken, 
+          refreshToken: !!refreshToken, 
+          type 
+        });
 
         if (type === 'signup' && accessToken && refreshToken) {
           // Set the session with the tokens from the URL
@@ -38,6 +54,9 @@ const EmailConfirmed = () => {
           if (data.user) {
             setStatus('success');
             setMessage('¡Tu email ha sido confirmado exitosamente! Ya puedes acceder a XistraCloud.');
+            
+            // Clear URL hash/query params
+            window.history.replaceState({}, document.title, window.location.pathname);
             
             // Redirect to dashboard after 3 seconds
             setTimeout(() => {
