@@ -1,7 +1,7 @@
 // Store para manejar datos del usuario de manera centralizada
 import { supabase } from './supabase';
 
-interface UserData {
+export interface UserData {
   name: string;
   email: string;
   avatar: string;
@@ -14,10 +14,25 @@ interface UserData {
   userId?: string;
 }
 
+// Datos mock para desarrollo
+const MOCK_USER_DATA: UserData = {
+  name: 'Yago Mateos',
+  email: 'yago@xistracloud.com',
+  avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+  bio: 'Desarrollador Full Stack especializado en aplicaciones cloud',
+  location: 'Madrid, España',
+  company: 'XistraCloud',
+  website: 'https://xistracloud.com',
+  joinedAt: new Date(Date.now() - 86400000 * 30).toISOString(), // 30 días atrás
+  plan: 'pro',
+  userId: 'mock-user-123'
+};
+
 class UserStore {
   private static instance: UserStore;
   private userData: UserData | null = null;
   private currentUserId: string | null = null;
+  private useMockData: boolean = true; // Temporal mientras arreglamos backend
 
   private constructor() {
     // No cargar datos automáticamente - se cargarán cuando se autentique el usuario
@@ -51,6 +66,18 @@ class UserStore {
     }
 
     this.currentUserId = userId;
+
+    // Si estamos en modo mock, usar datos mock
+    if (this.useMockData) {
+      console.log('🔄 Loading mock user data');
+      this.userData = { ...MOCK_USER_DATA, userId };
+      
+      // Disparar evento de carga
+      window.dispatchEvent(new CustomEvent('user-data-loaded', { 
+        detail: this.userData 
+      }));
+      return;
+    }
 
     try {
       // Intentar cargar desde la base de datos primero
@@ -184,4 +211,3 @@ class UserStore {
 }
 
 export const userStore = UserStore.getInstance();
-export type { UserData };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, RotateCcw, ExternalLink, Calendar, Trash2 } from 'lucide-react';
-import { getProjects } from '@/lib/api';
+import { getProjects, deleteProject, redeployProject } from '@/lib/api';
+import { toast } from 'sonner';
 
 // Updated interface to match backend data
 interface Deployment {
@@ -28,6 +29,7 @@ const Deployments = () => {
   const [buildingProjects, setBuildingProjects] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const queryClient = useQueryClient();
 
   // Use React Query with our API function that has mock data support
   const { data: deployments = [], isLoading, error, refetch } = useQuery({
@@ -36,79 +38,54 @@ const Deployments = () => {
     refetchInterval: 10000, // Refetch every 10 seconds
   });
 
+  // Delete deployment mutation
+  const deleteDeploymentMutation = useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deployments'] });
+      toast.success('Proyecto eliminado exitosamente');
+    },
+    onError: (error) => {
+      console.error('Error deleting deployment:', error);
+      toast.error('Error al eliminar el proyecto');
+    },
+  });
+
+  // Redeploy mutation
+  const redeployMutation = useMutation({
+    mutationFn: redeployProject,
+    onMutate: (projectId) => {
+      setBuildingProjects(prev => [...prev, projectId]);
+      toast.success('Creando nuevo despliegue...');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deployments'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] }); // También actualizar proyectos
+      setTimeout(() => {
+        toast.success('Nuevo despliegue completado exitosamente');
+      }, 3000);
+    },
+    onError: (error) => {
+      console.error('Error redeploying:', error);
+      toast.error('Error al crear nuevo despliegue');
+    },
+    onSettled: (data, error, projectId) => {
+      setBuildingProjects(prev => prev.filter(id => id !== projectId));
+    }
+  });
+
   // Sort deployments by created_at
   const sortedDeployments = deployments.sort((a, b) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
   const handleRedeploy = async (deployment: Deployment) => {
-    setBuildingProjects(prev => [...prev, deployment.id]);
-
-    try {
-      const response = await fetch('http://localhost:3001/deploy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          gitUrl: deployment.repository,
-          name: deployment.name,
-          framework: deployment.framework,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Redeployment failed');
-      }
-      
-      console.log('Redeployment request sent successfully. Starting polling for status update.');
-
-      // --- Polling Mechanism ---
-      const pollStatus = async () => {
-        // Refetch the latest list of deployments
-        await refetch(); 
-
-        // Find the specific deployment we are interested in
-        const currentDeployment = deployments.find(d => d.id === deployment.id);
-
-        // If the deployment is not found or its status is not 'building' (or similar), stop polling
-        if (currentDeployment && (currentDeployment.status === 'building' || currentDeployment.status === 'in progress')) {
-            setTimeout(pollStatus, 3000); // Poll every 3 seconds
-        } else {
-            // Status has changed or deployment not found, remove from buildingProjects
-            setBuildingProjects(prev => prev.filter(id => id !== deployment.id)); 
-        }
-      };
-
-      // Start polling after a short delay to allow backend to update status
-      setTimeout(pollStatus, 1000); 
-
-    } catch (error: any) {
-      console.error('Error redeploying:', error);
-      alert('El redespliegue ha fallado.');
-      setBuildingProjects(prev => prev.filter(id => id !== deployment.id)); // Remove yellow tag on error
-    }
+    redeployMutation.mutate(deployment.id);
   };
 
   const handleDelete = async (deploymentId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción es irreversible y eliminará el contenedor asociado.')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:3001/projects/${deploymentId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete project');
-      }
-
-      alert('Proyecto eliminado con éxito.');
-      refetch(); // Refresh the list immediately
-    } catch (error: any) {
-      console.error('Error deleting project:', error);
-      alert('Error al eliminar el proyecto.');
+    if (window.confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) {
+      deleteDeploymentMutation.mutate(deploymentId);
     }
   };
 
@@ -127,15 +104,20 @@ const Deployments = () => {
   };
 
   const getStatusText = (status: string) => {
+    console.log('📊 Getting status text for:', status);
     switch (status.toLowerCase()) {
       case 'deployed':
       case 'success':
+        console.log('📊 Returning: Exitoso');
         return 'Exitoso';
       case 'building':
+        console.log('📊 Returning: En progreso');
         return 'En progreso';
       case 'failed':
+        console.log('📊 Returning: Falló');
         return 'Falló';
       default:
+        console.log('📊 Returning default:', status);
         return status;
     }
   };

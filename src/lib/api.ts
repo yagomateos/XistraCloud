@@ -62,7 +62,7 @@ export interface DashboardStats {
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
-const USE_MOCK_DATA = true; // Temporarily use mocks while fixing Supabase connectivity
+const USE_MOCK_DATA = false; // ✅ Fixed! Now using REAL Supabase data
 
 // Debug logs
 console.log('🔧 DEBUG - API Configuration:');
@@ -70,8 +70,8 @@ console.log('  API_URL:', API_URL);
 console.log('  VITE_USE_MOCK_DATA:', import.meta.env.VITE_USE_MOCK_DATA);
 console.log('  USE_MOCK_DATA:', USE_MOCK_DATA);
 
-// Mock data for fallback
-const MOCK_PROJECTS: Project[] = [
+// Mock data for fallback (mutable para permitir eliminaciones)
+let MOCK_PROJECTS: Project[] = [
   {
     id: 'eeea1aeb-1cb8-4559-976c-a0816f75feca',
     name: 'example-voting-app',
@@ -427,8 +427,18 @@ export const getProjects = async (): Promise<Project[]> => {
 
 export const deleteProject = async (projectId: string): Promise<void> => {
   if (USE_MOCK_DATA) {
-    console.log('🔄 Using mock data for delete project');
+    console.log('🔄 Using mock data for delete project:', projectId);
     await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Buscar el proyecto en los datos mock
+    const projectIndex = MOCK_PROJECTS.findIndex(p => p.id === projectId);
+    if (projectIndex === -1) {
+      throw new Error('Proyecto no encontrado');
+    }
+    
+    // Eliminar el proyecto de los datos mock
+    MOCK_PROJECTS.splice(projectIndex, 1);
+    console.log('✅ Proyecto eliminado de datos mock');
     return;
   }
 
@@ -599,6 +609,74 @@ export const verifyDomain = async (domainId: string): Promise<Domain> => {
     return data;
   } catch (error) {
     console.error('❌ Error verifying domain via API:', error);
+    throw error;
+  }
+};
+
+// Redeploy project function
+export const redeployProject = async (projectId: string): Promise<void> => {
+  if (USE_MOCK_DATA) {
+    console.log('🔄 Using mock data for redeploy project:', projectId);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simular tiempo de despliegue inicial
+    
+    // Encontrar el proyecto original
+    const originalProject = MOCK_PROJECTS.find(p => p.id === projectId);
+    if (!originalProject) {
+      throw new Error('Proyecto no encontrado');
+    }
+
+    // Crear un nuevo deployment (copia del proyecto con nueva fecha y ID)
+    const newDeployment: Project = {
+      id: `redeploy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: originalProject.name,
+      repository: originalProject.repository,
+      framework: originalProject.framework,
+      status: 'building',
+      url: originalProject.url,
+      user_id: originalProject.user_id,
+      created_at: new Date().toISOString(),
+      container_id: originalProject.container_id,
+      deploy_type: originalProject.deploy_type,
+      compose_path: originalProject.compose_path,
+      lastDeploy: 'Ahora mismo'
+    };
+
+    console.log('🔄 Creating new deployment with status:', newDeployment.status);
+
+    // Agregar el nuevo deployment al inicio de la lista
+    MOCK_PROJECTS.unshift(newDeployment);
+    
+    // Después de 3 segundos, cambiar a 'deployed' (exitoso) - SIEMPRE exitoso en mock
+    setTimeout(() => {
+      const deploymentIndex = MOCK_PROJECTS.findIndex(p => p.id === newDeployment.id);
+      if (deploymentIndex !== -1) {
+        // Forzar estado deployed para que siempre muestre "Exitoso"
+        MOCK_PROJECTS[deploymentIndex].status = 'deployed';
+        MOCK_PROJECTS[deploymentIndex].lastDeploy = new Date().toLocaleDateString('es-ES', {
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        console.log('✅ Deployment status FORCED to deployed:', MOCK_PROJECTS[deploymentIndex].status);
+      }
+    }, 3000);
+    
+    console.log('✅ New deployment created successfully (mock)');
+    return;
+  }
+
+  try {
+    console.log('🌐 Redeploying project via API:', `${API_URL}/projects/${projectId}/redeploy`);
+    const response = await fetch(`${API_URL}/projects/${projectId}/redeploy`, {
+      method: 'POST'
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    console.log('✅ Successfully redeployed project via API');
+  } catch (error) {
+    console.error('❌ Error redeploying project via API:', error);
     throw error;
   }
 };
