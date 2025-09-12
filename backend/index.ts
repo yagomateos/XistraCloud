@@ -788,9 +788,9 @@ app.post('/domains', async (req, res) => {
       return res.status(400).json({ error: 'Domain and project_id are required' });
     }
 
-    // Validate domain format - more flexible regex
+    // Validate domain format - strict regex that requires valid TLD
     console.log('🔍 Validating domain format...');
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
     if (!domain || domain.length < 1 || domain.length > 253 || !domainRegex.test(domain)) {
       console.log('❌ Invalid domain:', domain, 'Test result:', domainRegex.test(domain));
       return res.status(400).json({ error: 'Invalid domain format. Please use a valid domain like example.com' });
