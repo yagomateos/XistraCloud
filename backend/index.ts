@@ -47,6 +47,106 @@ app.get('/projects', async (req, res) => {
   }
 });
 
+app.post('/projects', async (req, res) => {
+  try {
+    const { name, repository, framework, deploy_type, compose_path } = req.body;
+    
+    const projectData = {
+      name,
+      repository,
+      framework,
+      status: 'building',
+      deploy_type: deploy_type || 'git',
+      compose_path: compose_path || null,
+      url: null,
+      container_id: null
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([projectData])
+      .select();
+
+    if (error) throw error;
+    
+    console.log('✅ Project created successfully:', data[0]);
+    res.status(201).json(data[0]);
+  } catch (error) {
+    console.error('❌ Error creating project:', error);
+    res.status(500).json({ error: 'Failed to create project' });
+  }
+});
+
+app.delete('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    
+    console.log('✅ Project deleted successfully:', id);
+    res.status(200).json({ message: 'Project deleted successfully' });
+  } catch (error) {
+    console.error('❌ Error deleting project:', error);
+    res.status(500).json({ error: 'Failed to delete project' });
+  }
+});
+
+app.post('/projects/:id/redeploy', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Obtener el proyecto original
+    const { data: project, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Crear nuevo despliegue (copia del proyecto)
+    const newDeployment = {
+      name: project.name,
+      repository: project.repository,
+      framework: project.framework,
+      status: 'building',
+      deploy_type: project.deploy_type,
+      compose_path: project.compose_path,
+      url: project.url,
+      container_id: null
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([newDeployment])
+      .select();
+
+    if (error) throw error;
+
+    // Simular tiempo de despliegue y luego actualizar a 'deployed'
+    setTimeout(async () => {
+      await supabase
+        .from('projects')
+        .update({ status: 'deployed' })
+        .eq('id', data[0].id);
+    }, 3000);
+    
+    console.log('✅ Project redeployed successfully:', data[0]);
+    res.status(201).json(data[0]);
+  } catch (error) {
+    console.error('❌ Error redeploying project:', error);
+    res.status(500).json({ error: 'Failed to redeploy project' });
+  }
+});
+
 app.get('/dashboard/stats', async (req, res) => {
   try {
     // Obtener proyectos y su estado
