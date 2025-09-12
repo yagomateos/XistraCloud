@@ -7,8 +7,8 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // Supabase configuration
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || 'https://metzjfocvkelucinstul.supabase.co';
+const supabaseKey = process.env.SUPABASE_KEY || '***REMOVED-SUPABASE-SERVICE-KEY-2***';
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('SUPABASE_URL and SUPABASE_KEY must be set in environment variables');
