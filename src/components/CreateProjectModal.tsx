@@ -53,15 +53,16 @@ const CreateProjectModal = ({ open, onOpenChange, onCreateProject }: CreateProje
     
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
-      const response = await fetch(`${API_URL}/deploy`, {
+      const response = await fetch(`${API_URL}/projects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          gitUrl: data.repository,
+          repository: data.repository,
           name: data.name,
-          framework: data.framework
+          framework: data.framework,
+          status: 'pending'
         }),
       });
 
