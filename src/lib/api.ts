@@ -494,7 +494,7 @@ export const getDomains = async (): Promise<Domain[]> => {
     }
     const data = await response.json();
     console.log('✅ Successfully fetched domains from API');
-    return data;
+    return data.domains || [];
   } catch (error) {
     console.error('❌ Error fetching domains from API, falling back to mock data:', error);
     return MOCK_DOMAINS;
