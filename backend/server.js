@@ -1,6 +1,7 @@
 // Railway Force Update: Detailed Logs Implementation v3.0 - MUST DEPLOY NOW!
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -45,6 +46,7 @@ app.get('/health', (req, res) => {
       'GET /',
       'GET /health', 
       'GET /projects',
+      'POST /projects',
       'DELETE /projects/:id',
       'GET /domains',
       'DELETE /domains/:id'
@@ -873,6 +875,65 @@ app.get('/projects', async (req, res) => {
     
     res.json(data);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create project endpoint
+app.post('/projects', async (req, res) => {
+  try {
+    const { name, repository, framework } = req.body;
+    
+    if (!name || !repository) {
+      return res.status(400).json({ 
+        error: 'Name and repository are required' 
+      });
+    }
+
+    const newProject = {
+      id: crypto.randomUUID(),
+      name: name,
+      repository: repository,
+      framework: framework || 'unknown',
+      status: 'pending',
+      url: null,
+      user_id: null,
+      created_at: new Date().toISOString(),
+      container_id: null,
+      deploy_type: null,
+      compose_path: null,
+      organization_id: null
+    };
+
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([newProject])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ Error creating project:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    // Add creation log
+    const logEntry = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      level: 'info',
+      message: `Proyecto "${name}" creado exitosamente`,
+      details: `Repositorio: ${repository}, Framework: ${framework || 'unknown'}`,
+      source: 'projects',
+      project_id: newProject.id,
+      project_name: name
+    };
+
+    await supabase.from('logs').insert([logEntry]);
+    
+    console.log(`✅ Project "${name}" created successfully`);
+    res.status(201).json(data);
+  } catch (error) {
+    console.error('❌ Error in POST /projects:', error);
     res.status(500).json({ error: error.message });
   }
 });
