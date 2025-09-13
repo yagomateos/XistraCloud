@@ -200,9 +200,21 @@ const Apps = () => {
   const confirmInstall = () => {
     if (selectedTemplate) {
       // Navegar a la página de proyectos con el template preseleccionado
+      // Solo pasamos los datos serializables, no el objeto completo con iconos/componentes
       navigate('/dashboard/projects', { 
         state: { 
-          template: selectedTemplate,
+          template: {
+            id: selectedTemplate.id,
+            name: selectedTemplate.name,
+            description: selectedTemplate.description,
+            category: selectedTemplate.category,
+            downloads: selectedTemplate.downloads,
+            rating: selectedTemplate.rating,
+            tags: selectedTemplate.tags,
+            repository: selectedTemplate.repository,
+            framework: selectedTemplate.framework,
+            popular: selectedTemplate.popular
+          },
           autoOpenModal: true 
         } 
       });

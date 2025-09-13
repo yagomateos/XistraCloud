@@ -26,6 +26,18 @@ interface CreateProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateProject: (project: { name: string; repository: string; framework: string }) => void;
+  selectedTemplate?: {
+    id: string;
+    name: string;
+    description: string;
+    category: string;
+    downloads: number;
+    rating: number;
+    tags: string[];
+    repository?: string;
+    framework: string;
+    popular?: boolean;
+  };
 }
 
 const projectSchema = z.object({
@@ -36,17 +48,26 @@ const projectSchema = z.object({
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
-const CreateProjectModal = ({ open, onOpenChange, onCreateProject }: CreateProjectModalProps) => {
+const CreateProjectModal = ({ open, onOpenChange, onCreateProject, selectedTemplate }: CreateProjectModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
-      repository: '',
-      name: '',
-      framework: '',
+      repository: selectedTemplate?.repository || '',
+      name: selectedTemplate?.name || '',
+      framework: selectedTemplate?.framework || '',
     },
   });
+
+  // Actualizar valores del formulario cuando cambie el template seleccionado
+  useEffect(() => {
+    if (selectedTemplate) {
+      form.setValue('repository', selectedTemplate.repository || '');
+      form.setValue('name', selectedTemplate.name || '');
+      form.setValue('framework', selectedTemplate.framework || '');
+    }
+  }, [selectedTemplate, form]);
 
   const onSubmit = async (data: ProjectFormData) => {
     setIsLoading(true);
@@ -67,7 +88,11 @@ const CreateProjectModal = ({ open, onOpenChange, onCreateProject }: CreateProje
       });
 
       if (response.ok) {
-        onCreateProject(data);
+        onCreateProject({
+          name: data.name,
+          repository: data.repository,
+          framework: data.framework
+        });
         form.reset();
         onOpenChange(false);
       } else {

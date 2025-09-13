@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import ProjectCard from '@/components/ProjectCard';
 import CreateProjectModal from '@/components/CreateProjectModal';
 import { LimitReached } from '@/components/protected/plan-protected-route';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProjects, deleteProject, redeployProject, Project } from '@/lib/api';
 import { useUserData } from '@/hooks/useUserData';
@@ -16,9 +16,22 @@ import { toast } from 'sonner';
 const Projects = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const { userData, userPlan } = useUserData();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+
+  // Manejar template desde Apps (instalación directa)
+  useEffect(() => {
+    const state = location.state as { template?: any; autoOpenModal?: boolean } | null;
+    if (state?.template && state?.autoOpenModal) {
+      setSelectedTemplate(state.template);
+      setIsCreateModalOpen(true);
+      // Limpiar el state después de usarlo
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   // Use React Query with our API function that has mock data support
   const { data: projects = [], isLoading, error, refetch } = useQuery({
@@ -82,6 +95,16 @@ const Projects = () => {
     // In a real app, this would make an API call to create the project
     // For now, we'll just refetch the data
     refetch();
+    // Limpiar el template seleccionado después de crear
+    setSelectedTemplate(null);
+  };
+
+  const handleModalClose = (open: boolean) => {
+    setIsCreateModalOpen(open);
+    if (!open) {
+      // Limpiar el template cuando se cierre el modal
+      setSelectedTemplate(null);
+    }
   };
 
   const handleViewDetails = (projectId: string) => {
@@ -196,8 +219,9 @@ const Projects = () => {
 
       <CreateProjectModal
         open={isCreateModalOpen}
-        onOpenChange={setIsCreateModalOpen}
+        onOpenChange={handleModalClose}
         onCreateProject={handleCreateProject}
+        selectedTemplate={selectedTemplate}
       />
     </div>
   );
