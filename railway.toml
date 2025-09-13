@@ -1,6 +1,5 @@
 # Railway Deployment Configuration
 [build]
-context = "./backend"
 builder = "dockerfile"
 
 [build.env]
