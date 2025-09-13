@@ -15,9 +15,20 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // Test endpoint
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'XistraCloud API v2.0 - Working Domain Creation',
+    message: 'XistraCloud API v3.0 - FIXED DNS CONFIGURED ISSUE',
     timestamp: new Date().toISOString(),
-    version: '2025-09-13-fixed'
+    version: '2025-09-13-FINAL-FIX',
+    status: 'dns_configured column removed'
+  });
+});
+
+// Test endpoint to verify deployment
+app.get('/test-deployment', (req, res) => {
+  res.json({
+    status: 'NEW CODE DEPLOYED',
+    timestamp: new Date().toISOString(),
+    fix: 'dns_configured removed',
+    success: true
   });
 });
 
