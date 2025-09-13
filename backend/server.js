@@ -32,6 +32,46 @@ app.get('/test-deployment', (req, res) => {
   });
 });
 
+// Get all domains
+app.get('/domains', async (req, res) => {
+  try {
+    console.log('🌐 Fetching all domains');
+    
+    const { data: domains, error } = await supabase
+      .from('domains')
+      .select(`
+        id,
+        domain,
+        project_id,
+        created_at,
+        projects!inner (
+          id,
+          name,
+          description
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Supabase error fetching domains:', error);
+      return res.status(500).json({ 
+        error: 'Failed to fetch domains',
+        supabaseError: error.message 
+      });
+    }
+
+    console.log(`✅ Found ${domains?.length || 0} domains`);
+    res.json({ domains: domains || [] });
+
+  } catch (error) {
+    console.error('❌ Error fetching domains:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
 // Working domain creation endpoint
 app.post('/domains', async (req, res) => {
   try {
