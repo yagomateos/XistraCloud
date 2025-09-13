@@ -1004,6 +1004,36 @@ app.patch('/projects/fix-pending', async (req, res) => {
   }
 });
 
+// Debug endpoint to check projects that need fixing
+app.get('/projects/debug-broken', async (req, res) => {
+  try {
+    const { data: allProjects } = await supabase
+      .from('projects')
+      .select('id, name, status, url');
+    
+    const brokenProjects = allProjects?.filter(project => 
+      project.status !== 'deployed' || 
+      !project.url || 
+      project.url === '' || 
+      project.url.includes('localhost')
+    ) || [];
+
+    res.json({
+      total: allProjects?.length || 0,
+      broken: brokenProjects.length,
+      brokenProjects: brokenProjects.map(p => ({
+        name: p.name,
+        status: p.status,
+        url: p.url,
+        needsStatusFix: p.status !== 'deployed',
+        needsUrlFix: !p.url || p.url === '' || p.url.includes('localhost')
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);
