@@ -854,3 +854,4 @@ app.listen(port, () => {
 });
 
 module.exports = app;
+console.log('🚀 FORCE REDEPLOY: Sat Sep 13 14:07:10 CEST 2025');
