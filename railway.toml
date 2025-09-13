@@ -1,7 +1,7 @@
 # Railway Deployment Configuration
 [build]
 context = "./backend"
-builder = "nixpacks"
+builder = "dockerfile"
 
 [build.env]
 NODE_ENV = "production"
