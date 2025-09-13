@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'XistraCloud API v3.0 - FIXED DNS CONFIGURED ISSUE',
     timestamp: new Date().toISOString(),
-    version: '2025-09-13-FINAL-FIX',
+    version: '2025-09-13-DELETE-PROJECTS-FIX',
     status: 'dns_configured column removed'
   });
 });
@@ -693,6 +693,60 @@ app.delete('/domains/:id', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error deleting domain:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// Delete project endpoint
+app.delete('/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('🗑️ Deleting project with ID:', id);
+
+    if (!id) {
+      return res.status(400).json({ error: 'Project ID is required' });
+    }
+
+    // Check if project exists
+    const { data: project, error: checkError } = await supabase
+      .from('projects')
+      .select('id, name')
+      .eq('id', id)
+      .single();
+
+    if (checkError || !project) {
+      return res.status(404).json({ 
+        error: 'Project not found',
+        projectId: id 
+      });
+    }
+
+    // Delete project
+    const { error: deleteError } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      console.error('❌ Supabase error deleting project:', deleteError);
+      return res.status(500).json({ 
+        error: 'Failed to delete project',
+        supabaseError: deleteError.message 
+      });
+    }
+
+    console.log('✅ Project deleted successfully:', project.name);
+    res.json({
+      success: true,
+      message: 'Project deleted successfully',
+      deletedProject: project
+    });
+
+  } catch (error) {
+    console.error('❌ Error deleting project:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       details: error.message 
