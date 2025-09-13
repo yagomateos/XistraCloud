@@ -1,74 +1,205 @@
-# Welcome to your Lovable project
+# 🌩️ XistraCloud
 
-## Project info
+> **Plataforma Moderna de Gestión en la Nube** - Despliega, administra y escala tus proyectos sin esfuerzo
 
-**URL**: https://lovable.dev/projects/778689e2-92a6-4d83-a3e9-9163f4faee26
+[![Demo en Vivo](https://img.shields.io/badge/Demo%20en%20Vivo-xistra--cloud.vercel.app-brightgreen)](https://xistra-cloud.vercel.app)
+[![API Backend](https://img.shields.io/badge/API-xistracloud--production.up.railway.app-blue)](https://xistracloud-production.up.railway.app)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18.3-61dafb)](https://reactjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-green)](https://nodejs.org/)
 
-## How can I edit this code?
+## 🚀 Descripción General
 
-There are several ways of editing your application.
+XistraCloud es una plataforma integral de gestión en la nube que proporciona una interfaz intuitiva para desplegar, monitorizar y administrar tus proyectos en múltiples entornos. Construida con tecnologías modernas y diseñada para escalabilidad.
 
-**Use Lovable**
+### ✨ Características Principales
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/778689e2-92a6-4d83-a3e9-9163f4faee26) and start prompting.
+- **📊 Panel en Tiempo Real** - Monitoriza proyectos, despliegues y métricas del sistema
+- **🔄 Gestión de Proyectos** - Operaciones CRUD completas para tus proyectos en la nube
+- **🌐 Gestión de Dominios** - Registra y administra dominios personalizados
+- **📈 Registros de Actividad** - Rastrea todas las actividades del sistema y despliegues
+- **🎨 Interfaz Moderna** - Interfaz limpia construida con React + shadcn/ui
+- **⚡ API Rápida** - Backend de alto rendimiento con Express.js
+- **🔐 Seguro** - Construido con mejores prácticas de seguridad
+- **📱 Responsivo** - Funciona perfectamente en todos los dispositivos
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Stack Tecnológico
 
-**Use your preferred IDE**
+### Frontend
+- **React 18** - React moderno con hooks y suspense
+- **TypeScript** - Seguridad de tipos completa
+- **Vite** - Herramienta de construcción ultrarrápida
+- **TanStack Query** - Gestión de estado del servidor
+- **shadcn/ui** - Componentes hermosos y accesibles
+- **Tailwind CSS** - Estilos utilitarios
+- **Lucide React** - Iconos hermosos
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend
+- **Node.js** - Entorno de ejecución JavaScript
+- **Express.js** - Framework web rápido
+- **TypeScript** - Backend con seguridad de tipos
+- **Supabase** - Solución de base de datos moderna
+- **Railway** - Plataforma de despliegue en la nube
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Despliegue e Infraestructura
+- **Frontend**: Vercel (Auto-despliegue desde la rama main)
+- **Backend**: Railway (Entorno de producción)
+- **Base de Datos**: Supabase (PostgreSQL)
+- **Dominio**: Gestión de dominios personalizados
 
-Follow these steps:
+## 📦 Inicio Rápido
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Requisitos Previos
+- Node.js 18+ instalado
+- Git instalado
+- Cuenta de Supabase (para la base de datos)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### 1. Clonar el Repositorio
+```bash
+git clone https://github.com/yagomateos/XistraCloud.git
+cd XistraCloud
 ```
 
-**Edit a file directly in GitHub**
+### 2. Instalar Dependencias
+```bash
+# Instalar dependencias del frontend
+npm install
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+# Instalar dependencias del backend
+cd backend
+npm install
+```
 
-**Use GitHub Codespaces**
+### 3. Configuración del Entorno
+```bash
+# Frontend (.env.local)
+VITE_API_URL=http://localhost:3001
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Backend (.env)
+SUPABASE_URL=tu_url_de_supabase
+SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
+PORT=3001
+```
 
-## What technologies are used for this project?
+### 4. Iniciar Servidores de Desarrollo
+```bash
+# Terminal 1 - Frontend
+npm run dev
 
-This project is built with:
+# Terminal 2 - Backend
+cd backend
+npm start
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+¡Visita `http://localhost:5173` para ver la aplicación en acción! 🎉
 
-## How can I deploy this project?
+## 🌐 Demo en Vivo
 
-Simply open [Lovable](https://lovable.dev/projects/778689e2-92a6-4d83-a3e9-9163f4faee26) and click on Share -> Publish.
+- **Frontend**: [https://xistra-cloud.vercel.app](https://xistra-cloud.vercel.app)
+- **API Backend**: [https://xistracloud-production.up.railway.app](https://xistracloud-production.up.railway.app)
+- **Salud de la API**: [https://xistracloud-production.up.railway.app/health](https://xistracloud-production.up.railway.app/health)
 
-## Can I connect a custom domain to my Lovable project?
+## 📚 Documentación de la API
 
-Yes, you can!
+### Endpoints Principales
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| `GET` | `/health` | Verificación de salud de la API |
+| `GET` | `/projects` | Listar todos los proyectos |
+| `POST` | `/projects` | Crear nuevo proyecto |
+| `PUT` | `/projects/:id` | Actualizar proyecto |
+| `DELETE` | `/projects/:id` | Eliminar proyecto |
+| `GET` | `/domains` | Listar todos los dominios |
+| `POST` | `/domains` | Registrar dominio |
+| `GET` | `/logs` | Registros de actividad del sistema |
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-# Mock data fix deployed Wed Sep 10 21:37:30 CEST 2025
+### Ejemplo de Uso de la API
+
+```bash
+# Obtener todos los proyectos
+curl https://xistracloud-production.up.railway.app/projects
+
+# Crear nuevo proyecto
+curl -X POST https://xistracloud-production.up.railway.app/projects \
+  -H "Content-Type: application/json" \
+  -d '{"name":"mi-app","status":"deployed"}'
+
+# Eliminar proyecto
+curl -X DELETE https://xistracloud-production.up.railway.app/projects/id-del-proyecto
+```
+
+## 🏗️ Estructura del Proyecto
+
+```
+XistraCloud/
+├── 📁 src/                    # Código fuente del frontend
+│   ├── 📁 components/         # Componentes UI reutilizables
+│   ├── 📁 pages/             # Páginas de la aplicación
+│   ├── 📁 hooks/             # Hooks personalizados de React
+│   ├── 📁 lib/               # Utilidades y cliente API
+│   └── 📁 layouts/           # Layouts de páginas
+├── 📁 backend/               # Servidor API del backend
+│   ├── 📄 server.js          # Servidor Express
+│   ├── 📄 package.json       # Dependencias del backend
+│   └── 📁 migrations/        # Migraciones de base de datos
+├── 📁 public/                # Recursos estáticos
+├── 📄 package.json           # Dependencias del frontend
+├── 📄 tailwind.config.ts     # Configuración de Tailwind
+├── 📄 vite.config.ts         # Configuración de Vite
+└── 📄 README.md              # Este archivo
+```
+
+## 🧪 Estadísticas Actuales (Datos en Vivo)
+
+- **Proyectos**: 6 totales (3 desplegados, 1 construyendo, 2 pendientes)
+- **Dominios**: 1 dominio registrado
+- **Registros de Actividad**: 40+ eventos rastreados
+- **Versión de la API**: 2025-09-13-DELETE-READY-FINAL
+
+## 🚢 Despliegue
+
+### Frontend (Vercel)
+- Despliegue automático al hacer push a `main`
+- Despliegues de vista previa para pull requests
+- Soporte para dominios personalizados
+
+### Backend (Railway)
+- Despliegue de producción con auto-escalado
+- Gestión de variables de entorno
+- Integración de base de datos con Supabase
+
+## 🤝 Contribuciones
+
+¡Damos la bienvenida a las contribuciones! Por favor, consulta nuestras pautas de contribución:
+
+1. Haz fork del repositorio
+2. Crea una rama de característica: `git checkout -b feature/caracteristica-increible`
+3. Confirma los cambios: `git commit -m 'Agregar característica increíble'`
+4. Sube a la rama: `git push origin feature/caracteristica-increible`
+5. Abre un pull request
+
+## 📄 Licencia
+
+Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+## 👨‍💻 Autor
+
+**Yago Mateos**
+- GitHub: [@yagomateos](https://github.com/yagomateos)
+- Proyecto: [XistraCloud](https://github.com/yagomateos/XistraCloud)
+
+## 🙏 Agradecimientos
+
+- [shadcn/ui](https://ui.shadcn.com/) por la hermosa librería de componentes
+- [Vercel](https://vercel.com) por el hosting del frontend
+- [Railway](https://railway.app) por el despliegue del backend
+- [Supabase](https://supabase.com) por la base de datos
+
+---
+
+<div align="center">
+  <strong>Construido con ❤️ usando tecnologías web modernas</strong>
+  <br>
+  <sub>XistraCloud - El futuro de la gestión en la nube</sub>
+</div>
