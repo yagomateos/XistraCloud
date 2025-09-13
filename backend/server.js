@@ -252,6 +252,60 @@ app.post('/domains', async (req, res) => {
   }
 });
 
+// Delete domain endpoint
+app.delete('/domains/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('🗑️ Deleting domain with ID:', id);
+
+    if (!id) {
+      return res.status(400).json({ error: 'Domain ID is required' });
+    }
+
+    // Check if domain exists
+    const { data: domain, error: checkError } = await supabase
+      .from('domains')
+      .select('id, domain')
+      .eq('id', id)
+      .single();
+
+    if (checkError || !domain) {
+      return res.status(404).json({ 
+        error: 'Domain not found',
+        domainId: id 
+      });
+    }
+
+    // Delete domain
+    const { error: deleteError } = await supabase
+      .from('domains')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      console.error('❌ Supabase error deleting domain:', deleteError);
+      return res.status(500).json({ 
+        error: 'Failed to delete domain',
+        supabaseError: deleteError.message 
+      });
+    }
+
+    console.log('✅ Domain deleted successfully:', domain.domain);
+    res.json({
+      success: true,
+      message: 'Domain deleted successfully',
+      deletedDomain: domain
+    });
+
+  } catch (error) {
+    console.error('❌ Error deleting domain:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
 // Get projects endpoint
 app.get('/projects', async (req, res) => {
   try {
