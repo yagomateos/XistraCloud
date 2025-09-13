@@ -945,32 +945,55 @@ app.post('/projects', async (req, res) => {
 // Temporary endpoint to fix existing pending projects
 app.patch('/projects/fix-pending', async (req, res) => {
   try {
-    // Get all pending projects
-    const { data: pendingProjects, error: fetchError } = await supabase
+    // Get all projects that need fixing (pending OR null URL)
+    const { data: projectsToFix, error: fetchError } = await supabase
       .from('projects')
       .select('*')
-      .eq('status', 'pending');
+      .or('status.eq.pending,url.is.null,url.eq.');
     
     if (fetchError) {
       return res.status(500).json({ error: fetchError.message });
     }
 
     const updates = [];
-    for (const project of pendingProjects || []) {
+    for (const project of projectsToFix || []) {
       const projectSlug = project.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
       const deploymentUrl = `https://${projectSlug}.xistracloud.app`;
       
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({ 
-          status: 'deployed',
-          url: deploymentUrl,
-          deploy_type: 'auto'
-        })
-        .eq('id', project.id);
+      const updateData = {};
       
-      if (!updateError) {
-        updates.push({ id: project.id, name: project.name, url: deploymentUrl });
+      // Fix status if it's not deployed
+      if (project.status !== 'deployed') {
+        updateData.status = 'deployed';
+      }
+      
+      // Fix URL if it's null or empty
+      if (!project.url || project.url === '' || project.url.includes('localhost')) {
+        updateData.url = deploymentUrl;
+      }
+      
+      // Add deploy_type if missing
+      if (!project.deploy_type) {
+        updateData.deploy_type = 'auto';
+      }
+      
+      // Only update if there are changes
+      if (Object.keys(updateData).length > 0) {
+        const { error: updateError } = await supabase
+          .from('projects')
+          .update(updateData)
+          .eq('id', project.id);
+        
+        if (!updateError) {
+          updates.push({ 
+            id: project.id, 
+            name: project.name, 
+            oldStatus: project.status,
+            newStatus: updateData.status || project.status,
+            oldUrl: project.url,
+            newUrl: updateData.url || project.url
+          });
+        }
       }
     }
 
