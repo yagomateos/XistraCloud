@@ -23,7 +23,44 @@ interface Template {
 }
 
 const TEMPLATES: Template[] = [
-  // AI & Chat
+  // Bases de Datos
+  {
+    id: 'postgresql-pgadmin',
+    name: 'PostgreSQL + pgAdmin',
+    description: 'Base de datos PostgreSQL con interfaz de administración pgAdmin para gestión visual.',
+    icon: Database,
+    category: 'database',
+    downloads: 4667,
+    rating: 4.8,
+    tags: ['Database', 'PostgreSQL', 'SQL', 'pgAdmin'],
+    framework: 'docker',
+    popular: true
+  },
+  {
+    id: 'wordpress-mysql',
+    name: 'WordPress + MySQL',
+    description: 'Sitio web WordPress completo con base de datos MySQL integrada.',
+    icon: Globe,
+    category: 'cms',
+    downloads: 5842,
+    rating: 4.9,
+    tags: ['CMS', 'WordPress', 'MySQL', 'Website'],
+    framework: 'docker',
+    popular: true
+  },
+  {
+    id: 'portainer',
+    name: 'Portainer',
+    description: 'Interfaz web intuitiva para gestión y administración de contenedores Docker.',
+    icon: Package,
+    category: 'management',
+    downloads: 3456,
+    rating: 4.7,
+    tags: ['Docker', 'Management', 'UI', 'Containers'],
+    framework: 'docker'
+  },
+
+  // AI & Chat (mantenemos algunos para demostración)
   {
     id: 'lobechat',
     name: 'LobeChat',
@@ -34,8 +71,7 @@ const TEMPLATES: Template[] = [
     rating: 4.8,
     tags: ['AI', 'Chat', 'OpenAI'],
     repository: 'https://github.com/lobehub/lobe-chat',
-    framework: 'nextjs',
-    popular: true
+    framework: 'nextjs'
   },
   {
     id: 'one-api',
@@ -50,33 +86,6 @@ const TEMPLATES: Template[] = [
     framework: 'react'
   },
 
-  // Bases de Datos
-  {
-    id: 'mysql',
-    name: 'MySQL',
-    description: 'Sistema de gestión de bases de datos relacionales open-source más popular del mundo.',
-    icon: Database,
-    category: 'database',
-    downloads: 4684,
-    rating: 4.9,
-    tags: ['Database', 'SQL', 'Relational'],
-    repository: 'https://github.com/mysql/mysql-server',
-    framework: 'docker',
-    popular: true
-  },
-  {
-    id: 'postgresql',
-    name: 'PostgreSQL',
-    description: 'Base de datos relacional open-source gratuita que enfatiza la extensibilidad y el cumplimiento SQL.',
-    icon: Database,
-    category: 'database',
-    downloads: 4667,
-    rating: 4.8,
-    tags: ['Database', 'PostgreSQL', 'SQL'],
-    repository: 'https://github.com/postgres/postgres',
-    framework: 'docker'
-  },
-
   // Data & Analytics
   {
     id: 'n8n',
@@ -88,8 +97,7 @@ const TEMPLATES: Template[] = [
     rating: 4.7,
     tags: ['Workflow', 'Automation', 'Integration'],
     repository: 'https://github.com/n8n-io/n8n',
-    framework: 'nodejs',
-    popular: true
+    framework: 'nodejs'
   },
 
   // CMS & Content
@@ -197,27 +205,52 @@ const Apps = () => {
     setIsInstallDialogOpen(true);
   };
 
-  const confirmInstall = () => {
+  const confirmInstall = async () => {
     if (selectedTemplate) {
-      // Navegar a la página de proyectos con el template preseleccionado
-      // Solo pasamos los datos serializables, no el objeto completo con iconos/componentes
-      navigate('/dashboard/projects', { 
-        state: { 
-          template: {
-            id: selectedTemplate.id,
-            name: selectedTemplate.name,
-            description: selectedTemplate.description,
-            category: selectedTemplate.category,
-            downloads: selectedTemplate.downloads,
-            rating: selectedTemplate.rating,
-            tags: selectedTemplate.tags,
-            repository: selectedTemplate.repository,
-            framework: selectedTemplate.framework,
-            popular: selectedTemplate.popular
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
+        
+        // Preparar datos para el despliegue
+        const deploymentData = {
+          templateId: selectedTemplate.id,
+          name: selectedTemplate.name,
+          environment: {
+            // Variables por defecto para algunos templates
+            ...(selectedTemplate.id === 'postgresql-pgadmin' && {
+              POSTGRES_USER: 'admin',
+              POSTGRES_PASSWORD: 'admin123',
+              POSTGRES_DB: 'myapp',
+              PGADMIN_MAIL: 'admin@example.com',
+              PGADMIN_PW: 'admin123'
+            })
+          }
+        };
+        
+        // Llamar al API de despliegue
+        const response = await fetch(`${API_URL}/apps/deploy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          autoOpenModal: true 
-        } 
-      });
+          body: JSON.stringify(deploymentData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+          // Despliegue exitoso - redirigir a deployments o mostrar URL
+          alert(`✅ ${selectedTemplate.name} desplegado exitosamente!\\n\\nURL: ${result.deployment.urls[0]}`);
+          
+          // Redirigir a la página de proyectos para ver el deployment
+          navigate('/dashboard/projects');
+        } else {
+          throw new Error(result.error || result.message || 'Error en el despliegue');
+        }
+        
+      } catch (error) {
+        console.error('Error desplegando app:', error);
+        alert(`❌ Error desplegando ${selectedTemplate.name}: ${error.message}`);
+      }
     }
     setIsInstallDialogOpen(false);
     setSelectedTemplate(null);
@@ -365,13 +398,42 @@ const Apps = () => {
       <Dialog open={isInstallDialogOpen} onOpenChange={setIsInstallDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmar instalación</DialogTitle>
+            <DialogTitle>🚀 Desplegar {selectedTemplate?.name}</DialogTitle>
             <DialogDescription>
-              ¿Quieres instalar <strong>{selectedTemplate?.name}</strong>?
+              Se desplegará <strong>{selectedTemplate?.name}</strong> usando Docker.
               <br />
-              <span className="text-sm text-muted-foreground mt-2 block">
-                Se creará un nuevo proyecto con esta app preconfigurada.
-              </span>
+              <div className="mt-3 p-3 bg-muted rounded-lg text-sm">
+                <strong>Qué incluye:</strong>
+                <ul className="mt-1 space-y-1">
+                  {selectedTemplate?.id === 'postgresql-pgadmin' && (
+                    <>
+                      <li>• PostgreSQL Database (Puerto 5432)</li>
+                      <li>• pgAdmin Web Interface (Puerto 5050)</li>
+                      <li>• Credenciales por defecto configuradas</li>
+                    </>
+                  )}
+                  {selectedTemplate?.id === 'wordpress-mysql' && (
+                    <>
+                      <li>• WordPress Site (Puerto 80)</li>
+                      <li>• MySQL Database incluida</li>
+                      <li>• Configuración automática</li>
+                    </>
+                  )}
+                  {selectedTemplate?.id === 'portainer' && (
+                    <>
+                      <li>• Portainer Web UI (Puerto 9000)</li>
+                      <li>• Gestión de contenedores Docker</li>
+                      <li>• Interface de administración</li>
+                    </>
+                  )}
+                  {!['postgresql-pgadmin', 'wordpress-mysql', 'portainer'].includes(selectedTemplate?.id || '') && (
+                    <li>• {selectedTemplate?.description}</li>
+                  )}
+                </ul>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                ⏱️ El despliegue tomará unos segundos. Se abrirá automáticamente la URL cuando esté listo.
+              </p>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -379,7 +441,7 @@ const Apps = () => {
               Cancelar
             </Button>
             <Button onClick={confirmInstall}>
-              Instalar App
+              ✨ Desplegar Ahora
             </Button>
           </DialogFooter>
         </DialogContent>

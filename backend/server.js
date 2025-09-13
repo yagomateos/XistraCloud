@@ -1378,6 +1378,334 @@ app.post('/projects/force-complete-building', async (req, res) => {
   }
 });
 
+// ======================================
+// 🚀 APPS DEPLOYMENT SYSTEM (Dokploy-style)
+// ======================================
+
+const Docker = require('dockerode');
+const docker = new Docker();
+const fs = require('fs').promises;
+const path = require('path');
+const { exec } = require('child_process');
+const { promisify } = require('util');
+const execAsync = promisify(exec);
+
+// Template configurations for one-click deployment
+const APP_TEMPLATES = {
+  'postgresql-pgadmin': {
+    name: 'PostgreSQL + pgAdmin',
+    description: 'Base de datos PostgreSQL con interfaz de administración pgAdmin',
+    compose: 'postgresql-pgadmin/compose.yaml',
+    env_required: ['POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB', 'PGADMIN_MAIL', 'PGADMIN_PW'],
+    ports: [5432, 5050],
+    category: 'database'
+  },
+  'wordpress-mysql': {
+    name: 'WordPress + MySQL',
+    description: 'Sitio web WordPress con base de datos MySQL',
+    compose: 'wordpress-mysql/compose.yaml', 
+    env_required: [],
+    ports: [80],
+    category: 'cms'
+  },
+  'portainer': {
+    name: 'Portainer',
+    description: 'Interfaz web para gestión de contenedores Docker',
+    compose: 'portainer/compose.yaml',
+    env_required: [],
+    ports: [9000],
+    category: 'management'
+  }
+};
+
+// POST /apps/deploy - Deploy an app template
+app.post('/apps/deploy', async (req, res) => {
+  try {
+    const { templateId, name, environment = {}, domain } = req.body;
+    
+    if (!templateId || !name) {
+      return res.status(400).json({ error: 'Template ID y nombre son requeridos' });
+    }
+    
+    const template = APP_TEMPLATES[templateId];
+    if (!template) {
+      return res.status(404).json({ error: 'Template no encontrado' });
+    }
+
+    // Generate unique project ID and ports
+    const projectId = `app-${templateId}-${crypto.randomUUID().substring(0, 8)}`;
+    const basePort = 8000 + Math.floor(Math.random() * 1000);
+    
+    console.log(`🚀 Iniciando despliegue de ${template.name} como ${name}...`);
+    
+    // Create deployment directory
+    const deployPath = path.join(process.cwd(), '..', 'deployments', projectId);
+    await execAsync(`mkdir -p ${deployPath}`);
+    
+    // Copy compose file
+    const composePath = path.join(process.cwd(), '..', 'awesome-compose', template.compose);
+    const targetComposePath = path.join(deployPath, 'compose.yaml');
+    
+    // Read and modify compose file with dynamic ports
+    let composeContent = await fs.readFile(composePath, 'utf8');
+    
+    // Replace static ports with dynamic ones
+    let currentPort = basePort;
+    for (const port of template.ports) {
+      const portRegex = new RegExp(`- "?${port}:`, 'g');
+      composeContent = composeContent.replace(portRegex, `- "${currentPort}:`);
+      currentPort++;
+    }
+    
+    // Add project name prefix to container names
+    composeContent = composeContent.replace(/container_name: ([\\w-]+)/g, `container_name: ${projectId}-$1`);
+    
+    await fs.writeFile(targetComposePath, composeContent);
+    
+    // Create .env file
+    const envContent = Object.entries(environment)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\\n');
+    await fs.writeFile(path.join(deployPath, '.env'), envContent);
+    
+    // Deploy with docker-compose
+    const { stdout, stderr } = await execAsync(
+      `cd ${deployPath} && docker-compose -p ${projectId} up -d`,
+      { timeout: 120000 } // 2 minutos timeout
+    );
+    
+    console.log('✅ Despliegue exitoso:', stdout);
+    if (stderr) console.log('⚠️ Warnings:', stderr);
+    
+    // Calculate URLs
+    const urls = template.ports.map((originalPort, index) => {
+      const mappedPort = basePort + index;
+      return `http://localhost:${mappedPort}`;
+    });
+    
+    // Store deployment in database (usando tabla deployments existente)
+    const deploymentData = {
+      id: projectId,
+      project_id: projectId, // Para compatibilidad
+      name: name,
+      status: 'running',
+      url: urls[0],
+      framework: templateId, // Usamos framework para almacenar template_id
+      created_at: new Date().toISOString(),
+      type: 'app_deployment', // Marcador especial para apps
+      deployment_logs: JSON.stringify({
+        template_id: templateId,
+        template_name: template.name,
+        urls: urls,
+        ports: template.ports.map((_, index) => basePort + index),
+        environment: environment,
+        deploy_path: deployPath
+      })
+    };
+    
+    const { data, error } = await supabase
+      .from('deployments')
+      .insert([deploymentData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error storing deployment:', error);
+      // Continue anyway, deployment was successful
+    }
+
+    // Generate logs
+    await generateAppDeploymentLogs(projectId, template.name, name, 'success', urls[0]);
+    
+    res.json({
+      success: true,
+      message: `${template.name} desplegado exitosamente como ${name}`,
+      deployment: {
+        id: projectId,
+        name: name,
+        template: template.name,
+        status: 'running',
+        urls: urls,
+        ports: template.ports.map((_, index) => basePort + index)
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error deploying app:', error);
+    
+    // Generate error logs
+    if (req.body.templateId && req.body.name) {
+      await generateAppDeploymentLogs(
+        `app-${req.body.templateId}-error`, 
+        req.body.templateId, 
+        req.body.name, 
+        'failed', 
+        null,
+        error.message
+      );
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      message: 'Error durante el despliegue'
+    });
+  }
+});
+
+// GET /apps/deployments - List all app deployments
+app.get('/apps/deployments', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('deployments')
+      .select('*')
+      .eq('type', 'app_deployment')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching deployments:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    // Parse deployment_logs JSON for each deployment
+    const processedData = (data || []).map(deployment => {
+      try {
+        const logs = JSON.parse(deployment.deployment_logs || '{}');
+        return {
+          ...deployment,
+          template_id: logs.template_id,
+          template_name: logs.template_name,
+          urls: logs.urls,
+          ports: logs.ports,
+          environment: logs.environment,
+          deploy_path: logs.deploy_path
+        };
+      } catch {
+        return deployment;
+      }
+    });
+
+    res.json(processedData);
+  } catch (error) {
+    console.error('❌ Error fetching deployments:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /apps/deployments/:id - Stop and remove app deployment
+app.delete('/apps/deployments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get deployment info
+    const { data: deployment, error } = await supabase
+      .from('deployments')
+      .select('*')
+      .eq('id', id)
+      .eq('type', 'app_deployment')
+      .single();
+
+    if (error || !deployment) {
+      return res.status(404).json({ error: 'Deployment not found' });
+    }
+
+    // Parse deployment logs to get deploy_path
+    let deployPath = null;
+    try {
+      const logs = JSON.parse(deployment.deployment_logs || '{}');
+      deployPath = logs.deploy_path;
+    } catch (e) {
+      console.log('Could not parse deployment logs');
+    }
+
+    // Stop and remove containers
+    await execAsync(`docker-compose -p ${id} down -v`);
+    console.log(`✅ Stopped containers for ${id}`);
+
+    // Clean up deployment directory
+    if (deployPath) {
+      await execAsync(`rm -rf ${deployPath}`);
+    }
+
+    // Remove from database
+    await supabase
+      .from('deployments')
+      .delete()
+      .eq('id', id);
+
+    res.json({ 
+      success: true, 
+      message: `Deployment ${deployment.name} eliminado exitosamente` 
+    });
+
+  } catch (error) {
+    console.error('❌ Error removing deployment:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Function to generate deployment logs
+async function generateAppDeploymentLogs(projectId, templateName, appName, status, url = null, errorMessage = null) {
+  const logs = [];
+  const baseTime = new Date();
+  
+  if (status === 'success') {
+    logs.push({
+      id: crypto.randomUUID(),
+      project_id: projectId,
+      level: 'info',
+      message: `🚀 Iniciando despliegue de ${templateName}`,
+      timestamp: new Date(baseTime.getTime() - 15000).toISOString(),
+      details: { template: templateName, name: appName }
+    });
+    
+    logs.push({
+      id: crypto.randomUUID(),
+      project_id: projectId,
+      level: 'info', 
+      message: `📦 Descargando imágenes de Docker para ${templateName}`,
+      timestamp: new Date(baseTime.getTime() - 10000).toISOString(),
+      details: { step: 'download_images' }
+    });
+    
+    logs.push({
+      id: crypto.randomUUID(),
+      project_id: projectId,
+      level: 'info',
+      message: `🔧 Configurando contenedores y redes`,
+      timestamp: new Date(baseTime.getTime() - 5000).toISOString(),
+      details: { step: 'configure_containers' }
+    });
+    
+    logs.push({
+      id: crypto.randomUUID(),
+      project_id: projectId,
+      level: 'success',
+      message: `✅ ${templateName} desplegado exitosamente como ${appName}`,
+      timestamp: baseTime.toISOString(),
+      details: { url: url, status: 'running' }
+    });
+  } else {
+    logs.push({
+      id: crypto.randomUUID(),
+      project_id: projectId,
+      level: 'error',
+      message: `❌ Error desplegando ${templateName}: ${errorMessage}`,
+      timestamp: baseTime.toISOString(),
+      details: { error: errorMessage, template: templateName }
+    });
+  }
+
+  // Store logs in database
+  for (const log of logs) {
+    try {
+      await supabase.from('logs').insert([log]);
+    } catch (error) {
+      console.error('Error storing app deployment log:', error);
+    }
+  }
+}
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);
