@@ -1392,31 +1392,258 @@ const execAsync = promisify(exec);
 
 // Template configurations for one-click deployment
 const APP_TEMPLATES = {
+  // CMS & Websites
+  'wordpress-mysql': {
+    name: 'WordPress',
+    description: 'El CMS más popular del mundo con base de datos MySQL',
+    compose: 'wordpress-mysql/compose.yaml',
+    env_required: [],
+    ports: [80],
+    category: 'cms',
+    icon: '📝'
+  },
+  'nextcloud-postgres': {
+    name: 'Nextcloud',
+    description: 'Plataforma de colaboración y almacenamiento en la nube auto-hospedada',
+    compose: 'nextcloud-postgres/compose.yaml', 
+    env_required: ['POSTGRES_PASSWORD', 'NEXTCLOUD_ADMIN_USER', 'NEXTCLOUD_ADMIN_PASSWORD'],
+    ports: [8080, 5432],
+    category: 'cms'
+  },
+
+  // Databases
   'postgresql-pgadmin': {
     name: 'PostgreSQL + pgAdmin',
     description: 'Base de datos PostgreSQL con interfaz de administración pgAdmin',
     compose: 'postgresql-pgadmin/compose.yaml',
     env_required: ['POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB', 'PGADMIN_MAIL', 'PGADMIN_PW'],
     ports: [5432, 5050],
-    category: 'database'
+    category: 'database',
+    icon: '🐘'
   },
-  'wordpress-mysql': {
-    name: 'WordPress + MySQL',
-    description: 'Sitio web WordPress con base de datos MySQL',
-    compose: 'wordpress-mysql/compose.yaml', 
-    env_required: [],
-    ports: [80],
-    category: 'cms'
+
+  // Development Tools
+  'gitea-postgres': {
+    name: 'Gitea',
+    description: 'Servicio Git auto-hospedado ligero escrito en Go',
+    compose: 'gitea-postgres/compose.yaml',
+    env_required: ['POSTGRES_PASSWORD'],
+    ports: [3000, 5432],
+    category: 'development',
+    icon: '🦊'
   },
+
+  // Management & Monitoring
   'portainer': {
     name: 'Portainer',
     description: 'Interfaz web para gestión de contenedores Docker',
     compose: 'portainer/compose.yaml',
     env_required: [],
     ports: [9000],
-    category: 'management'
+    category: 'management',
+    icon: '🐳'
+  },
+  'prometheus-grafana': {
+    name: 'Prometheus + Grafana',
+    description: 'Stack completo de monitoreo y visualización de métricas',
+    compose: 'prometheus-grafana/compose.yaml',
+    env_required: [],
+    ports: [9090, 3001],
+    category: 'monitoring',
+    icon: '📊'
+  },
+
+  // Web Servers & Frameworks
+  'nginx-golang': {
+    name: 'Nginx + Go',
+    description: 'Servidor web Nginx con aplicación Go',
+    compose: 'nginx-golang/compose.yaml',
+    env_required: [],
+    ports: [80],
+    category: 'webserver',
+    icon: '🌐'
+  },
+  'apache-php': {
+    name: 'Apache + PHP',
+    description: 'Servidor web Apache con soporte PHP completo',
+    compose: 'apache-php/compose.yaml',
+    env_required: [],
+    ports: [80],
+    category: 'webserver',
+    icon: '🔥'
+  },
+
+  // Analytics & Search
+  'elasticsearch-logstash-kibana': {
+    name: 'ELK Stack',
+    description: 'Elasticsearch, Logstash y Kibana para análisis de logs',
+    compose: 'elasticsearch-logstash-kibana/compose.yaml',
+    env_required: [],
+    ports: [9200, 5601],
+    category: 'analytics',
+    icon: '🔍'
+  },
+
+  // Gaming & Entertainment
+  'minecraft': {
+    name: 'Minecraft Server',
+    description: 'Servidor de Minecraft Java Edition',
+    compose: 'minecraft/compose.yaml',
+    env_required: [],
+    ports: [25565],
+    category: 'gaming',
+    icon: '🎮'
+  },
+  'plex': {
+    name: 'Plex Media Server',
+    description: 'Servidor multimedia para streaming de contenido',
+    compose: 'plex/compose.yaml',
+    env_required: [],
+    ports: [32400],
+    category: 'media',
+    icon: '🎬'
+  },
+
+  // Python Frameworks
+  'django': {
+    name: 'Django',
+    description: 'Framework web de Python para desarrollo rápido',
+    compose: 'django/compose.yaml',
+    env_required: [],
+    ports: [8000],
+    category: 'framework',
+    icon: '🐍'
+  },
+  'flask': {
+    name: 'Flask',
+    description: 'Micro framework web de Python',
+    compose: 'flask/compose.yaml',
+    env_required: [],
+    ports: [5000],
+    category: 'framework',
+    icon: '🌶️'
+  },
+  'flask-redis': {
+    name: 'Flask + Redis',
+    description: 'Aplicación Flask con cache Redis',
+    compose: 'flask-redis/compose.yaml',
+    env_required: [],
+    ports: [5000, 6379],
+    category: 'framework',
+    icon: '🌶️'
+  },
+  'fastapi': {
+    name: 'FastAPI',
+    description: 'Framework web moderno y rápido para APIs con Python',
+    compose: 'fastapi/compose.yaml',
+    env_required: [],
+    ports: [8000],
+    category: 'api',
+    icon: '⚡'
+  },
+
+  // JavaScript/Node.js
+  'react-nginx': {
+    name: 'React + Nginx',
+    description: 'Aplicación React servida con Nginx',
+    compose: 'react-nginx/compose.yaml',
+    env_required: [],
+    ports: [80],
+    category: 'frontend',
+    icon: '⚛️'
+  },
+  'vuejs': {
+    name: 'Vue.js',
+    description: 'Aplicación Vue.js con servidor de desarrollo',
+    compose: 'vuejs/compose.yaml',
+    env_required: [],
+    ports: [8080],
+    category: 'frontend',
+    icon: '💚'
+  },
+  'angular': {
+    name: 'Angular',
+    description: 'Aplicación Angular con servidor de desarrollo',
+    compose: 'angular/compose.yaml',
+    env_required: [],
+    ports: [4200],
+    category: 'frontend',
+    icon: '🔴'
+  },
+
+  // Full Stack Combinations
+  'react-express-mongodb': {
+    name: 'MERN Stack',
+    description: 'MongoDB, Express, React y Node.js completo',
+    compose: 'react-express-mongodb/compose.yaml',
+    env_required: [],
+    ports: [3000, 3001, 27017],
+    category: 'fullstack',
+    icon: '🍃'
+  },
+  'react-express-mysql': {
+    name: 'React + Express + MySQL',
+    description: 'Stack completo con React frontend y MySQL backend',
+    compose: 'react-express-mysql/compose.yaml',
+    env_required: ['MYSQL_ROOT_PASSWORD', 'MYSQL_DATABASE', 'MYSQL_USER', 'MYSQL_PASSWORD'],
+    ports: [3000, 3001, 3306],
+    category: 'fullstack',
+    icon: '⚛️'
+  },
+
+  // Security & Networking
+  'wireguard': {
+    name: 'WireGuard VPN',
+    description: 'Servidor VPN WireGuard moderno y seguro',
+    compose: 'wireguard/compose.yaml',
+    env_required: [],
+    ports: [51820],
+    category: 'security',
+    icon: '🛡️'
+  },
+  'pihole-cloudflared-DoH': {
+    name: 'Pi-hole + Cloudflare',
+    description: 'Bloqueador de anuncios Pi-hole con DNS over HTTPS',
+    compose: 'pihole-cloudflared-DoH/compose.yaml',
+    env_required: [],
+    ports: [80, 53],
+    category: 'security',
+    icon: '🕳️'
   }
 };
+
+// GET /apps/templates - Get available app templates
+app.get('/apps/templates', (req, res) => {
+  try {
+    const templates = Object.entries(APP_TEMPLATES).map(([id, template]) => ({
+      id,
+      ...template
+    }));
+    
+    res.json({
+      templates,
+      categories: {
+        cms: { name: 'CMS & Websites', icon: '📝' },
+        database: { name: 'Bases de Datos', icon: '🗄️' },
+        development: { name: 'Desarrollo', icon: '👨‍💻' },
+        management: { name: 'Gestión', icon: '⚙️' },
+        monitoring: { name: 'Monitoreo', icon: '📊' },
+        webserver: { name: 'Servidores Web', icon: '🌐' },
+        analytics: { name: 'Análisis', icon: '🔍' },
+        gaming: { name: 'Gaming', icon: '🎮' },
+        media: { name: 'Media', icon: '🎬' },
+        framework: { name: 'Frameworks', icon: '🏗️' },
+        api: { name: 'APIs', icon: '⚡' },
+        frontend: { name: 'Frontend', icon: '🎨' },
+        fullstack: { name: 'Full Stack', icon: '🍃' },
+        security: { name: 'Seguridad', icon: '🛡️' }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error fetching templates:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // POST /apps/deploy - Deploy an app template
 app.post('/apps/deploy', async (req, res) => {
