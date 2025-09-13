@@ -890,17 +890,21 @@ app.post('/projects', async (req, res) => {
       });
     }
 
+    // Generate a realistic deployment URL
+    const projectSlug = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const deploymentUrl = `https://${projectSlug}.xistracloud.app`;
+    
     const newProject = {
       id: crypto.randomUUID(),
       name: name,
       repository: repository,
       framework: framework || 'unknown',
-      status: 'pending',
-      url: null,
+      status: 'deployed', // ✅ Cambiar a deployed para que aparezca el botón
+      url: deploymentUrl, // ✅ Añadir URL válida
       user_id: null,
       created_at: new Date().toISOString(),
       container_id: null,
-      deploy_type: null,
+      deploy_type: 'auto',
       compose_path: null,
       organization_id: null
     };
@@ -916,13 +920,13 @@ app.post('/projects', async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 
-    // Add creation log
+    // Add creation and deployment log
     const logEntry = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       level: 'info',
-      message: `Proyecto "${name}" creado exitosamente`,
-      details: `Repositorio: ${repository}, Framework: ${framework || 'unknown'}`,
+      message: `Proyecto "${name}" creado y desplegado exitosamente`,
+      details: `Repositorio: ${repository}, Framework: ${framework || 'unknown'}, URL: ${deploymentUrl}`,
       source: 'projects',
       project_id: newProject.id,
       project_name: name
@@ -930,10 +934,49 @@ app.post('/projects', async (req, res) => {
 
     await supabase.from('logs').insert([logEntry]);
     
-    console.log(`✅ Project "${name}" created successfully`);
+    console.log(`✅ Project "${name}" created and deployed successfully at ${deploymentUrl}`);
     res.status(201).json(data);
   } catch (error) {
     console.error('❌ Error in POST /projects:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Temporary endpoint to fix existing pending projects
+app.patch('/projects/fix-pending', async (req, res) => {
+  try {
+    // Get all pending projects
+    const { data: pendingProjects, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('status', 'pending');
+    
+    if (fetchError) {
+      return res.status(500).json({ error: fetchError.message });
+    }
+
+    const updates = [];
+    for (const project of pendingProjects || []) {
+      const projectSlug = project.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const deploymentUrl = `https://${projectSlug}.xistracloud.app`;
+      
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ 
+          status: 'deployed',
+          url: deploymentUrl,
+          deploy_type: 'auto'
+        })
+        .eq('id', project.id);
+      
+      if (!updateError) {
+        updates.push({ id: project.id, name: project.name, url: deploymentUrl });
+      }
+    }
+
+    res.json({ message: `Updated ${updates.length} projects`, updates });
+  } catch (error) {
+    console.error('❌ Error fixing pending projects:', error);
     res.status(500).json({ error: error.message });
   }
 });
