@@ -47,6 +47,7 @@ app.get('/health', (req, res) => {
       'GET /health', 
       'GET /projects',
       'POST /projects',
+      'POST /projects/:id/redeploy',
       'DELETE /projects/:id',
       'GET /domains',
       'DELETE /domains/:id'
@@ -899,8 +900,8 @@ app.post('/projects', async (req, res) => {
       name: name,
       repository: repository,
       framework: framework || 'unknown',
-      status: 'deployed', // ✅ Cambiar a deployed para que aparezca el botón
-      url: deploymentUrl, // ✅ Añadir URL válida
+      status: 'building', // ✅ Empezar como building
+      url: null, // ✅ Sin URL hasta que termine
       user_id: null,
       created_at: new Date().toISOString(),
       container_id: null,
@@ -920,13 +921,13 @@ app.post('/projects', async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 
-    // Add creation and deployment log
+    // Add creation log
     const logEntry = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       level: 'info',
-      message: `Proyecto "${name}" creado y desplegado exitosamente`,
-      details: `Repositorio: ${repository}, Framework: ${framework || 'unknown'}, URL: ${deploymentUrl}`,
+      message: `Proyecto "${name}" creado - iniciando despliegue...`,
+      details: `Repositorio: ${repository}, Framework: ${framework || 'unknown'}`,
       source: 'projects',
       project_id: newProject.id,
       project_name: name
@@ -934,10 +935,141 @@ app.post('/projects', async (req, res) => {
 
     await supabase.from('logs').insert([logEntry]);
     
-    console.log(`✅ Project "${name}" created and deployed successfully at ${deploymentUrl}`);
+    console.log(`✅ Project "${name}" created, starting build process...`);
+    
+    // Simulate deployment process (3-8 seconds)
+    const deploymentTime = 3000 + Math.random() * 5000; // 3-8 seconds
+    
+    setTimeout(async () => {
+      try {
+        // Update project to deployed status
+        await supabase
+          .from('projects')
+          .update({ 
+            status: 'deployed',
+            url: deploymentUrl 
+          })
+          .eq('id', newProject.id);
+        
+        // Add success log
+        const successLog = {
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          level: 'info',
+          message: `✅ Proyecto "${name}" desplegado exitosamente`,
+          details: `URL: ${deploymentUrl}`,
+          source: 'deployments',
+          project_id: newProject.id,
+          project_name: name
+        };
+        
+        await supabase.from('logs').insert([successLog]);
+        console.log(`🚀 Project "${name}" deployed successfully at ${deploymentUrl}`);
+      } catch (error) {
+        console.error('Error completing deployment:', error);
+        
+        // Update to failed status if something goes wrong
+        await supabase
+          .from('projects')
+          .update({ status: 'failed' })
+          .eq('id', newProject.id);
+      }
+    }, deploymentTime);
     res.status(201).json(data);
   } catch (error) {
     console.error('❌ Error in POST /projects:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Redeploy project endpoint with realistic timing
+app.post('/projects/:id/redeploy', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get the project
+    const { data: project, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (fetchError || !project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Set to building status
+    await supabase
+      .from('projects')
+      .update({ 
+        status: 'building',
+        url: null // Remove URL during rebuild
+      })
+      .eq('id', id);
+
+    // Add redeploy log
+    const redeployLog = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      level: 'info',
+      message: `🔄 Redespliegue iniciado para "${project.name}"`,
+      details: `Repositorio: ${project.repository}`,
+      source: 'deployments',
+      project_id: id,
+      project_name: project.name
+    };
+
+    await supabase.from('logs').insert([redeployLog]);
+    
+    res.json({ 
+      message: `Redeploy started for ${project.name}`,
+      status: 'building'
+    });
+
+    // Simulate redeploy process (5-10 seconds)
+    const deploymentTime = 5000 + Math.random() * 5000; // 5-10 seconds
+    
+    setTimeout(async () => {
+      try {
+        const projectSlug = project.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        const deploymentUrl = `https://${projectSlug}.xistracloud.app`;
+        
+        // Update project to deployed status
+        await supabase
+          .from('projects')
+          .update({ 
+            status: 'deployed',
+            url: deploymentUrl 
+          })
+          .eq('id', id);
+        
+        // Add success log
+        const successLog = {
+          id: crypto.randomUUID(),
+          timestamp: new Date().toISOString(),
+          level: 'info',
+          message: `✅ Redespliegue completado para "${project.name}"`,
+          details: `URL: ${deploymentUrl}`,
+          source: 'deployments',
+          project_id: id,
+          project_name: project.name
+        };
+        
+        await supabase.from('logs').insert([successLog]);
+        console.log(`🚀 Project "${project.name}" redeployed successfully`);
+      } catch (error) {
+        console.error('Error completing redeploy:', error);
+        
+        // Update to failed status if something goes wrong
+        await supabase
+          .from('projects')
+          .update({ status: 'failed' })
+          .eq('id', id);
+      }
+    }, deploymentTime);
+    
+  } catch (error) {
+    console.error('❌ Error in redeploy:', error);
     res.status(500).json({ error: error.message });
   }
 });

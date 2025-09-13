@@ -2,7 +2,7 @@
 export interface Project {
   id: string;
   name: string;
-  status: 'deployed' | 'building' | 'failed' | 'stopped';
+  status: 'deployed' | 'building' | 'failed' | 'stopped' | 'pending';
   created_at: string;
   url?: string | null;
   repository: string;
