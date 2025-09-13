@@ -4,9 +4,12 @@ builder = "dockerfile"
 
 [build.env]
 NODE_ENV = "production"
+BUILD_ID = "${{RAILWAY_GIT_COMMIT_SHA:0:7}}-${{RAILWAY_DEPLOYMENT_ID:0:8}}"
 
 [deploy]
 startCommand = "npm start"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
 
 [env]
 SUPABASE_URL = "${{SUPABASE_URL}}"

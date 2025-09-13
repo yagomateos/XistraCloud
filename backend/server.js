@@ -14,11 +14,41 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Test endpoint
 app.get('/', (req, res) => {
+  const buildId = process.env.BUILD_ID || 'local-dev';
+  const deploymentId = process.env.RAILWAY_DEPLOYMENT_ID || 'local';
+  const commitSha = process.env.RAILWAY_GIT_COMMIT_SHA || 'unknown';
+  
   res.json({ 
-    message: 'XistraCloud API v3.0 - FIXED DNS CONFIGURED ISSUE',
+    message: 'XistraCloud API v3.0 - DELETE ENDPOINT READY',
     timestamp: new Date().toISOString(),
-    version: '2025-09-13-DELETE-PROJECTS-FINAL-V2',
-    status: 'dns_configured column removed'
+    version: '2025-09-13-DELETE-READY-FINAL',
+    buildId,
+    deploymentId: deploymentId.substring(0, 8),
+    commitSha: commitSha.substring(0, 7),
+    status: 'DELETE /projects/:id implemented',
+    endpoints: {
+      delete_project: 'DELETE /projects/:id',
+      health: 'GET /health'
+    }
+  });
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '2025-09-13-DELETE-READY-FINAL',
+    buildId: process.env.BUILD_ID || 'local-dev',
+    endpoints_available: [
+      'GET /',
+      'GET /health', 
+      'GET /projects',
+      'DELETE /projects/:id',
+      'GET /domains',
+      'DELETE /domains/:id'
+    ]
   });
 });
 
