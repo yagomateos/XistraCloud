@@ -1,4 +1,4 @@
-// Simple working endpoint v2.1 - Dashboard Fix
+// Simple working endpoint v2.2 - Railway Style Logs
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
