@@ -48,6 +48,7 @@ export interface DashboardStats {
     building: number;
     error: number;
     stopped?: number;
+    pending?: number;
   };
   deploymentTrend: Array<{
     date: string;

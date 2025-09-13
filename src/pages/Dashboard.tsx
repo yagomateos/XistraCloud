@@ -29,6 +29,16 @@ const Dashboard = () => {
     refetchInterval: 30000 // Actualizar cada 30 segundos
   });
 
+  // Obtener conteo de dominios
+  const { data: domainsData } = useQuery({
+    queryKey: ['domains'],
+    queryFn: async () => {
+      const response = await fetch('https://xistracloud-production.up.railway.app/domains');
+      return response.json();
+    },
+    refetchInterval: 60000 // Actualizar cada 60 segundos
+  });
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Cargando...</div>;
   }
@@ -40,6 +50,7 @@ const Dashboard = () => {
   const projectsStatus = [
     { name: 'Activos', value: dashboardData?.projectStats.active || 0, color: 'hsl(var(--success))' },
     { name: 'En construcción', value: dashboardData?.projectStats.building || 0, color: 'hsl(var(--warning))' },
+    { name: 'Pendientes', value: dashboardData?.projectStats.pending || 0, color: 'hsl(var(--muted))' },
     { name: 'Con errores', value: dashboardData?.projectStats.error || 0, color: 'hsl(var(--error))' }
   ];
 
@@ -64,11 +75,23 @@ const Dashboard = () => {
     { date: 'Hoy', uptime: 100 },
   ];
 
-  // Datos de ejemplo para proyectos principales
-  const topProjects = [
-    { name: 'example-voting-app', requests: '5.1K', uptime: '98.8%', status: 'deployed' },
-    { name: 'fastapi-blog-api', requests: '3.2K', uptime: '99.9%', status: 'deployed' },
-    { name: 'react-dashboard', requests: '1.8K', uptime: '99.5%', status: 'deployed' },
+  // Obtener proyectos reales para mostrar en el dashboard
+  const { data: projectsData } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const response = await fetch('https://xistracloud-production.up.railway.app/projects');
+      const projects = await response.json();
+      // Tomar solo los primeros 3 proyectos activos
+      return projects.filter((p: any) => p.status === 'deployed').slice(0, 3);
+    },
+    refetchInterval: 60000
+  });
+
+  // Datos de ejemplo para proyectos principales - usar datos reales si están disponibles
+  const topProjects = projectsData || [
+    { name: 'awesome-compose', requests: '5.1K', uptime: '98.8%', status: 'deployed' },
+    { name: 'landing-page', requests: '3.2K', uptime: '99.9%', status: 'deployed' },
+    { name: 'api-service', requests: '1.8K', uptime: '99.5%', status: 'deployed' },
   ];
 
   const getActivityIcon = (type: string) => {
@@ -114,19 +137,25 @@ const Dashboard = () => {
             <BarChart3 className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg lg:text-2xl font-bold">{(dashboardData?.projectStats.active || 0) + (dashboardData?.projectStats.building || 0) + (dashboardData?.projectStats.error || 0) + (dashboardData?.projectStats.stopped || 0)}</div>
+            <div className="text-lg lg:text-2xl font-bold">
+              {(dashboardData?.projectStats.active || 0) + 
+               (dashboardData?.projectStats.building || 0) + 
+               (dashboardData?.projectStats.error || 0) + 
+               (dashboardData?.projectStats.stopped || 0) +
+               (dashboardData?.projectStats.pending || 0)}
+            </div>
             <p className="text-xs text-success">+2 este mes</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium">Deployments hoy</CardTitle>
+            <CardTitle className="text-xs lg:text-sm font-medium">Activos ahora</CardTitle>
             <Rocket className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-lg lg:text-2xl font-bold">{dashboardData?.projectStats.active || 0}</div>
-            <p className="text-xs text-success">+15% vs ayer</p>
+            <p className="text-xs text-success">Proyectos desplegados</p>
           </CardContent>
         </Card>
 
@@ -158,8 +187,11 @@ const Dashboard = () => {
         <div className="mb-6 lg:mb-8">
           <PlanLimitCard 
             userPlan={userPlan}
-            currentProjects={(dashboardData?.projectStats.active || 0) + (dashboardData?.projectStats.building || 0) + (dashboardData?.projectStats.error || 0)}
-            currentDomains={0} // TODO: obtener de la API
+            currentProjects={(dashboardData?.projectStats.active || 0) + 
+                           (dashboardData?.projectStats.building || 0) + 
+                           (dashboardData?.projectStats.error || 0) +
+                           (dashboardData?.projectStats.pending || 0)}
+            currentDomains={domainsData?.length || 0}
           />
         </div>
       )}
