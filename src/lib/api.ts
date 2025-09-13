@@ -511,7 +511,7 @@ export const getDomains = async (): Promise<Domain[]> => {
   }
 };
 
-export const getLogs = async (): Promise<Log[]> => {
+export const getLogs = async (params?: { level?: string; limit?: number; source?: string; project?: string }): Promise<Log[]> => {
   if (USE_MOCK_DATA) {
     console.log('🔄 Using mock data for logs');
     await new Promise(resolve => setTimeout(resolve, 350));
@@ -519,8 +519,22 @@ export const getLogs = async (): Promise<Log[]> => {
   }
 
   try {
-    console.log('🌐 Fetching logs from API:', `${API_URL}/logs`);
-    const response = await fetch(`${API_URL}/logs`);
+    let url = `${API_URL}/logs`;
+    if (params) {
+      const urlParams = new URLSearchParams();
+      if (params.level) urlParams.append('level', params.level);
+      if (params.limit) urlParams.append('limit', params.limit.toString());
+      if (params.source) urlParams.append('source', params.source);
+      if (params.project) urlParams.append('project', params.project);
+      
+      const paramsString = urlParams.toString();
+      if (paramsString) {
+        url += `?${paramsString}`;
+      }
+    }
+
+    console.log('🌐 Fetching logs from API:', url);
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

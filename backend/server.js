@@ -259,9 +259,9 @@ app.get('/logs', async (req, res) => {
           id: logId++,
           timestamp: new Date(baseTime).toISOString(),
           level: 'info',
-          message: `🚀 Starting deployment for "${project.name}"`,
-          details: `Repository: ${project.repository}`,
-          source: 'deployment',
+          message: `🚀 Iniciando despliegue para "${project.name}"`,
+          details: `Repositorio: ${project.repository}`,
+          source: 'despliegue',
           project_id: project.id,
           project_name: project.name,
           framework: project.framework
@@ -272,9 +272,9 @@ app.get('/logs', async (req, res) => {
           id: logId++,
           timestamp: new Date(baseTime + 5000).toISOString(),
           level: 'info',
-          message: `📦 Installing dependencies for ${project.framework}`,
-          details: `Running npm install / yarn install`,
-          source: 'build',
+          message: `📦 Instalando dependencias para ${project.framework}`,
+          details: `Ejecutando npm install / yarn install`,
+          source: 'construcción',
           project_id: project.id,
           project_name: project.name
         });
@@ -283,12 +283,12 @@ app.get('/logs', async (req, res) => {
           id: logId++,
           timestamp: new Date(baseTime + 15000).toISOString(),
           level: 'info',
-          message: `🔨 Building ${project.framework} application`,
-          details: project.framework === 'nextjs' ? 'Next.js production build' : 
-                  project.framework === 'react' ? 'React production build' : 
-                  project.framework === 'nodejs' ? 'Node.js server setup' : 
-                  `${project.framework} build process`,
-          source: 'build',
+          message: `🔨 Construyendo aplicación ${project.framework}`,
+          details: project.framework === 'nextjs' ? 'Construcción de producción Next.js' : 
+                  project.framework === 'react' ? 'Construcción de producción React' : 
+                  project.framework === 'nodejs' ? 'Configuración servidor Node.js' : 
+                  `Proceso de construcción ${project.framework}`,
+          source: 'construcción',
           project_id: project.id,
           project_name: project.name
         });
@@ -297,72 +297,72 @@ app.get('/logs', async (req, res) => {
         const statusLogs = {
           deployed: {
             level: 'success',
-            message: `✅ Deployment successful for "${project.name}"`,
-            details: `Service is running on port ${Math.floor(Math.random() * 9000) + 3000}`,
+            message: `✅ Despliegue exitoso para "${project.name}"`,
+            details: `El servicio está ejecutándose en el puerto ${Math.floor(Math.random() * 9000) + 3000}`,
             extraLogs: [
               {
                 offset: 25000,
                 level: 'info', 
-                message: `🌐 Service health check passed`,
-                details: `HTTP 200 OK - Service responding normally`
+                message: `🌐 Verificación de salud del servicio aprobada`,
+                details: `HTTP 200 OK - Servicio respondiendo normalmente`
               },
               {
                 offset: 30000,
                 level: 'info',
-                message: `📊 Metrics collection enabled`,
-                details: `CPU: 2%, Memory: 45MB, Network: Active`
+                message: `📊 Recolección de métricas habilitada`,
+                details: `CPU: 2%, Memoria: 45MB, Red: Activa`
               }
             ]
           },
           building: {
             level: 'warning',
-            message: `⏳ Build in progress for "${project.name}"`,
-            details: `Build step 3/5 - Optimizing assets...`,
+            message: `⏳ Construcción en progreso para "${project.name}"`,
+            details: `Paso de construcción 3/5 - Optimizando recursos...`,
             extraLogs: [
               {
                 offset: 8000,
                 level: 'info',
-                message: `📥 Downloading build dependencies`,
-                details: `Fetching Node.js ${Math.floor(Math.random() * 3) + 16}.x runtime`
+                message: `📥 Descargando dependencias de construcción`,
+                details: `Obteniendo runtime Node.js ${Math.floor(Math.random() * 3) + 16}.x`
               }
             ]
           },
           pending: {
             level: 'warning', 
-            message: `⏱️ Deployment queued for "${project.name}"`,
-            details: `Waiting for available build slot...`,
+            message: `⏱️ Despliegue en cola para "${project.name}"`,
+            details: `Esperando espacio disponible para construcción...`,
             extraLogs: [
               {
                 offset: 2000,
                 level: 'info',
-                message: `📋 Build configuration validated`,
-                details: `Dockerfile detected, using containerized deployment`
+                message: `📋 Configuración de construcción validada`,
+                details: `Dockerfile detectado, usando despliegue en contenedor`
               }
             ]
           },
           failed: {
             level: 'error',
-            message: `❌ Deployment failed for "${project.name}"`,
-            details: `Build failed at step 2/5 - Dependency resolution`,
+            message: `❌ Despliegue fallido para "${project.name}"`,
+            details: `La construcción falló en el paso 2/5 - Resolución de dependencias`,
             extraLogs: [
               {
                 offset: 12000,
                 level: 'error',
-                message: `🔴 Error: Package not found`,
-                details: `npm ERR! 404 Not Found - GET https://registry.npmjs.org/some-package`
+                message: `🔴 Error: Paquete no encontrado`,
+                details: `npm ERR! 404 No Encontrado - GET https://registry.npmjs.org/some-package`
               },
               {
                 offset: 13000,
                 level: 'warning',
-                message: `🔄 Retrying build with fallback configuration`,
-                details: `Attempting recovery with cached dependencies`
+                message: `🔄 Reintentando construcción con configuración de respaldo`,
+                details: `Intentando recuperación con dependencias en caché`
               }
             ]
           },
           stopped: {
             level: 'warning',
-            message: `⏹️ Service stopped for "${project.name}"`,
-            details: `Graceful shutdown initiated by user`,
+            message: `⏹️ Servicio detenido para "${project.name}"`,
+            details: `Apagado graceful iniciado por el usuario`,
             extraLogs: []
           }
         };
@@ -389,7 +389,7 @@ app.get('/logs', async (req, res) => {
             level: extra.level,
             message: extra.message,
             details: extra.details,
-            source: 'system',
+            source: 'sistema',
             project_id: project.id,
             project_name: project.name
           });
@@ -401,9 +401,9 @@ app.get('/logs', async (req, res) => {
             id: logId++,
             timestamp: new Date(baseTime + 35000).toISOString(),
             level: 'info',
-            message: `🐳 Container started`,
-            details: `Container ID: ${project.container_id.substring(0, 12)}... | Status: Running`,
-            source: 'container',
+            message: `🐳 Contenedor iniciado`,
+            details: `ID del Contenedor: ${project.container_id.substring(0, 12)}... | Estado: Ejecutándose`,
+            source: 'contenedor',
             project_id: project.id,
             project_name: project.name,
             container_id: project.container_id
@@ -413,9 +413,9 @@ app.get('/logs', async (req, res) => {
             id: logId++,
             timestamp: new Date(baseTime + 40000).toISOString(),
             level: 'info',
-            message: `📋 Container logs streaming`,
-            details: `Log level: INFO | Output: /var/log/app.log`,
-            source: 'container',
+            message: `📋 Transmisión de logs del contenedor`,
+            details: `Nivel de log: INFO | Salida: /var/log/app.log`,
+            source: 'contenedor',
             project_id: project.id,
             project_name: project.name
           });
@@ -433,9 +433,9 @@ app.get('/logs', async (req, res) => {
           id: logId++,
           timestamp: new Date(baseTime).toISOString(),
           level: 'info',
-          message: `🌐 Domain configuration initiated`,
-          details: `Domain: ${domain.domain} | Project: ${domain.project_name}`,
-          source: 'domain',
+          message: `🌐 Configuración de dominio iniciada`,
+          details: `Dominio: ${domain.domain} | Proyecto: ${domain.project_name}`,
+          source: 'dominio',
           domain_id: domain.id,
           domain_name: domain.domain,
           project_name: domain.project_name
@@ -447,36 +447,36 @@ app.get('/logs', async (req, res) => {
             {
               offset: 10000,
               level: 'info',
-              message: `🔍 DNS verification started`,
-              details: `Checking CNAME record for ${domain.domain}`
+              message: `🔍 Verificación DNS iniciada`,
+              details: `Comprobando registro CNAME para ${domain.domain}`
             },
             {
               offset: 15000,
               level: 'success',
-              message: `✅ DNS verification successful`,
-              details: `CNAME points to xistracloud.app correctly`
+              message: `✅ Verificación DNS exitosa`,
+              details: `CNAME apunta a xistracloud.app correctamente`
             }
           ],
           pending: [
             {
               offset: 10000,
               level: 'warning',
-              message: `⏳ DNS verification pending`,
-              details: `Waiting for CNAME propagation...`
+              message: `⏳ Verificación DNS pendiente`,
+              details: `Esperando propagación de CNAME...`
             },
             {
               offset: 60000,
               level: 'warning',
-              message: `⏱️ Still waiting for DNS`,
-              details: `Please ensure CNAME record is configured`
+              message: `⏱️ Aún esperando DNS`,
+              details: `Por favor, asegúrese de que el registro CNAME esté configurado`
             }
           ],
           failed: [
             {
               offset: 10000,
               level: 'error',
-              message: `❌ DNS verification failed`,
-              details: `CNAME record not found or incorrect`
+              message: `❌ Verificación DNS fallida`,
+              details: `Registro CNAME no encontrado o incorrecto`
             }
           ]
         };
@@ -503,8 +503,8 @@ app.get('/logs', async (req, res) => {
             id: logId++,
             timestamp: new Date(sslTime).toISOString(),
             level: 'info',
-            message: `🔒 SSL certificate provisioning`,
-            details: `Requesting Let's Encrypt certificate for ${domain.domain}`,
+            message: `🔒 Aprovisionamiento de certificado SSL`,
+            details: `Solicitando certificado Let's Encrypt para ${domain.domain}`,
             source: 'ssl',
             domain_id: domain.id,
             domain_name: domain.domain
@@ -515,11 +515,11 @@ app.get('/logs', async (req, res) => {
             timestamp: new Date(sslTime + 5000).toISOString(),
             level: domain.ssl_status === 'active' ? 'success' : 'warning',
             message: domain.ssl_status === 'active' ? 
-              `🔐 SSL certificate issued successfully` : 
-              `⚠️ SSL certificate pending`,
+              `🔐 Certificado SSL emitido con éxito` : 
+              `⚠️ Certificado SSL pendiente`,
             details: domain.ssl_status === 'active' ?
-              `Certificate valid until ${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toDateString()}` :
-              `Certificate issuance in progress...`,
+              `Certificado válido hasta ${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toDateString()}` :
+              `Emisión de certificado en progreso...`,
             source: 'ssl',
             domain_id: domain.id,
             domain_name: domain.domain
