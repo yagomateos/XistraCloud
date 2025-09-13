@@ -15,7 +15,7 @@ interface ProjectCardProps {
     name: string;
     repository: string;
     framework: string;
-    status: 'deployed' | 'building' | 'failed' | 'stopped';
+    status: 'deployed' | 'building' | 'failed' | 'stopped' | 'pending';
     lastDeploy: string;
     url?: string;
   };
@@ -35,6 +35,8 @@ const ProjectCard = ({ project, onViewDetails, onDeploy, onDelete }: ProjectCard
         return 'bg-error-bg text-error border-error/20';
       case 'stopped':
         return 'bg-muted text-muted-foreground border-muted/20';
+      case 'pending':
+        return 'bg-info-bg text-info border-info/20';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -50,6 +52,8 @@ const ProjectCard = ({ project, onViewDetails, onDeploy, onDelete }: ProjectCard
         return 'Falló';
       case 'stopped':
         return 'Detenido';
+      case 'pending':
+        return 'Pendiente';
       default:
         return status;
     }
@@ -126,6 +130,7 @@ const ProjectCard = ({ project, onViewDetails, onDeploy, onDelete }: ProjectCard
             <div className={`status-dot mr-1 status-${
               project.status === 'deployed' ? 'success' : 
               project.status === 'building' ? 'warning' : 
+              project.status === 'pending' ? 'info' :
               project.status === 'stopped' ? 'muted' : 
               'error'
             }`} />
