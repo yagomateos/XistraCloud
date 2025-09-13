@@ -24,35 +24,8 @@ const Projects = () => {
   const { data: projects = [], isLoading, error, refetch } = useQuery({
     queryKey: ['projects'],
     queryFn: getProjects,
-    refetchInterval: 5000, // Refetch every 5 seconds to check for building projects
+    refetchInterval: 10000, // Refetch every 10 seconds
   });
-
-  // Auto-complete building projects
-  useEffect(() => {
-    const hasBuildingProjects = projects.some(p => p.status === 'building');
-    
-    if (hasBuildingProjects) {
-      const autoCompleteBuilding = async () => {
-        try {
-          const response = await fetch('https://xistracloud-production.up.railway.app/projects/auto-complete');
-          const result = await response.json();
-          
-          if (result.updates && result.updates.length > 0) {
-            console.log(`✅ Auto-completed ${result.updates.length} building projects`);
-            refetch(); // Refresh the projects list
-          }
-        } catch (error) {
-          console.error('Error auto-completing projects:', error);
-        }
-      };
-
-      // Call immediately and then every 10 seconds while there are building projects
-      autoCompleteBuilding();
-      const interval = setInterval(autoCompleteBuilding, 10000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [projects, refetch]);
 
   // Delete project mutation
   const deleteProjectMutation = useMutation({
