@@ -23,6 +23,7 @@ import { useUserData } from '@/hooks/useUserData';
 const Dashboard = () => {
   const { userData, userPlan } = useUserData();
 
+  // ✅ TODOS LOS HOOKS AL INICIO - NUNCA CAMBIAR EL ORDEN
   const { data: dashboardData, isLoading, error } = useQuery({
     queryKey: ['dashboardStats'],
     queryFn: getDashboardStats,
@@ -38,6 +39,20 @@ const Dashboard = () => {
     },
     refetchInterval: 60000 // Actualizar cada 60 segundos
   });
+
+  // Obtener proyectos reales para mostrar en el dashboard
+  const { data: projectsData } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const response = await fetch('https://xistracloud-production.up.railway.app/projects');
+      const projects = await response.json();
+      // Tomar solo los primeros 3 proyectos activos
+      return projects.filter((p: any) => p.status === 'deployed').slice(0, 3);
+    },
+    refetchInterval: 60000
+  });
+
+  // ✅ LÓGICA CONDICIONAL DESPUÉS DE LOS HOOKS
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-full">Cargando...</div>;
@@ -74,18 +89,6 @@ const Dashboard = () => {
     { date: 'Hace 2d', uptime: 99.9 },
     { date: 'Hoy', uptime: 100 },
   ];
-
-  // Obtener proyectos reales para mostrar en el dashboard
-  const { data: projectsData } = useQuery({
-    queryKey: ['projects'],
-    queryFn: async () => {
-      const response = await fetch('https://xistracloud-production.up.railway.app/projects');
-      const projects = await response.json();
-      // Tomar solo los primeros 3 proyectos activos
-      return projects.filter((p: any) => p.status === 'deployed').slice(0, 3);
-    },
-    refetchInterval: 60000
-  });
 
   // Datos de ejemplo para proyectos principales - usar datos reales si están disponibles
   const topProjects = projectsData || [
