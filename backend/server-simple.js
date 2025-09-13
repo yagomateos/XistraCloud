@@ -84,6 +84,15 @@ app.post('/domains', async (req, res) => {
       txt: { name: `_xistracloud.${domain}`, value: `xistracloud-verification=${verificationToken}` }
     };
 
+    console.log('🚀 Creating domain in database:', {
+      domain,
+      project_id: projectIdValue,
+      status: 'pending',
+      ssl_enabled: false,
+      dns_records: dnsRecords,
+      verification_token: verificationToken
+    });
+
     const { data: newDomain, error: insertError } = await supabase
       .from('domains')
       .insert({
