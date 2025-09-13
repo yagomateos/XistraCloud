@@ -1,27 +1,14 @@
 # Railway Deployment Configuration
-name: xistracloud-backend
-services:
-  backend:
-    build:
-      context: ./backend
-    environments:
-      production:
-        variables:
-          NODE_ENV: production
-          SUPABASE_URL: ${{SUPABASE_URL}}
-          SUPABASE_KEY: ${{SUPABASE_KEY}}
-          DOCKER_HOST: unix:///var/run/docker.sock
-        domains:
-          - api.xistracloud.com
-  
-  database:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: xistracloud
-      POSTGRES_USER: ${{POSTGRES_USER}}
-      POSTGRES_PASSWORD: ${{POSTGRES_PASSWORD}}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+[build]
+context = "./backend"
 
-volumes:
-  postgres_data:
+[build.env]
+NODE_ENV = "production"
+
+[deploy]
+startCommand = "node server.js"
+
+[env]
+SUPABASE_URL = "${{SUPABASE_URL}}"
+SUPABASE_KEY = "${{SUPABASE_KEY}}"
+SUPABASE_SERVICE_ROLE_KEY = "${{SUPABASE_SERVICE_ROLE_KEY}}"
