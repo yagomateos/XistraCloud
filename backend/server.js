@@ -1,4 +1,4 @@
-// Simple working endpoint v2.2 - Railway Style Logs
+// Railway Force Update: Detailed Logs Implementation v3.0 - MUST DEPLOY NOW!
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
