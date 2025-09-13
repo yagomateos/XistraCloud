@@ -71,6 +71,68 @@ app.get('/domains', async (req, res) => {
   }
 });
 
+// Dashboard stats endpoint
+app.get('/dashboard/stats', async (req, res) => {
+  try {
+    console.log('📊 Fetching dashboard stats');
+    
+    // Get counts
+    const { count: domainsCount } = await supabase
+      .from('domains')
+      .select('*', { count: 'exact', head: true });
+
+    const { count: projectsCount } = await supabase
+      .from('projects')
+      .select('*', { count: 'exact', head: true });
+
+    res.json({
+      totalDomains: domainsCount || 0,
+      totalProjects: projectsCount || 0,
+      totalDeployments: 156, // Mock for now
+      uptime: 99.9
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching dashboard stats:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch dashboard stats',
+      details: error.message 
+    });
+  }
+});
+
+// Logs endpoint
+app.get('/logs', async (req, res) => {
+  try {
+    console.log('📝 Fetching logs');
+    
+    // Mock logs for now - you can integrate with actual logging later
+    res.json([
+      {
+        id: 1,
+        timestamp: new Date().toISOString(),
+        level: 'info',
+        message: 'Domain created successfully',
+        source: 'api'
+      },
+      {
+        id: 2,
+        timestamp: new Date(Date.now() - 300000).toISOString(),
+        level: 'info',
+        message: 'Project deployment completed',
+        source: 'deployment'
+      }
+    ]);
+
+  } catch (error) {
+    console.error('❌ Error fetching logs:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch logs',
+      details: error.message 
+    });
+  }
+});
+
 // Working domain creation endpoint
 app.post('/domains', async (req, res) => {
   try {
