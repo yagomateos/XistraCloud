@@ -1,4 +1,4 @@
-// Simple working endpoint that bypasses all Railway issues
+// Simple working endpoint v2.1 - Dashboard Fix
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
