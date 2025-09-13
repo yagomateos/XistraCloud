@@ -17,7 +17,7 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'XistraCloud API v3.0 - FIXED DNS CONFIGURED ISSUE',
     timestamp: new Date().toISOString(),
-    version: '2025-09-13-DELETE-PROJECTS-FIX',
+    version: '2025-09-13-DELETE-PROJECTS-FINAL-V2',
     status: 'dns_configured column removed'
   });
 });
