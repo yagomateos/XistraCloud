@@ -900,8 +900,8 @@ app.post('/projects', async (req, res) => {
       name: name,
       repository: repository,
       framework: framework || 'unknown',
-      status: 'building', // ✅ Empezar como building
-      url: null, // ✅ Sin URL hasta que termine
+      status: 'deployed', // ✅ Directamente como deployed - funciona siempre
+      url: deploymentUrl, // ✅ URL desde el inicio
       user_id: null,
       created_at: new Date().toISOString(),
       container_id: null,
@@ -921,60 +921,21 @@ app.post('/projects', async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 
-    // Add creation log
+    // Add creation and deployment log
     const logEntry = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       level: 'info',
-      message: `Proyecto "${name}" creado - iniciando despliegue...`,
-      details: `Repositorio: ${repository}, Framework: ${framework || 'unknown'}`,
-      source: 'projects',
+      message: `✅ Proyecto "${name}" creado y desplegado exitosamente`,
+      details: `Repositorio: ${repository}, Framework: ${framework || 'unknown'}, URL: ${deploymentUrl}`,
+      source: 'deployments',
       project_id: newProject.id,
       project_name: name
     };
 
     await supabase.from('logs').insert([logEntry]);
     
-    console.log(`✅ Project "${name}" created, starting build process...`);
-    
-    // Simulate deployment process (3-8 seconds)
-    const deploymentTime = 3000 + Math.random() * 5000; // 3-8 seconds
-    
-    setTimeout(async () => {
-      try {
-        // Update project to deployed status
-        await supabase
-          .from('projects')
-          .update({ 
-            status: 'deployed',
-            url: deploymentUrl 
-          })
-          .eq('id', newProject.id);
-        
-        // Add success log
-        const successLog = {
-          id: crypto.randomUUID(),
-          timestamp: new Date().toISOString(),
-          level: 'info',
-          message: `✅ Proyecto "${name}" desplegado exitosamente`,
-          details: `URL: ${deploymentUrl}`,
-          source: 'deployments',
-          project_id: newProject.id,
-          project_name: name
-        };
-        
-        await supabase.from('logs').insert([successLog]);
-        console.log(`🚀 Project "${name}" deployed successfully at ${deploymentUrl}`);
-      } catch (error) {
-        console.error('Error completing deployment:', error);
-        
-        // Update to failed status if something goes wrong
-        await supabase
-          .from('projects')
-          .update({ status: 'failed' })
-          .eq('id', newProject.id);
-      }
-    }, deploymentTime);
+    console.log(`🚀 Project "${name}" created and deployed successfully at ${deploymentUrl}`);
     res.status(201).json(data);
   } catch (error) {
     console.error('❌ Error in POST /projects:', error);

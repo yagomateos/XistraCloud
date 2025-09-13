@@ -19,7 +19,6 @@ import { getDashboardStats } from '@/lib/api';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useUserData } from '@/hooks/useUserData';
-import { useEffect } from 'react';
 
 const Dashboard = () => {
   const { userData, userPlan } = useUserData();
@@ -52,27 +51,6 @@ const Dashboard = () => {
     },
     refetchInterval: 30000
   });
-
-  // Auto-complete building projects (same as Projects page)
-  useEffect(() => {
-    const autoCompleteBuilding = async () => {
-      try {
-        const response = await fetch('https://xistracloud-production.up.railway.app/projects/auto-complete');
-        const result = await response.json();
-        
-        if (result.updates && result.updates.length > 0) {
-          console.log(`✅ Dashboard: Auto-completed ${result.updates.length} building projects`);
-        }
-      } catch (error) {
-        console.error('Dashboard: Error auto-completing projects:', error);
-      }
-    };
-
-    // Check every 15 seconds from dashboard
-    const interval = setInterval(autoCompleteBuilding, 15000);
-    
-    return () => clearInterval(interval);
-  }, []);
 
   // ✅ LÓGICA CONDICIONAL DESPUÉS DE LOS HOOKS
 
