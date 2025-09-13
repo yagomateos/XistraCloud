@@ -157,7 +157,7 @@ const CATEGORIES = [
   { id: 'design', name: 'Diseño', icon: Palette },
 ];
 
-const Templates = () => {
+const Apps = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -223,7 +223,7 @@ const Templates = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 space-y-4 lg:space-y-0">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Templates</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Apps</h1>
           <p className="text-sm lg:text-base text-muted-foreground">
             Despliega aplicaciones populares con un solo clic
           </p>
@@ -235,7 +235,7 @@ const Templates = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Buscar templates..."
+            placeholder="Buscar apps..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 h-11"
@@ -328,7 +328,7 @@ const Templates = () => {
                         className="w-full"
                         onClick={() => handleInstallTemplate(template)}
                       >
-                        Instalar Template
+                        Instalar App
                       </Button>
                     </CardFooter>
                   </Card>
@@ -339,7 +339,7 @@ const Templates = () => {
             {sortedTemplates.length === 0 && (
               <div className="text-center py-12">
                 <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No se encontraron templates</h3>
+                <h3 className="text-lg font-semibold mb-2">No se encontraron apps</h3>
                 <p className="text-muted-foreground">
                   Intenta cambiar los filtros de búsqueda o categoría
                 </p>
@@ -358,7 +358,7 @@ const Templates = () => {
               ¿Quieres instalar <strong>{selectedTemplate?.name}</strong>?
               <br />
               <span className="text-sm text-muted-foreground mt-2 block">
-                Se creará un nuevo proyecto con este template preconfigurado.
+                Se creará un nuevo proyecto con esta app preconfigurada.
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -367,7 +367,7 @@ const Templates = () => {
               Cancelar
             </Button>
             <Button onClick={confirmInstall}>
-              Instalar Template
+              Instalar App
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -376,4 +376,4 @@ const Templates = () => {
   );
 };
 
-export default Templates;
+export default Apps;
