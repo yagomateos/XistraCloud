@@ -25,14 +25,18 @@ export interface Domain {
 }
 
 export interface Log {
-  id: string;
-  project_id: string;
-  project_name: string;
-  type: string;
-  message: string;
-  created_at: string;
+  id: string | number;
+  timestamp?: string; // Optional - new Railway-style logs use this
   level: string;
+  message: string;
+  details?: string; // Optional details field for Railway-style logs
   source: string;
+  project_id?: string;
+  project_name?: string;
+  domain_id?: string;
+  domain_name?: string;
+  type?: string; // Optional backwards compatibility
+  created_at?: string; // Optional backwards compatibility - old logs use this
 }
 
 // Alias for backwards compatibility
@@ -471,7 +475,9 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    console.log('✅ Successfully fetched dashboard stats from API');
+    console.log('✅ Successfully fetched dashboard stats from API:', data);
+    
+    // Railway now returns the correct structure - no conversion needed!
     return data;
   } catch (error) {
     console.error('❌ Error fetching dashboard stats from API, falling back to mock data:', error);
