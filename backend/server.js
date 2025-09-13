@@ -1043,6 +1043,54 @@ app.get('/projects/debug-broken', async (req, res) => {
   }
 });
 
+// Simple fix for a specific project by ID
+app.patch('/projects/:id/fix', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get the project first
+    const { data: project, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (fetchError || !project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const projectSlug = project.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const deploymentUrl = `https://${projectSlug}.xistracloud.app`;
+    
+    const updateData = {
+      status: 'deployed',
+      url: deploymentUrl,
+      deploy_type: 'auto'
+    };
+    
+    const { data: updatedProject, error: updateError } = await supabase
+      .from('projects')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (updateError) {
+      console.error('Update error:', updateError);
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    res.json({ 
+      message: `Fixed project ${project.name}`, 
+      before: { status: project.status, url: project.url },
+      after: { status: updatedProject.status, url: updatedProject.url }
+    });
+  } catch (error) {
+    console.error('❌ Error fixing project:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);
