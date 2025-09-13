@@ -945,18 +945,25 @@ app.post('/projects', async (req, res) => {
 // Temporary endpoint to fix existing pending projects
 app.patch('/projects/fix-pending', async (req, res) => {
   try {
-    // Get all projects that need fixing (pending OR null URL)
-    const { data: projectsToFix, error: fetchError } = await supabase
+    // Get ALL projects first
+    const { data: allProjects, error: fetchError } = await supabase
       .from('projects')
-      .select('*')
-      .or('status.eq.pending,url.is.null,url.eq.');
+      .select('*');
     
     if (fetchError) {
       return res.status(500).json({ error: fetchError.message });
     }
 
+    // Filter broken projects in JavaScript
+    const projectsToFix = allProjects?.filter(project => 
+      project.status !== 'deployed' || 
+      !project.url || 
+      project.url === '' || 
+      project.url.includes('localhost')
+    ) || [];
+
     const updates = [];
-    for (const project of projectsToFix || []) {
+    for (const project of projectsToFix) {
       const projectSlug = project.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
       const deploymentUrl = `https://${projectSlug}.xistracloud.app`;
       
@@ -967,7 +974,7 @@ app.patch('/projects/fix-pending', async (req, res) => {
         updateData.status = 'deployed';
       }
       
-      // Fix URL if it's null or empty
+      // Fix URL if it's null or empty or localhost
       if (!project.url || project.url === '' || project.url.includes('localhost')) {
         updateData.url = deploymentUrl;
       }
@@ -988,18 +995,20 @@ app.patch('/projects/fix-pending', async (req, res) => {
           updates.push({ 
             id: project.id, 
             name: project.name, 
-            oldStatus: project.status,
-            newStatus: updateData.status || project.status,
-            oldUrl: project.url,
-            newUrl: updateData.url || project.url
+            changes: updateData
           });
+        } else {
+          console.error('Update error for', project.name, updateError);
         }
       }
     }
 
-    res.json({ message: `Updated ${updates.length} projects`, updates });
+    res.json({ 
+      message: `Fixed ${updates.length} out of ${projectsToFix.length} broken projects`, 
+      updates 
+    });
   } catch (error) {
-    console.error('❌ Error fixing pending projects:', error);
+    console.error('❌ Error fixing projects:', error);
     res.status(500).json({ error: error.message });
   }
 });
