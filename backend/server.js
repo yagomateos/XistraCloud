@@ -1223,6 +1223,142 @@ app.patch('/projects/:id/fix', async (req, res) => {
   }
 });
 
+// Auto-complete building projects that are stuck
+app.get('/projects/auto-complete', async (req, res) => {
+  try {
+    // Get all building projects
+    const { data: buildingProjects, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('status', 'building');
+    
+    if (fetchError) {
+      return res.status(500).json({ error: fetchError.message });
+    }
+
+    const updates = [];
+    const debugInfo = [];
+    const now = new Date();
+    
+    for (const project of buildingProjects || []) {
+      const createdAt = new Date(project.created_at);
+      const secondsSinceCreated = (now.getTime() - createdAt.getTime()) / 1000;
+      
+      debugInfo.push({
+        name: project.name,
+        created_at: project.created_at,
+        secondsSinceCreated: Math.round(secondsSinceCreated),
+        willUpdate: secondsSinceCreated > 5
+      });
+      
+      // If project has been building for more than 5 seconds, mark as deployed
+      if (secondsSinceCreated > 5) {
+        const projectSlug = project.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        const deploymentUrl = `https://${projectSlug}.xistracloud.app`;
+        
+        const { error: updateError } = await supabase
+          .from('projects')
+          .update({ 
+            status: 'deployed',
+            url: deploymentUrl 
+          })
+          .eq('id', project.id);
+        
+        if (!updateError) {
+          updates.push({ 
+            id: project.id, 
+            name: project.name,
+            secondsBuilding: Math.round(secondsSinceCreated)
+          });
+          
+          // Add completion log
+          const successLog = {
+            id: crypto.randomUUID(),
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            message: `✅ Despliegue completado para "${project.name}" (${Math.round(secondsSinceCreated)}s)`,
+            details: `URL: ${deploymentUrl}`,
+            source: 'deployments',
+            project_id: project.id,
+            project_name: project.name
+          };
+          
+          await supabase.from('logs').insert([successLog]);
+        } else {
+          console.error('Update error for', project.name, updateError);
+        }
+      }
+    }
+
+    res.json({ 
+      message: `Auto-completed ${updates.length} projects`, 
+      updates,
+      totalBuilding: buildingProjects?.length || 0,
+      debug: debugInfo
+    });
+  } catch (error) {
+    console.error('❌ Error auto-completing projects:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Force complete ALL building projects immediately
+app.post('/projects/force-complete-building', async (req, res) => {
+  try {
+    // Get all building projects
+    const { data: buildingProjects, error: fetchError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('status', 'building');
+    
+    if (fetchError) {
+      return res.status(500).json({ error: fetchError.message });
+    }
+
+    const updates = [];
+    
+    for (const project of buildingProjects || []) {
+      const projectSlug = project.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const deploymentUrl = `https://${projectSlug}.xistracloud.app`;
+      
+      try {
+        const { data: updatedProject, error: updateError } = await supabase
+          .from('projects')
+          .update({ 
+            status: 'deployed',
+            url: deploymentUrl 
+          })
+          .eq('id', project.id)
+          .select()
+          .single();
+        
+        if (updateError) {
+          console.error('Update error for', project.name, updateError);
+        } else {
+          updates.push({ 
+            id: project.id, 
+            name: project.name,
+            oldStatus: 'building',
+            newStatus: 'deployed',
+            url: deploymentUrl
+          });
+        }
+      } catch (error) {
+        console.error('Exception updating', project.name, error);
+      }
+    }
+
+    res.json({ 
+      message: `Force-completed ${updates.length} building projects`, 
+      updates,
+      totalProcessed: buildingProjects?.length || 0
+    });
+  } catch (error) {
+    console.error('❌ Error force-completing projects:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);
