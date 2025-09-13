@@ -11,7 +11,8 @@ import {
   LogOut,
   BarChart3,
   Globe,
-  X
+  X,
+  Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -56,6 +57,7 @@ const Sidebar = ({ user }: SidebarProps) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
     { name: 'Proyectos', href: '/dashboard/projects', icon: FolderOpen },
+    { name: 'Templates', href: '/dashboard/templates', icon: Package },
     { name: 'Despliegues', href: '/dashboard/deployments', icon: Rocket },
     { name: 'Logs', href: '/dashboard/logs', icon: FileText },
     { name: 'Dominios', href: '/dashboard/domains', icon: Globe },

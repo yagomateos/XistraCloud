@@ -9,6 +9,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
+import Templates from "@/pages/Templates";
 import Deployments from "@/pages/Deployments";
 import Logs from "@/pages/Logs";
 import Settings from "@/pages/Settings";
@@ -46,6 +47,7 @@ const App = () => (
                 <Route index element={<Dashboard />} />
                 <Route path="projects" element={<Projects />} />
                 <Route path="project/:id" element={<ProjectDetail />} />
+                <Route path="templates" element={<Templates />} />
                 <Route path="deployments" element={<Deployments />} />
                 <Route path="logs" element={<Logs />} />
                 <Route path="domains" element={<Domains />} />
