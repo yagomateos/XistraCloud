@@ -500,8 +500,11 @@ export const getDomains = async (): Promise<Domain[]> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    console.log('✅ Successfully fetched domains from API');
-    return data.domains || [];
+    console.log('✅ Successfully fetched domains from API:', data);
+    console.log('🔍 Domains array:', data.domains);
+    const domains = data.domains || [];
+    console.log('📦 Final domains to return:', domains);
+    return domains;
   } catch (error) {
     console.error('❌ Error fetching domains from API, falling back to mock data:', error);
     return MOCK_DOMAINS;

@@ -51,10 +51,13 @@ const Domains = () => {
   const { userData, userPlan } = useUserData();
 
   // Fetch domains from API
-  const { data: domains = [], isLoading, error, refetch } = useQuery({
+  const { data: domainsData = [], isLoading, error, refetch } = useQuery({
     queryKey: ['domains'],
     queryFn: getDomains,
   });
+
+  // Ensure domains is always an array
+  const domains = Array.isArray(domainsData) ? domainsData : [];
 
   // Fetch real projects from API
   const { data: projects = [] } = useQuery({
