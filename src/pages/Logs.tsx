@@ -10,13 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Download, AlertCircle, Info, CheckCircle, XCircle, Bug, RefreshCw } from 'lucide-react';
+import { Search, Download, AlertCircle, Info, CheckCircle, XCircle, Bug, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getLogs } from '@/lib/api';
 
 const Logs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [projectFilter, setProjectFilter] = useState<string>('all');
   const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Fetch logs from API
   const { data: logs = [], isLoading, error, refetch } = useQuery({
@@ -41,6 +43,17 @@ const Logs = () => {
     
     return matchesSearch && matchesProject;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedLogs = filteredLogs.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
 
   const getLevelIcon = (level: string) => {
     switch (level) {
@@ -194,13 +207,19 @@ const Logs = () => {
           <Input
             placeholder="Buscar en logs..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              resetPagination();
+            }}
             className="pl-10 h-11"
           />
         </div>
         
         <div className="flex gap-2">
-          <Select value={projectFilter} onValueChange={setProjectFilter}>
+          <Select value={projectFilter} onValueChange={(value) => {
+            setProjectFilter(value);
+            resetPagination();
+          }}>
             <SelectTrigger className="flex-1 h-11">
               <SelectValue placeholder="Todos los proyectos" />
             </SelectTrigger>
@@ -214,7 +233,10 @@ const Logs = () => {
             </SelectContent>
           </Select>
 
-          <Select value={levelFilter} onValueChange={setLevelFilter}>
+          <Select value={levelFilter} onValueChange={(value) => {
+            setLevelFilter(value);
+            resetPagination();
+          }}>
             <SelectTrigger className="flex-1 h-11">
               <SelectValue placeholder="Todos los niveles" />
             </SelectTrigger>
@@ -245,7 +267,7 @@ const Logs = () => {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {filteredLogs.map((log) => (
+            {paginatedLogs.map((log) => (
               <div key={log.id} className="p-3 lg:p-4 hover:bg-accent/50 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">
@@ -298,7 +320,42 @@ const Logs = () => {
         )}
       </div>
       
-      {filteredLogs.length > 0 && (
+      {/* Pagination */}
+      {filteredLogs.length > ITEMS_PER_PAGE && (
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Página {currentPage} de {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-xs lg:text-sm text-muted-foreground">
+            Mostrando {startIndex + 1}-{Math.min(endIndex, filteredLogs.length)} de {filteredLogs.length} logs filtrados
+            {logs.length !== filteredLogs.length && ` (${logs.length} total)`}
+            {logs.length >= 200 && " (últimos 200)"}
+          </p>
+        </div>
+      )}
+
+      {/* Footer info when no pagination needed */}
+      {filteredLogs.length > 0 && filteredLogs.length <= ITEMS_PER_PAGE && (
         <div className="mt-4 text-center">
           <p className="text-xs lg:text-sm text-muted-foreground">
             Mostrando {filteredLogs.length} de {logs.length} logs
