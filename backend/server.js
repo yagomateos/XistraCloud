@@ -44,6 +44,10 @@ app.get('/domains', async (req, res) => {
         domain,
         project_id,
         created_at,
+        status,
+        ssl_enabled,
+        dns_records,
+        verification_token,
         projects!inner (
           id,
           name
