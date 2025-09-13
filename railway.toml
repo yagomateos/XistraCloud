@@ -1,12 +1,13 @@
 # Railway Deployment Configuration
 [build]
 context = "./backend"
+builder = "nixpacks"
 
 [build.env]
 NODE_ENV = "production"
 
 [deploy]
-startCommand = "node server.js"
+startCommand = "npm start"
 
 [env]
 SUPABASE_URL = "${{SUPABASE_URL}}"
