@@ -2,7 +2,7 @@
 
 > **Plataforma Moderna de Gestión en la Nube** - Despliega, administra y escala tus proyectos sin esfuerzo
 
-[![Demo en Vivo](https://img.shields.io/badge/Demo%20en%20Vivo-xistra--cloud.vercel.app-brightgreen)](https://xistra-cloud.vercel.app)
+[![Demo en Vivo](https://img.shields.io/badge/Demo%20en%20Vivo-xistracloud.vercel.app-brightgreen)](https://xistracloud.vercel.app)
 [![API Backend](https://img.shields.io/badge/API-xistracloud--production.up.railway.app-blue)](https://xistracloud-production.up.railway.app)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.3-61dafb)](https://reactjs.org/)
@@ -95,7 +95,7 @@ npm start
 
 ## 🌐 Demo en Vivo
 
-- **Frontend**: [https://xistra-cloud.vercel.app](https://xistra-cloud.vercel.app)
+- **Frontend**: [https://xistracloud.vercel.app](https://xistracloud.vercel.app)
 - **API Backend**: [https://xistracloud-production.up.railway.app](https://xistracloud-production.up.railway.app)
 - **Salud de la API**: [https://xistracloud-production.up.railway.app/health](https://xistracloud-production.up.railway.app/health)
 
