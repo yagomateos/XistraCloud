@@ -46,8 +46,7 @@ app.get('/domains', async (req, res) => {
         created_at,
         projects!inner (
           id,
-          name,
-          description
+          name
         )
       `)
       .order('created_at', { ascending: false });
