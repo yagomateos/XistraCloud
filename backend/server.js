@@ -856,3 +856,4 @@ app.listen(port, () => {
 module.exports = app;
 console.log('🚀 FORCE REDEPLOY: Sat Sep 13 14:07:10 CEST 2025');
 // Force rebuild Sat Sep 13 14:12:00 CEST 2025
+console.log('🔥 FORCED DEPLOY - Sat Sep 13 14:18:38 CEST 2025');
