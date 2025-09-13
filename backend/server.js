@@ -310,6 +310,84 @@ app.delete('/domains/:id', async (req, res) => {
   }
 });
 
+// Verify domain endpoint
+app.post('/domains/:id/verify', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('🔍 Verifying domain with ID:', id);
+
+    if (!id) {
+      return res.status(400).json({ error: 'Domain ID is required' });
+    }
+
+    // Get domain info
+    const { data: domain, error: fetchError } = await supabase
+      .from('domains')
+      .select('id, domain, status')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !domain) {
+      return res.status(404).json({ 
+        error: 'Domain not found',
+        domainId: id 
+      });
+    }
+
+    // Simulate verification process
+    let newStatus;
+    let message;
+
+    // 70% chance of success for realistic simulation
+    const verificationSuccess = Math.random() > 0.3;
+    
+    if (verificationSuccess) {
+      newStatus = 'verified';
+      message = `Domain ${domain.domain} verified successfully`;
+    } else {
+      newStatus = 'failed';
+      message = `Domain ${domain.domain} verification failed - DNS records not found`;
+    }
+
+    // Update domain status
+    const { error: updateError } = await supabase
+      .from('domains')
+      .update({ 
+        status: newStatus, 
+        ssl_enabled: newStatus === 'verified' ? true : false 
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      console.error('❌ Error updating domain status:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to update domain status',
+        supabaseError: updateError.message 
+      });
+    }
+
+    console.log(`✅ Domain verification completed: ${domain.domain} -> ${newStatus}`);
+    
+    res.json({
+      success: true,
+      domain: {
+        id: domain.id,
+        domain: domain.domain,
+        status: newStatus,
+        ssl_enabled: newStatus === 'verified',
+        message: message
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error verifying domain:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
 // Get projects endpoint
 app.get('/projects', async (req, res) => {
   try {

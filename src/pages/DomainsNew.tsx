@@ -167,7 +167,7 @@ const Domains = () => {
     if (status === 'verified' && ssl) {
       return <Badge className="bg-green-100 text-green-800">Verificado + SSL</Badge>;
     } else if (status === 'verified') {
-      return <Badge className="bg-yellow-100 text-yellow-800">Verificado</Badge>;
+      return <Badge className="bg-green-100 text-green-800">Verificado</Badge>;
     } else if (status === 'pending') {
       return <Badge className="bg-yellow-100 text-yellow-800">Pendiente</Badge>;
     } else {
