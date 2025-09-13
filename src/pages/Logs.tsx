@@ -94,15 +94,27 @@ const Logs = () => {
   };
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('es-ES', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    if (!timestamp) return 'Fecha no disponible';
+    
+    try {
+      const date = new Date(timestamp);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Fecha inválida';
+      }
+      
+      return date.toLocaleString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting timestamp:', timestamp, error);
+      return 'Error en fecha';
+    }
   };
 
   const exportLogs = () => {
@@ -249,7 +261,13 @@ const Logs = () => {
                         
                         {log.project_name && (
                           <Badge variant="outline" className="text-xs">
-                            {log.project_name}
+                            📦 {log.project_name}
+                          </Badge>
+                        )}
+                        
+                        {log.domain_name && (
+                          <Badge variant="outline" className="text-xs">
+                            🌐 {log.domain_name}
                           </Badge>
                         )}
                         
@@ -259,13 +277,19 @@ const Logs = () => {
                       </div>
                       
                       <span className="text-xs text-muted-foreground lg:ml-auto">
-                        {formatTimestamp(log.created_at)}
+                        {formatTimestamp(log.timestamp || log.created_at || '')}
                       </span>
                     </div>
                     
                     <p className="text-xs lg:text-sm text-foreground break-words leading-relaxed">
                       {log.message}
                     </p>
+                    
+                    {log.details && (
+                      <p className="text-xs text-muted-foreground mt-1 pl-2 border-l-2 border-muted/20 italic">
+                        {log.details}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
