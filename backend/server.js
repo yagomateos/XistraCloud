@@ -325,6 +325,49 @@ app.get('/projects', async (req, res) => {
   }
 });
 
+// Temporary endpoint to fix mock domain statuses
+app.post('/fix-domains', async (req, res) => {
+  try {
+    console.log('🔧 Fixing mock domain statuses');
+    
+    // Update different domains with realistic statuses
+    const updates = [
+      { domain: 'test.com', status: 'verified', ssl_enabled: true },
+      { domain: 'mi-nuevo-dominio.com', status: 'pending', ssl_enabled: false },
+      { domain: 'mi-app-web.com', status: 'verified', ssl_enabled: true },
+      { domain: 'staging.mi-app-web.com', status: 'pending', ssl_enabled: false },
+      { domain: 'api.mi-empresa.com', status: 'failed', ssl_enabled: false },
+      { domain: 'sinaptiks.com', status: 'verified', ssl_enabled: true }
+    ];
+
+    for (const update of updates) {
+      const { error } = await supabase
+        .from('domains')
+        .update({ 
+          status: update.status, 
+          ssl_enabled: update.ssl_enabled 
+        })
+        .eq('domain', update.domain);
+      
+      if (error) {
+        console.error(`❌ Error updating ${update.domain}:`, error);
+      } else {
+        console.log(`✅ Updated ${update.domain} to ${update.status}`);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Domain statuses updated with realistic mix',
+      updated: updates.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error fixing domains:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);
