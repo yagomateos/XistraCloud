@@ -16,7 +16,14 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 const socket = process.env.DOCKER_SOCKET || path.join(os.homedir(), '.docker', 'run', 'docker.sock');
-const docker = new Docker({ socketPath: socket });
+let docker: Docker;
+try {
+  docker = new Docker({ socketPath: socket });
+  console.log('✅ Docker client initialized.');
+} catch (error) {
+  console.error('❌ Failed to initialize Docker client. Docker-related features will be disabled.', error.message);
+  docker = null as any;
+}
 
 app.use(cors());
 app.use(express.json());
@@ -24,6 +31,62 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.send('Hello from XistraCloud backend!');
 });
+  // Endpoint mock para templates de apps
+  app.get('/apps/templates', (req, res) => {
+    console.log('[backend] GET /apps/templates from', req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress);
+    res.json({
+      templates: [
+        {
+          id: 'wordpress',
+          name: 'WordPress',
+          description: 'CMS popular para blogs y webs.',
+          category: 'cms',
+          ports: [8080],
+          env_required: ['WORDPRESS_DB_USER', 'WORDPRESS_DB_PASSWORD'],
+          icon: '📝'
+        },
+        {
+          id: 'mysql',
+          name: 'MySQL',
+          description: 'Base de datos relacional.',
+          category: 'database',
+          ports: [3306],
+          env_required: ['MYSQL_ROOT_PASSWORD'],
+          icon: '🗄️'
+        },
+        {
+          id: 'n8n',
+          name: 'n8n',
+          description: 'Automatización de flujos de trabajo.',
+          category: 'automation',
+          ports: [5678],
+          env_required: [],
+          icon: '🔗'
+        }
+      ],
+      categories: {
+        cms: { name: 'CMS', icon: '📝' },
+        database: { name: 'Base de datos', icon: '🗄️' },
+        automation: { name: 'Automatización', icon: '🔗' }
+      }
+    });
+  });
+  // Endpoint mock para desplegar apps
+  app.post('/apps/deploy', (req, res) => {
+    console.log('[backend] POST /apps/deploy from', req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress, 'body:', JSON.stringify(req.body || {}));
+    const { templateId, name, environment } = req.body;
+    // Simula despliegue exitoso y devuelve URL de la app
+    res.json({
+      success: true,
+      deployment: {
+        id: `${templateId}-instance-001`,
+        name,
+        status: 'running',
+        urls: [`http://localhost:8080/${templateId}`],
+        environment
+      }
+    });
+  });
 
 // FORCED UPDATE TEST - v2025-01-12-18:50
 app.get('/debug/health', (req, res) => {

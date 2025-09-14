@@ -16,6 +16,7 @@ interface Template {
   ports: number[];
   env_required: string[];
   icon?: string;
+  features?: string[];
 }
 
 interface Category {
@@ -58,12 +59,10 @@ const Apps = () => {
     fetchTemplates();
   }, []);
 
-  const handleInstallTemplate = (template: Template) => {
-    setSelectedTemplate(template);
-    setIsInstallDialogOpen(true);
-  };
-
-  const confirmInstall = async () => {
+  const handleInstall = (template: Template) => {
+    // Redirigir a la página de instalación en lugar de mostrar modal
+    navigate(`/dashboard/apps/install/${template.id}`);
+  };  const confirmInstall = async () => {
     if (selectedTemplate && !isDeploying) {
       setIsDeploying(true);
       try {
@@ -97,7 +96,9 @@ const Apps = () => {
         const result = await response.json();
         
         if (response.ok && result.success) {
-          alert(`✅ ${selectedTemplate.name} desplegado exitosamente!\\n\\nURL: ${result.deployment.urls[0]}`);
+          const url = result.deployment.accessUrl || result.deployment.urls?.[0] || 'URL no disponible';
+          
+          alert(`✅ ${selectedTemplate.name} desplegado exitosamente!\\n\\n🌐 URL: ${url}\\n\\n⏱️ Puede tardar unos segundos en estar disponible.`);
           navigate('/dashboard/projects');
         } else {
           throw new Error(result.error || result.message || 'Error en el despliegue');
@@ -220,7 +221,7 @@ const Apps = () => {
                 <CardFooter className="pt-0">
                   <Button 
                     className="w-full"
-                    onClick={() => handleInstallTemplate(template)}
+                    onClick={() => handleInstall(template)}
                   >
                     🚀 Desplegar
                   </Button>
@@ -274,7 +275,7 @@ const Apps = () => {
                   <CardFooter className="pt-0">
                     <Button 
                       className="w-full"
-                      onClick={() => handleInstallTemplate(template)}
+                      onClick={() => handleInstall(template)}
                     >
                       🚀 Desplegar
                     </Button>
@@ -294,24 +295,28 @@ const Apps = () => {
               {selectedTemplate?.icon} Desplegar {selectedTemplate?.name}
             </DialogTitle>
             <DialogDescription>
-              Se desplegará <strong>{selectedTemplate?.name}</strong> usando Docker.
-              <br />
-              <div className="mt-3 p-3 bg-muted rounded-lg text-sm">
-                <strong>Qué incluye:</strong>
-                <ul className="mt-1 space-y-1">
-                  <li>• {selectedTemplate?.description}</li>
-                  {selectedTemplate?.ports.map((port, index) => (
-                    <li key={index}>• Puerto {port} disponible</li>
+              Instalar {selectedTemplate?.name} en tu espacio de hosting
+            </DialogDescription>
+            <div className="mt-4 space-y-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <h4 className="font-medium text-sm mb-2">Características incluidas:</h4>
+                <ul className="text-xs space-y-1 text-muted-foreground">
+                  {selectedTemplate?.features?.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <div className="w-1 h-1 bg-current rounded-full"></div>
+                      {feature}
+                    </li>
                   ))}
-                  {selectedTemplate?.env_required.length > 0 && (
-                    <li>• Variables de entorno preconfiguradas</li>
-                  )}
                 </ul>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                ⏱️ El despliegue tomará unos segundos. Se abrirá automáticamente la URL cuando esté listo.
-              </p>
-            </DialogDescription>
+              <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="font-medium">Instalación automática</span>
+                </div>
+                <p>La aplicación estará lista en unos segundos con toda la configuración automática.</p>
+              </div>
+            </div>
           </DialogHeader>
           <DialogFooter>
             <Button 

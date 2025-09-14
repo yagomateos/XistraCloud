@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress-wordpress
+    ports:
+      - "9986:80"
+    environment:
+      WORDPRESS_DB_HOST: wordpress-mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: vgnfmsli
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wordpress-wp-data:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - wordpress-network
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: wordpress-mysql
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: vgnfmsli
+      MYSQL_ROOT_PASSWORD: ghtyzi8k
+    volumes:
+      - wordpress-mysql-data:/var/lib/mysql
+    networks:
+      - wordpress-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 5s
+
+volumes:
+  wordpress-wp-data:
+  wordpress-mysql-data:
+
+networks:
+  wordpress-network:
+    driver: bridge
