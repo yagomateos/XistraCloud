@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: ${APP_NAME}-n8n
+    ports:
+      - "${PORT}:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${APP_NAME}-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ${APP_NAME}-n8n-data:/home/node/.n8n
+    depends_on:
+      - postgres
+    networks:
+      - ${APP_NAME}-network
+
+  postgres:
+    image: postgres:15
+    container_name: ${APP_NAME}-postgres
+    environment:
+      POSTGRES_DB: n8n
+      POSTGRES_USER: n8n
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ${APP_NAME}-postgres-data:/var/lib/postgresql/data
+    networks:
+      - ${APP_NAME}-network
+
+volumes:
+  ${APP_NAME}-n8n-data:
+  ${APP_NAME}-postgres-data:
+
+networks:
+  ${APP_NAME}-network:
+    driver: bridge

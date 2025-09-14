@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: mi-blog-auto-wordpress
+    ports:
+      - "8322:80"
+    environment:
+      WORDPRESS_DB_HOST: mi-blog-auto-mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: iw2jggx5
+      WORDPRESS_DB_NAME: wordpress
+      # Configuración automática
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_AUTO_UPDATE_CORE', false);
+        define('AUTOMATIC_UPDATER_DISABLED', true);
+    volumes:
+      - mi-blog-auto-wp-data:/var/www/html
+      - mi-blog-auto-wp-setup:/setup
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - mi-blog-auto-network
+    restart: unless-stopped
+
+  wordpress-setup:
+    image: wordpress:cli
+    container_name: mi-blog-auto-wp-cli
+    volumes:
+      - mi-blog-auto-wp-data:/var/www/html
+    networks:
+      - mi-blog-auto-network
+    depends_on:
+      - wordpress
+    environment:
+      WORDPRESS_DB_HOST: mi-blog-auto-mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: iw2jggx5
+      WORDPRESS_DB_NAME: wordpress
+    command: >
+      bash -c "
+      sleep 30 &&
+      wp core install --url='http://localhost:8322' --title='Mi Blog Genial' --admin_user='yago' --admin_password='MiPassword123' --admin_email='yago@ejemplo.com' --allow-root &&
+      wp option update blogdescription 'Un blog sobre tecnología' --allow-root &&
+      wp language core install es_ES --activate --allow-root &&
+      wp option update WPLANG es_ES --allow-root &&
+      wp theme activate twentytwentyfour --allow-root
+      "
+
+  mysql:
+    image: mysql:8.0
+    container_name: mi-blog-auto-mysql
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: iw2jggx5
+      MYSQL_ROOT_PASSWORD: vkmp0mym
+    volumes:
+      - mi-blog-auto-mysql-data:/var/lib/mysql
+    networks:
+      - mi-blog-auto-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 5s
+
+volumes:
+  mi-blog-auto-wp-data:
+  mi-blog-auto-mysql-data:
+  mi-blog-auto-wp-setup:
+
+networks:
+  mi-blog-auto-network:
+    driver: bridge

@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: mi-blog-mejorado-wordpress
+    ports:
+      - "8603:80"
+    environment:
+      WORDPRESS_DB_HOST: mi-blog-mejorado-mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: fwnodn0g
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - mi-blog-mejorado-wp-data:/var/www/html
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - mi-blog-mejorado-network
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: mi-blog-mejorado-mysql
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: fwnodn0g
+      MYSQL_ROOT_PASSWORD: uyxx5qtj
+    volumes:
+      - mi-blog-mejorado-mysql-data:/var/lib/mysql
+    networks:
+      - mi-blog-mejorado-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 5s
+
+volumes:
+  mi-blog-mejorado-wp-data:
+  mi-blog-mejorado-mysql-data:
+
+networks:
+  mi-blog-mejorado-network:
+    driver: bridge

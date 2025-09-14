@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: mi-wp-test-wordpress
+    ports:
+      - "9852:80"
+    environment:
+      WORDPRESS_DB_HOST: mi-wp-test-mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: 3yeggb3w
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - mi-wp-test-wp-data:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - mi-wp-test-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: mi-wp-test-mysql
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: 3yeggb3w
+      MYSQL_ROOT_PASSWORD: pf4xh8ba
+    volumes:
+      - mi-wp-test-mysql-data:/var/lib/mysql
+    networks:
+      - mi-wp-test-network
+
+volumes:
+  mi-wp-test-wp-data:
+  mi-wp-test-mysql-data:
+
+networks:
+  mi-wp-test-network:
+    driver: bridge

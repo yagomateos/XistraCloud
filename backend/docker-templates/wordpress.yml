@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: ${APP_NAME}-mysql
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpresspass
+    volumes:
+      - ${APP_NAME}-mysql-data:/var/lib/mysql
+    networks:
+      - ${APP_NAME}-network
+    restart: unless-stopped
+
+  wordpress:
+    image: wordpress:latest
+    container_name: ${APP_NAME}-wordpress
+    platform: linux/amd64
+    ports:
+      - "${PORT}:80"
+    environment:
+      WORDPRESS_DB_HOST: ${APP_NAME}-mysql:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpresspass
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - ${APP_NAME}-wp-data:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - ${APP_NAME}-network
+    restart: unless-stopped
+
+volumes:
+  ${APP_NAME}-wp-data:
+  ${APP_NAME}-mysql-data:
+
+networks:
+  ${APP_NAME}-network:
+    driver: bridge
