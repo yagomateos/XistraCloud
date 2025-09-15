@@ -1,0 +1,28 @@
+services:
+  nextjs:
+    image: node:18-alpine
+    container_name: ${APP_NAME}-nextjs
+    platform: linux/amd64
+    ports:
+      - "${PORT}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    working_dir: /app
+    command: |
+      sh -c "
+      npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias '@/*' --use-npm --yes
+      npm run build
+      npm start
+      "
+    volumes:
+      - ${APP_NAME}-nextjs-data:/app
+    networks:
+      - ${APP_NAME}-network
+    restart: unless-stopped
+
+volumes:
+  ${APP_NAME}-nextjs-data:
+
+networks:
+  ${APP_NAME}-network:

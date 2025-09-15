@@ -56,12 +56,33 @@ app.get('/apps/templates', (req, res) => {
         env_required: ['DB_ROOT_PASSWORD', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'],
         icon: '🗄️',
         features: ['MySQL 8.0', 'Datos persistentes', 'Usuario personalizable', 'Puerto configurable']
+      },
+      {
+        id: 'postgresql',
+        name: 'PostgreSQL',
+        description: 'Base de datos avanzada con soporte JSON.',
+        category: 'database',
+        ports: [5432],
+        env_required: ['DB_ROOT_PASSWORD', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'],
+        icon: '🐘',
+        features: ['PostgreSQL 15', 'JSON support', 'Extensiones', 'Backup automático']
+      },
+      {
+        id: 'nextjs',
+        name: 'Next.js',
+        description: 'Framework React para aplicaciones web modernas.',
+        category: 'frontend',
+        ports: [3000],
+        env_required: [],
+        icon: '⚡',
+        features: ['React 18', 'TypeScript', 'Tailwind CSS', 'App Router', 'Server Components']
       }
     ],
     categories: {
       cms: { name: 'CMS', icon: '📝' },
       database: { name: 'Base de datos', icon: '🗄️' },
-      automation: { name: 'Automatización', icon: '🔗' }
+      automation: { name: 'Automatización', icon: '🔗' },
+      frontend: { name: 'Frontend', icon: '⚡' }
     }
   });
 });
