@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search, Package, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getAppTemplates, deployApp } from '@/lib/api';
 
 interface Template {
   id: string;
@@ -35,20 +36,13 @@ const Apps = () => {
   const [isDeploying, setIsDeploying] = useState(false);
   const navigate = useNavigate();
 
-  // Cargar templates desde el backend
+  // Cargar templates desde el backend o mock data
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const response = await fetch(`${API_URL}/apps/templates`);
-        const data = await response.json();
-        
-        if (response.ok) {
-          setTemplates(data.templates || []);
-          setCategories(data.categories || {});
-        } else {
-          console.error('Error fetching templates:', data.error);
-        }
+        const data = await getAppTemplates();
+        setTemplates(data.templates || []);
+        setCategories(data.categories || {});
       } catch (error) {
         console.error('Error fetching templates:', error);
       } finally {
@@ -66,8 +60,6 @@ const Apps = () => {
     if (selectedTemplate && !isDeploying) {
       setIsDeploying(true);
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        
         // Preparar datos para el despliegue
         const deploymentData = {
           templateId: selectedTemplate.id,
@@ -85,17 +77,9 @@ const Apps = () => {
         };
         
         // Llamar al API de despliegue
-        const response = await fetch(`${API_URL}/apps/deploy`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(deploymentData)
-        });
+        const result = await deployApp(deploymentData);
         
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
+        if (result.success) {
           const url = result.deployment.accessUrl || result.deployment.urls?.[0] || 'URL no disponible';
           
           alert(`✅ ${selectedTemplate.name} desplegado exitosamente!\\n\\n🌐 URL: ${url}\\n\\n⏱️ Puede tardar unos segundos en estar disponible.`);

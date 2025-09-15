@@ -73,7 +73,7 @@ const CreateProjectModal = ({ open, onOpenChange, onCreateProject, selectedTempl
     setIsLoading(true);
     
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
+      const API_URL = import.meta.env.VITE_API_URL || '/api';
       const response = await fetch(`${API_URL}/projects`, {
         method: 'POST',
         headers: {
