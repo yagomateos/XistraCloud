@@ -105,13 +105,13 @@ app.post('/apps/deploy', async (req, res) => {
       DB_USER: environment.DB_USER || 'wordpress',
       N8N_USER: environment.N8N_USER || 'admin',
       N8N_PASSWORD: environment.N8N_PASSWORD || generatePassword(),
-      // Variables específicas para WordPress
-      SITE_NAME: environment.SITE_NAME || name,
-      SITE_DESCRIPTION: environment.SITE_DESCRIPTION || 'Un sitio increíble',
-      ADMIN_USER: environment.ADMIN_USER || 'admin',
-      ADMIN_EMAIL: environment.ADMIN_EMAIL || 'admin@example.com',
-      ADMIN_PASSWORD: environment.ADMIN_PASSWORD || generatePassword(),
-      LANGUAGE: environment.LANGUAGE || 'es_ES'
+      // Variables específicas para WordPress - mapear desde frontend
+      SITE_NAME: environment.SITE_NAME || environment.siteName || name,
+      SITE_DESCRIPTION: environment.SITE_DESCRIPTION || environment.description || 'Un sitio increíble',
+      ADMIN_USER: environment.ADMIN_USER || environment.adminUser || 'admin',
+      ADMIN_EMAIL: environment.ADMIN_EMAIL || environment.adminEmail || 'admin@example.com',
+      ADMIN_PASSWORD: environment.ADMIN_PASSWORD || environment.adminPassword || generatePassword(),
+      LANGUAGE: environment.LANGUAGE || environment.language || 'es_ES'
     };
     
     // Reemplazar variables en la plantilla
@@ -156,7 +156,7 @@ app.post('/apps/deploy', async (req, res) => {
     switch (templateId) {
       case 'wordpress':
         accessUrl = siteUrl;
-        deployInfo = {
+        loginInfo = {
           admin_url: `${siteUrl}/wp-admin`,
           username: envVars.ADMIN_USER,
           password: envVars.ADMIN_PASSWORD,
@@ -174,7 +174,7 @@ app.post('/apps/deploy', async (req, res) => {
         break;
       case 'mysql':
         accessUrl = isProduction ? `mysql://xistracloud.com:${port}` : `mysql://localhost:${port}`;
-        deployInfo = {
+        loginInfo = {
           host: isProduction ? 'xistracloud.com' : 'localhost',
           port: port,
           root_password: envVars.DB_ROOT_PASSWORD,

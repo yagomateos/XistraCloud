@@ -28,6 +28,8 @@ services:
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpresspass123
       WORDPRESS_DB_NAME: wordpress
+      # Pre-configurar WordPress con datos del usuario
+      WORDPRESS_TABLE_PREFIX: 'wp_'
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_HOME', '${SITE_URL}');
         define('WP_SITEURL', '${SITE_URL}');
