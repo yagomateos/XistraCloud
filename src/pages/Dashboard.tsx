@@ -76,26 +76,16 @@ const Dashboard = () => {
     project: activity.project,
     message: activity.message,
     status: activity.status,
-    time: formatDistanceToNow(new Date(activity.created_at), { locale: es, addSuffix: true })
+    time: activity.created_at 
+      ? formatDistanceToNow(new Date(activity.created_at), { locale: es, addSuffix: true })
+      : 'hace unos momentos'
   }));
 
-  // Datos de ejemplo para uptime
-  const uptimeData = [
-    { date: 'Hace 7d', uptime: 99.9 },
-    { date: 'Hace 6d', uptime: 99.8 },
-    { date: 'Hace 5d', uptime: 99.9 },
-    { date: 'Hace 4d', uptime: 100 },
-    { date: 'Hace 3d', uptime: 99.7 },
-    { date: 'Hace 2d', uptime: 99.9 },
-    { date: 'Hoy', uptime: 100 },
-  ];
+  // Usar SOLO datos reales - eliminar datos inventados
+  const uptimeData = []; // Vacío hasta tener datos reales
 
-  // Datos de ejemplo para proyectos principales - usar datos reales si están disponibles
-  const topProjects = projectsData || [
-    { name: 'awesome-compose', requests: '5.1K', uptime: '98.8%', status: 'deployed' },
-    { name: 'landing-page', requests: '3.2K', uptime: '99.9%', status: 'deployed' },
-    { name: 'api-service', requests: '1.8K', uptime: '99.5%', status: 'deployed' },
-  ];
+  // Usar SOLO proyectos reales del API
+  const topProjects = projectsData || [];
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -147,7 +137,7 @@ const Dashboard = () => {
                (dashboardData?.projectStats.stopped || 0) +
                (dashboardData?.projectStats.pending || 0)}
             </div>
-            <p className="text-xs text-success">+2 este mes</p>
+            <p className="text-xs text-muted-foreground">Total registrados</p>
           </CardContent>
         </Card>
 
@@ -168,25 +158,25 @@ const Dashboard = () => {
             <TrendingUp className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg lg:text-2xl font-bold">99.2%</div>
-            <p className="text-xs text-muted-foreground">Últimos 30 días</p>
+            <div className="text-lg lg:text-2xl font-bold">{dashboardData?.successRate || '0'}%</div>
+            <p className="text-xs text-muted-foreground">Basado en deployments</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium">Tiempo respuesta</CardTitle>
+            <CardTitle className="text-xs lg:text-sm font-medium">Actividad reciente</CardTitle>
             <Zap className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-lg lg:text-2xl font-bold">189ms</div>
-            <p className="text-xs text-success">-12ms vs semana pasada</p>
+            <div className="text-lg lg:text-2xl font-bold">{recentActivity.length}</div>
+            <p className="text-xs text-success">eventos registrados</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Plan Limits Card */}
-      {userData && userPlan && (
+      {/* Plan Limits Card - DESHABILITADO temporalmente hasta tener datos reales */}
+      {false && userData && userPlan && (
         <div className="mb-6 lg:mb-8">
           <PlanLimitCard 
             userPlan={userPlan}
