@@ -387,6 +387,57 @@ app.get('/dashboard/stats', (req, res) => {
   });
 });
 
+// Endpoint de proxy dinámico para apps
+app.get('/proxy/:port/*', (req, res) => {
+  const { port: appPort } = req.params;
+  const path = req.params[0] || '';
+  const queryString = req.url.split('?')[1] ? '?' + req.url.split('?')[1] : '';
+  
+  console.log(`[proxy] Proxying to localhost:${appPort}/${path}${queryString}`);
+  
+  // Crear proxy request
+  const proxyUrl = `http://localhost:${appPort}/${path}${queryString}`;
+  
+  const http = require('http');
+  const url = require('url');
+  const parsedUrl = url.parse(proxyUrl);
+  
+  const options = {
+    hostname: parsedUrl.hostname,
+    port: parsedUrl.port,
+    path: parsedUrl.path,
+    method: req.method,
+    headers: {
+      ...req.headers,
+      'host': parsedUrl.host,
+      'x-forwarded-for': req.ip,
+      'x-forwarded-proto': 'https'
+    }
+  };
+  
+  const proxyReq = http.request(options, (proxyRes) => {
+    // Copiar headers de respuesta
+    Object.keys(proxyRes.headers).forEach(key => {
+      res.setHeader(key, proxyRes.headers[key]);
+    });
+    
+    res.writeHead(proxyRes.statusCode);
+    proxyRes.pipe(res);
+  });
+  
+  proxyReq.on('error', (error) => {
+    console.error(`[proxy] Error: ${error.message}`);
+    res.status(502).send('Bad Gateway');
+  });
+  
+  // Si es POST/PUT, pipe el body
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    req.pipe(proxyReq);
+  } else {
+    proxyReq.end();
+  }
+});
+
 app.listen(port, () => {
   console.log(`🚀 XistraCloud Real Docker Backend listening at http://localhost:${port}`);
   console.log(`📁 Docker templates: ${path.join(__dirname, 'docker-templates')}`);
