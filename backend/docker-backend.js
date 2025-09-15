@@ -83,6 +83,11 @@ app.post('/apps/deploy', async (req, res) => {
     const port = getRandomPort();
     const appName = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
     
+    // Determinar entorno y URLs
+    const isProduction = process.env.NODE_ENV === 'production';
+    const baseUrl = isProduction ? 'https://xistracloud.com' : 'http://localhost';
+    const siteUrl = isProduction ? `${baseUrl}/app/${port}` : `${baseUrl}:${port}`;
+    
     // Leer plantilla Docker Compose
     const templatePath = path.join(__dirname, 'docker-templates', `${templateId}.yml`);
     let dockerComposeContent = await fs.readFile(templatePath, 'utf8');
@@ -92,6 +97,8 @@ app.post('/apps/deploy', async (req, res) => {
       APP_NAME: appName,
       DEPLOY_NAME: appName,
       PORT: port,
+      SITE_URL: siteUrl,
+      FORCE_SSL: isProduction ? 'true' : 'false',
       DB_PASSWORD: generatePassword(),
       DB_ROOT_PASSWORD: generatePassword(),
       DB_NAME: environment.DB_NAME || 'wordpress',
@@ -148,17 +155,17 @@ app.post('/apps/deploy', async (req, res) => {
     
     switch (templateId) {
       case 'wordpress':
-        accessUrl = `https://xistracloud.com/app/${port}`;
+        accessUrl = siteUrl;
         deployInfo = {
-          admin_url: `https://xistracloud.com/app/${port}/wp-admin`,
+          admin_url: `${siteUrl}/wp-admin`,
           username: envVars.ADMIN_USER,
           password: envVars.ADMIN_PASSWORD,
           email: envVars.ADMIN_EMAIL,
-          notes: 'WordPress configurado automáticamente. Puedes acceder directamente al panel de admin.'
+          notes: 'WordPress configurado automáticamente con URL correcta. Puedes acceder directamente al panel de admin.'
         };
         break;
       case 'n8n':
-        accessUrl = `https://xistracloud.com/app/${port}`;
+        accessUrl = siteUrl;
         loginInfo = {
           username: envVars.N8N_USER,
           password: envVars.N8N_PASSWORD,
@@ -166,9 +173,9 @@ app.post('/apps/deploy', async (req, res) => {
         };
         break;
       case 'mysql':
-        accessUrl = `mysql://xistracloud.com:${port}`;
+        accessUrl = isProduction ? `mysql://xistracloud.com:${port}` : `mysql://localhost:${port}`;
         deployInfo = {
-          host: 'xistracloud.com',
+          host: isProduction ? 'xistracloud.com' : 'localhost',
           port: port,
           root_password: envVars.DB_ROOT_PASSWORD,
           database: envVars.DB_NAME,
