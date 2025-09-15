@@ -31,8 +31,11 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_HOME', '${SITE_URL}');
         define('WP_SITEURL', '${SITE_URL}');
-        define('FORCE_SSL_ADMIN', ${FORCE_SSL:-false});
+        define('FORCE_SSL_ADMIN', ${FORCE_SSL});
         define('WP_DEBUG', false);
+        $_SERVER['HTTPS'] = 'on';
+        $_SERVER['SERVER_PORT'] = 443;
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
     volumes:
       - ${APP_NAME}-wp-data:/var/www/html
     depends_on:
