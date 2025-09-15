@@ -36,19 +36,6 @@ services:
         define('WPMU_PLUGIN_URL', '${SITE_URL}/wp-content/mu-plugins');
         define('FORCE_SSL_ADMIN', true);
         define('WP_DEBUG', false);
-        
-        // Fix for subdirectory installations
-        if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-            $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
-        }
-        
-        // Ensure correct asset URLs
-        add_filter('script_loader_src', function($src) {
-            return str_replace(home_url(), '${SITE_URL}', $src);
-        });
-        add_filter('style_loader_src', function($src) {
-            return str_replace(home_url(), '${SITE_URL}', $src);
-        });
     volumes:
       - ${APP_NAME}-wp-data:/var/www/html
     depends_on:
