@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:5.7
-    container_name: miwp-yago-mysql
+    container_name: test-wp-mysql
     platform: linux/amd64
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword123
@@ -11,35 +11,38 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "no"
       MYSQL_RANDOM_ROOT_PASSWORD: "no"
     volumes:
-      - miwp-yago-mysql-data:/var/lib/mysql
+      - test-wp-mysql-data:/var/lib/mysql
     networks:
-      - miwp-yago-network
+      - test-wp-network
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password --explicit_defaults_for_timestamp
 
   wordpress:
     image: wordpress:latest
-    container_name: miwp-yago-wordpress
+    container_name: test-wp-wordpress
     platform: linux/amd64
     ports:
-      - "9495:80"
+      - "8080:80"
     environment:
-      WORDPRESS_DB_HOST: miwp-yago-mysql:3306
+      WORDPRESS_DB_HOST: test-wp-mysql:3306
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpresspass123
       WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME','http://localhost:8080');
+        define('WP_SITEURL','http://localhost:8080');
     volumes:
-      - miwp-yago-wp-data:/var/www/html
+      - test-wp-wp-data:/var/www/html
     depends_on:
       - mysql
     networks:
-      - miwp-yago-network
+      - test-wp-network
     restart: unless-stopped
 
 volumes:
-  miwp-yago-wp-data:
-  miwp-yago-mysql-data:
+  test-wp-wp-data:
+  test-wp-mysql-data:
 
 networks:
-  miwp-yago-network:
+  test-wp-network:
     driver: bridge

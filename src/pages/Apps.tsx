@@ -39,7 +39,7 @@ const Apps = () => {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
         const response = await fetch(`${API_URL}/apps/templates`);
         const data = await response.json();
         
@@ -66,7 +66,7 @@ const Apps = () => {
     if (selectedTemplate && !isDeploying) {
       setIsDeploying(true);
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'https://xistracloud-production.up.railway.app';
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
         
         // Preparar datos para el despliegue
         const deploymentData = {

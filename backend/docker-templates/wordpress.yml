@@ -4,15 +4,18 @@ services:
     container_name: ${APP_NAME}-mysql
     platform: linux/amd64
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: rootpassword123
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wordpress
-      MYSQL_PASSWORD: wordpresspass
+      MYSQL_PASSWORD: wordpresspass123
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+      MYSQL_RANDOM_ROOT_PASSWORD: "no"
     volumes:
       - ${APP_NAME}-mysql-data:/var/lib/mysql
     networks:
       - ${APP_NAME}-network
     restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --explicit_defaults_for_timestamp
 
   wordpress:
     image: wordpress:latest
@@ -23,7 +26,7 @@ services:
     environment:
       WORDPRESS_DB_HOST: ${APP_NAME}-mysql:3306
       WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpresspass
+      WORDPRESS_DB_PASSWORD: wordpresspass123
       WORDPRESS_DB_NAME: wordpress
     volumes:
       - ${APP_NAME}-wp-data:/var/www/html

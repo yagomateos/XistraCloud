@@ -32,7 +32,7 @@ class UserStore {
   private static instance: UserStore;
   private userData: UserData | null = null;
   private currentUserId: string | null = null;
-  private useMockData: boolean = true; // Temporal mientras arreglamos backend
+  private useMockData: boolean = false; // DESACTIVADO - solo datos reales
 
   private constructor() {
     // No cargar datos automáticamente - se cargarán cuando se autentique el usuario

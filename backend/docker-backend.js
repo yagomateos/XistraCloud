@@ -120,16 +120,9 @@ app.post('/apps/deploy', async (req, res) => {
     const dockerComposePath = path.join(appDir, 'docker-compose.yml');
     await fs.writeFile(dockerComposePath, dockerComposeContent);
     
-    // Si es WordPress, crear archivo init-mysql.sql personalizado
-    if (templateId === 'wordpress') {
-      const initSqlTemplatePath = path.join(__dirname, 'docker-templates', 'init-mysql.sql');
-      const initSqlPath = path.join(appDir, 'init-mysql.sql');
-      
-      let initSqlContent = await fs.readFile(initSqlTemplatePath, 'utf8');
-      initSqlContent = initSqlContent.replace('MYSQL_PASSWORD_PLACEHOLDER', envVars.DB_PASSWORD);
-      
-      await fs.writeFile(initSqlPath, initSqlContent);
-    }
+    console.log(`[deploy] Docker Compose creado: ${dockerComposePath}`);
+    
+    // NO crear archivo SQL - dejar que MySQL use sus variables de entorno por defecto
     
     // Ejecutar docker-compose up
     console.log(`[deploy] Desplegando ${templateId} como ${appName} en puerto ${port}`);
