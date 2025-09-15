@@ -34,9 +34,6 @@ services:
         define('WP_CONTENT_URL', '${SITE_URL}/wp-content');
         define('FORCE_SSL_ADMIN', true);
         define('WP_DEBUG', false);
-        if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-            $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
-        }
     volumes:
       - ${APP_NAME}-wp-data:/var/www/html
     depends_on:
