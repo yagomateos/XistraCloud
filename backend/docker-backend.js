@@ -40,7 +40,7 @@ app.get('/apps/templates', (req, res) => {
       {
         id: 'n8n',
         name: 'n8n',
-        description: 'Automatización de flujos de trabajo. Incluye PostgreSQL.',
+        description: 'Automatización de flujos de trabajo.',
         category: 'automation',
         ports: [5678],
         env_required: ['N8N_USER', 'N8N_PASSWORD', 'DB_PASSWORD'],
@@ -148,9 +148,9 @@ app.post('/apps/deploy', async (req, res) => {
     
     switch (templateId) {
       case 'wordpress':
-        accessUrl = `http://localhost:${port}`;
-        loginInfo = {
-          admin_url: `http://localhost:${port}/wp-admin`,
+        accessUrl = `https://xistracloud.com/app/${port}`;
+        deployInfo = {
+          admin_url: `https://xistracloud.com/app/${port}/wp-admin`,
           username: envVars.ADMIN_USER,
           password: envVars.ADMIN_PASSWORD,
           email: envVars.ADMIN_EMAIL,
@@ -158,7 +158,7 @@ app.post('/apps/deploy', async (req, res) => {
         };
         break;
       case 'n8n':
-        accessUrl = `http://localhost:${port}`;
+        accessUrl = `https://xistracloud.com/app/${port}`;
         loginInfo = {
           username: envVars.N8N_USER,
           password: envVars.N8N_PASSWORD,
@@ -166,9 +166,9 @@ app.post('/apps/deploy', async (req, res) => {
         };
         break;
       case 'mysql':
-        accessUrl = `mysql://localhost:${port}`;
-        loginInfo = {
-          host: 'localhost',
+        accessUrl = `mysql://xistracloud.com:${port}`;
+        deployInfo = {
+          host: 'xistracloud.com',
           port: port,
           root_password: envVars.DB_ROOT_PASSWORD,
           database: envVars.DB_NAME,

@@ -34,7 +34,7 @@ const Dashboard = () => {
   const { data: domainsData } = useQuery({
     queryKey: ['domains'],
     queryFn: async () => {
-      const response = await fetch('https://xistracloud-production.up.railway.app/domains');
+      const response = await fetch('/api/domains');
       return response.json();
     },
     refetchInterval: 60000 // Actualizar cada 60 segundos
@@ -44,7 +44,7 @@ const Dashboard = () => {
   const { data: projectsData } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
-      const response = await fetch('https://xistracloud-production.up.railway.app/projects');
+      const response = await fetch('/api/projects');
       const projects = await response.json();
       // Tomar solo los primeros 3 proyectos activos
       return projects.filter((p: any) => p.status === 'deployed').slice(0, 3);

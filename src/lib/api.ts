@@ -66,7 +66,7 @@ export interface DashboardStats {
   }>;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 const USE_MOCK_DATA = false; // ✅ FORCED REAL DATA ONLY
 
 // Debug logs
@@ -299,6 +299,68 @@ const MOCK_DOMAINS: Domain[] = [
     created_at: new Date(Date.now() - 86400000 * 14).toISOString()
   }
 ];
+
+// Mock data para templates de aplicaciones
+const MOCK_TEMPLATES = {
+  templates: [
+    {
+      id: 'wordpress',
+      name: 'WordPress',
+      description: 'CMS popular para blogs y webs. Incluye MySQL.',
+      category: 'cms',
+      ports: [80],
+      env_required: ['DB_PASSWORD', 'DB_ROOT_PASSWORD'],
+      icon: '📝',
+      features: ['CMS completo', 'MySQL incluida', 'Panel de admin', 'Temas y plugins']
+    },
+    {
+      id: 'n8n',
+      name: 'n8n',
+      description: 'Automatización de flujos de trabajo.',
+      category: 'automation',
+      ports: [5678],
+      env_required: ['N8N_USER', 'N8N_PASSWORD', 'DB_PASSWORD'],
+      icon: '🔗',
+      features: ['Automatización visual', 'PostgreSQL incluida', 'API integrations', 'Workflows']
+    },
+    {
+      id: 'mysql',
+      name: 'MySQL',
+      description: 'Base de datos relacional MySQL 8.0.',
+      category: 'database',
+      ports: [3306],
+      env_required: ['DB_ROOT_PASSWORD', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'],
+      icon: '🗄️',
+      features: ['MySQL 8.0', 'Datos persistentes', 'Usuario personalizable', 'Puerto configurable']
+    },
+    {
+      id: 'nextjs',
+      name: 'Next.js',
+      description: 'Framework React para aplicaciones web modernas.',
+      category: 'frontend',
+      ports: [3000],
+      env_required: [],
+      icon: '⚡',
+      features: ['SSR/SSG', 'API Routes', 'TypeScript', 'Optimizado']
+    },
+    {
+      id: 'postgresql',
+      name: 'PostgreSQL',
+      description: 'Base de datos avanzada con soporte JSON.',
+      category: 'database',
+      ports: [5432],
+      env_required: ['POSTGRES_PASSWORD', 'POSTGRES_USER', 'POSTGRES_DB'],
+      icon: '🐘',
+      features: ['PostgreSQL 15', 'JSON support', 'Extensiones', 'Backup automático']
+    }
+  ],
+  categories: {
+    cms: { name: 'CMS', icon: '📝' },
+    database: { name: 'Base de datos', icon: '🗄️' },
+    automation: { name: 'Automatización', icon: '🔗' },
+    frontend: { name: 'Frontend', icon: '⚡' }
+  }
+};
 
 const MOCK_LOGS: Log[] = [
   {
@@ -719,6 +781,70 @@ export const redeployProject = async (projectId: string): Promise<void> => {
     console.log('✅ Successfully redeployed project via API');
   } catch (error) {
     console.error('❌ Error redeploying project via API:', error);
+    throw error;
+  }
+};
+
+// Nueva función para obtener templates de apps
+export const getAppTemplates = async () => {
+  if (USE_MOCK_DATA) {
+    console.log('📦 Using mock templates data');
+    return MOCK_TEMPLATES;
+  }
+
+  try {
+    console.log('📦 Fetching templates from API:', `${API_URL}/apps/templates`);
+    const response = await fetch(`${API_URL}/apps/templates`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('✅ Successfully fetched templates from API');
+    return data;
+  } catch (error) {
+    console.error('❌ Error fetching templates from API, falling back to mock data:', error);
+    return MOCK_TEMPLATES;
+  }
+};
+
+// Nueva función para deployar apps
+export const deployApp = async (deploymentData: { templateId: string; name: string; environment: any }) => {
+  if (USE_MOCK_DATA) {
+    console.log('🚀 Mock deployment simulation for:', deploymentData);
+    // Simular delay de deployment
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    return {
+      success: true,
+      deployment: {
+        id: `mock-${Date.now()}`,
+        name: deploymentData.name,
+        templateId: deploymentData.templateId,
+        status: 'running',
+        accessUrl: `http://localhost:${8000 + Math.floor(Math.random() * 1000)}`,
+        urls: [`http://localhost:${8000 + Math.floor(Math.random() * 1000)}`]
+      }
+    };
+  }
+
+  try {
+    console.log('🚀 Deploying app via API:', `${API_URL}/apps/deploy`);
+    const response = await fetch(`${API_URL}/apps/deploy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(deploymentData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ Successfully deployed app via API');
+    return result;
+  } catch (error) {
+    console.error('❌ Error deploying app via API:', error);
     throw error;
   }
 };
