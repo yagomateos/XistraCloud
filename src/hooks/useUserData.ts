@@ -4,7 +4,7 @@ import { PlanType } from '@/lib/plans';
 
 export const useUserData = () => {
   const [userData, setUserData] = useState<UserData | null>(userStore.getUserData());
-  const [loading, setLoading] = useState(!userData);
+  const [loading, setLoading] = useState(false); // Cambiar a false por defecto
 
   useEffect(() => {
     const handleUserDataUpdate = (event: CustomEvent) => {
@@ -26,20 +26,21 @@ export const useUserData = () => {
     window.addEventListener('user-data-loaded', handleUserDataLoad as EventListener);
     window.addEventListener('user-data-cleared', handleUserDataClear as EventListener);
 
-    // Si no hay datos, intentar cargarlos
+    // Asegurar que siempre hay datos disponibles
     if (!userData) {
-      // Los datos se cargarán automáticamente cuando el usuario se autentique
-      setLoading(true);
-    } else {
-      setLoading(false);
+      const initialData = userStore.getUserData();
+      if (initialData) {
+        setUserData(initialData);
+      }
     }
+    setLoading(false); // Siempre finalizar el loading
 
     return () => {
       window.removeEventListener('user-data-updated', handleUserDataUpdate as EventListener);
       window.removeEventListener('user-data-loaded', handleUserDataLoad as EventListener);
       window.removeEventListener('user-data-cleared', handleUserDataClear as EventListener);
     };
-  }, [userData]);
+  }, []); // Cambiar a array vacío para que solo se ejecute una vez
 
   const updateUserData = async (data: Partial<UserData>) => {
     setLoading(true);
