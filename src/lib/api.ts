@@ -66,7 +66,12 @@ export interface DashboardStats {
   }>;
 }
 
-export const API_URL = 'http://localhost:3001';
+// Resolve API base URL: prefer env, then production domain, else localhost
+export const API_URL =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
+  (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost'
+    ? 'https://xistracloud.com/api'
+    : 'http://localhost:3001');
 const USE_MOCK_DATA = false;
 
 // Debug logs
