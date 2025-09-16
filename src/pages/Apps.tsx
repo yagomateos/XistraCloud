@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Package, Loader2 } from 'lucide-react';
+import { Package, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAppTemplates, deployApp } from '@/lib/api';
 
@@ -29,8 +27,6 @@ const Apps = () => {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [categories, setCategories] = useState<Record<string, Category>>({});
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'category'>('name');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isInstallDialogOpen, setIsInstallDialogOpen] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
@@ -41,10 +37,30 @@ const Apps = () => {
     const fetchTemplates = async () => {
       try {
         const data = await getAppTemplates();
-        setTemplates(data.templates || []);
+        // Filtrar solo WordPress
+        const wordpressOnly = (data.templates || []).filter(template => 
+          template.id === 'wordpress' || 
+          template.id === 'wordpress-mysql' || 
+          template.name.toLowerCase().includes('wordpress')
+        );
+        setTemplates(wordpressOnly);
         setCategories(data.categories || {});
       } catch (error) {
         console.error('Error fetching templates:', error);
+        // Fallback: crear template de WordPress manualmente
+        setTemplates([{
+          id: 'wordpress',
+          name: 'WordPress',
+          description: 'CMS popular para blogs y webs. Incluye MySQL.',
+          category: 'cms',
+          ports: [80],
+          env_required: ['DB_PASSWORD', 'DB_ROOT_PASSWORD'],
+          icon: '📝',
+          features: ['CMS completo', 'MySQL incluida', 'Panel de admin', 'Temas y plugins']
+        }]);
+        setCategories({
+          cms: { name: 'CMS & Websites', icon: '📝' }
+        });
       } finally {
         setLoading(false);
       }
@@ -81,8 +97,19 @@ const Apps = () => {
         
         if (result.success) {
           const url = result.deployment.accessUrl || result.deployment.urls?.[0] || 'URL no disponible';
+          const instructions = result.deployment.instructions;
           
-          alert(`✅ ${selectedTemplate.name} desplegado exitosamente!\\n\\n🌐 URL: ${url}\\n\\n⏱️ Puede tardar unos segundos en estar disponible.`);
+          let message = `✅ ${selectedTemplate.name} desplegado exitosamente!\\n\\n🌐 URL: ${url}\\n\\n⏱️ Puede tardar unos segundos en estar disponible.`;
+          
+          if (instructions) {
+            if (instructions.wordpress) {
+              message += `\\n\\n📝 Instrucciones: ${instructions.wordpress}`;
+            } else if (instructions.general) {
+              message += `\\n\\n📝 Instrucciones: ${instructions.general}`;
+            }
+          }
+          
+          alert(message);
           navigate('/dashboard/projects');
         } else {
           throw new Error(result.error || result.message || 'Error en el despliegue');
@@ -98,19 +125,8 @@ const Apps = () => {
     setIsInstallDialogOpen(false);
   };
 
-  // Filtrar y ordenar templates
-  const filteredTemplates = templates.filter(template =>
-    template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    template.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const sortedTemplates = [...filteredTemplates].sort((a, b) => {
-    if (sortBy === 'name') return a.name.localeCompare(b.name);
-    if (sortBy === 'category') return a.category.localeCompare(b.category);
-    return 0;
-  });
-
-  const uniqueCategories = Array.from(new Set(templates.map(t => t.category)));
+  // Solo mostrar templates de WordPress (ya filtrados en useEffect)
+  const wordpressTemplates = templates;
 
   if (loading) {
     return (
@@ -124,152 +140,67 @@ const Apps = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">🚀 Apps</h1>
+        <h1 className="text-3xl font-bold mb-2">📝 WordPress</h1>
         <p className="text-muted-foreground mb-6">
-          Despliega aplicaciones populares con un solo clic. Desde WordPress hasta bases de datos, todo listo en segundos.
+          Despliega WordPress con un solo clic. El CMS más popular del mundo listo en segundos.
         </p>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Buscar apps..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as 'name' | 'category')}
-          className="px-3 py-2 border rounded-md bg-background"
-        >
-          <option value="name">Ordenar por nombre</option>
-          <option value="category">Ordenar por categoría</option>
-        </select>
-      </div>
-
-      <Tabs defaultValue="todos" className="w-full">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-1 h-auto p-1 bg-muted/30">
-          <TabsTrigger value="todos" className="text-xs px-2 py-1">
-            Todos ({templates.length})
-          </TabsTrigger>
-          {uniqueCategories.slice(0, 7).map(category => {
-            const categoryData = categories[category];
-            const count = templates.filter(t => t.category === category).length;
-            return (
-              <TabsTrigger key={category} value={category} className="text-xs px-2 py-1">
-                {categoryData?.icon} {categoryData?.name || category} ({count})
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-
-        {/* All templates */}
-        <TabsContent value="todos" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedTemplates.map((template) => (
-              <Card key={template.id} className="h-full hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <span className="text-2xl">{template.icon || '📦'}</span>
-                      {template.name}
-                    </CardTitle>
-                    <Badge variant="secondary" className="text-xs">
-                      {categories[template.category]?.name || template.category}
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-sm leading-relaxed">
-                    {template.description}
-                  </CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {template.ports.map((port, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        Puerto {port}
-                      </Badge>
-                    ))}
-                  </div>
-                  {template.env_required.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Requiere configuración de variables de entorno
-                    </p>
-                  )}
-                </CardContent>
-                
-                <CardFooter className="pt-0">
-                  <Button 
-                    className="w-full"
-                    onClick={() => handleInstall(template)}
-                  >
-                    🚀 Desplegar
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-          
-          {sortedTemplates.length === 0 && (
-            <div className="text-center py-12">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No se encontraron apps</h3>
-              <p className="text-muted-foreground">
-                Intenta cambiar los filtros de búsqueda
-              </p>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Category-specific tabs */}
-        {uniqueCategories.map(category => (
-          <TabsContent key={category} value={category} className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.filter(t => t.category === category).map((template) => (
-                <Card key={template.id} className="h-full hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <span className="text-2xl">{template.icon || '📦'}</span>
-                      {template.name}
-                    </CardTitle>
-                    <CardDescription className="text-sm leading-relaxed">
-                      {template.description}
-                    </CardDescription>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {template.ports.map((port, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          Puerto {port}
-                        </Badge>
-                      ))}
-                    </div>
-                    {template.env_required.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Requiere configuración de variables de entorno
-                      </p>
-                    )}
-                  </CardContent>
-                  
-                  <CardFooter className="pt-0">
-                    <Button 
-                      className="w-full"
-                      onClick={() => handleInstall(template)}
-                    >
-                      🚀 Desplegar
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+      {/* WordPress Template */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {wordpressTemplates.map((template) => (
+          <Card key={template.id} className="h-full hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <span className="text-2xl">{template.icon || '📝'}</span>
+                  {template.name}
+                </CardTitle>
+                <Badge variant="secondary" className="text-xs">
+                  {categories[template.category]?.name || template.category}
+                </Badge>
+              </div>
+              <CardDescription className="text-sm leading-relaxed">
+                {template.description}
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <div className="flex flex-wrap gap-1 mb-3">
+                {template.ports.map((port, index) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    Puerto {port}
+                  </Badge>
+                ))}
+              </div>
+              {template.env_required.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Requiere configuración de variables de entorno
+                </p>
+              )}
+            </CardContent>
+            
+            <CardFooter className="pt-0">
+              <Button 
+                className="w-full"
+                onClick={() => handleInstall(template)}
+              >
+                🚀 Desplegar WordPress
+              </Button>
+            </CardFooter>
+          </Card>
         ))}
-      </Tabs>
+      </div>
+      
+      {wordpressTemplates.length === 0 && (
+        <div className="text-center py-12">
+          <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">WordPress no disponible</h3>
+          <p className="text-muted-foreground">
+            No se pudo cargar el template de WordPress
+          </p>
+        </div>
+      )}
 
       {/* Install Confirmation Dialog */}
       <Dialog open={isInstallDialogOpen} onOpenChange={setIsInstallDialogOpen}>

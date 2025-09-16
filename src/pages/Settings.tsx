@@ -229,8 +229,21 @@ const Settings: React.FC = () => {
     setIsDeleteModalOpen(false);
   };
 
-  // Mostrar loading mientras se cargan los datos del usuario
-  if (loading || !userData) {
+  // Si no hay userData, mostrar datos por defecto para que la página funcione
+  const safeUserData = userData || {
+    name: 'Usuario',
+    email: 'usuario@ejemplo.com',
+    avatar: '',
+    bio: '',
+    location: '',
+    company: '',
+    website: '',
+    plan: 'free',
+    joinedAt: new Date().toISOString()
+  };
+
+  // Mostrar loading solo si está realmente cargando y no hay datos
+  if (loading && !userData) {
     return (
       <div className="space-y-4 md:space-y-6 pt-6 px-4 pb-4 lg:p-6">
         <div>
@@ -293,12 +306,12 @@ const Settings: React.FC = () => {
                 <Avatar className="h-16 w-16 md:h-20 md:w-20 mx-auto sm:mx-0">
                   <AvatarImage src={localUserData.avatar} />
                   <AvatarFallback className="text-base md:text-lg">
-                    {userData.name.split(' ').map(n => n[0]).join('')}
+                    {safeUserData.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col gap-2 text-center sm:text-left flex-1 min-w-0">
-                  <h3 className="font-semibold text-base md:text-lg truncate">{userData.name}</h3>
-                  <p className="text-sm md:text-base text-muted-foreground truncate">{userData.email}</p>
+                  <h3 className="font-semibold text-base md:text-lg truncate">{safeUserData.name}</h3>
+                  <p className="text-sm md:text-base text-muted-foreground truncate">{safeUserData.email}</p>
                   <Dialog open={isAvatarModalOpen} onOpenChange={setIsAvatarModalOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline" size="sm" className="w-full sm:w-fit text-xs md:text-sm">
@@ -320,7 +333,7 @@ const Settings: React.FC = () => {
                             <Avatar className="h-32 w-32 ring-4 ring-background shadow-lg">
                               <AvatarImage src={avatarPreview || localUserData.avatar} />
                               <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                                {userData.name.split(' ').map(n => n[0]).join('')}
+                                {safeUserData.name.split(' ').map(n => n[0]).join('')}
                               </AvatarFallback>
                             </Avatar>
                             {avatarPreview && (
@@ -703,7 +716,7 @@ const Settings: React.FC = () => {
         {/* FACTURACIÓN */}
         <TabsContent value="billing" className="space-y-6">
           <PlanLimitCard 
-            userPlan={userData.plan as any}
+            userPlan={safeUserData.plan as any}
             currentProjects={0} // TODO: obtener del API
             currentDomains={0} // TODO: obtener del API
           />
@@ -723,7 +736,7 @@ const Settings: React.FC = () => {
                 <div>
                   <h3 className="font-semibold">Próxima facturación</h3>
                   <p className="text-sm text-muted-foreground">
-                    15 Oct 2025 • Plan {userData.plan}
+                    15 Oct 2025 • Plan {safeUserData.plan}
                   </p>
                 </div>
                 <Badge variant="default">Al día</Badge>

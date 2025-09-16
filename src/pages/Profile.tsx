@@ -10,7 +10,7 @@ import { userStore, UserData } from '@/lib/user-store';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserData>(userStore.getUserData());
+  const [user, setUser] = useState<UserData | null>(userStore.getUserData());
 
   // Escuchar cambios en los datos del usuario
   useEffect(() => {
@@ -24,6 +24,19 @@ const Profile = () => {
       window.removeEventListener('user-data-updated', handleUserDataUpdate as EventListener);
     };
   }, []);
+
+  // Datos seguros por defecto si no hay usuario
+  const safeUser = user || {
+    name: 'Usuario',
+    email: 'usuario@ejemplo.com',
+    avatar: '',
+    bio: '',
+    location: '',
+    company: '',
+    website: '',
+    plan: 'free',
+    joinedAt: new Date().toISOString()
+  };
 
   const handleEditProfile = () => {
     navigate('/dashboard/settings?tab=profile');
@@ -59,58 +72,58 @@ const Profile = () => {
           <Card>
             <CardHeader className="text-center pb-4">
               <Avatar className="h-20 w-20 md:h-24 md:w-24 mx-auto mb-3 md:mb-4">
-                <AvatarImage src={user.avatar} />
+                <AvatarImage src={safeUser.avatar} />
                 <AvatarFallback className="text-xl md:text-2xl">
-                  {user.name.split(' ').map(n => n[0]).join('')}
+                  {safeUser.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
-              <CardTitle className="text-lg md:text-xl">{user.name}</CardTitle>
-              <CardDescription className="text-sm md:text-base">{user.email}</CardDescription>
+              <CardTitle className="text-lg md:text-xl">{safeUser.name}</CardTitle>
+              <CardDescription className="text-sm md:text-base">{safeUser.email}</CardDescription>
               <div className="flex justify-center mt-2">
-                <Badge variant="secondary" className="text-xs md:text-sm">{user.plan} Plan</Badge>
+                <Badge variant="secondary" className="text-xs md:text-sm">{safeUser.plan} Plan</Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-0">
-              {user.bio && (
+              {safeUser.bio && (
                 <p className="text-xs md:text-sm text-center text-muted-foreground leading-relaxed">
-                  {user.bio}
+                  {safeUser.bio}
                 </p>
               )}
               
               <Separator />
               
               <div className="space-y-3">
-                {user.company && (
+                {safeUser.company && (
                   <div className="flex items-center space-x-2 text-xs md:text-sm">
                     <Building className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{user.company}</span>
+                    <span className="truncate">{safeUser.company}</span>
                   </div>
                 )}
                 
-                {user.location && (
+                {safeUser.location && (
                   <div className="flex items-center space-x-2 text-xs md:text-sm">
                     <MapPin className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{user.location}</span>
+                    <span className="truncate">{safeUser.location}</span>
                   </div>
                 )}
                 
-                {user.website && (
+                {safeUser.website && (
                   <div className="flex items-center space-x-2 text-xs md:text-sm">
                     <LinkIcon className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
                     <a 
-                      href={user.website} 
+                      href={safeUser.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-primary hover:underline truncate"
                     >
-                      {user.website}
+                      {safeUser.website}
                     </a>
                   </div>
                 )}
                 
                 <div className="flex items-center space-x-2 text-xs md:text-sm">
                   <Calendar className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Miembro desde {formatJoinDate(user.joinedAt)}</span>
+                  <span className="text-muted-foreground">Miembro desde {formatJoinDate(safeUser.joinedAt)}</span>
                 </div>
               </div>
               

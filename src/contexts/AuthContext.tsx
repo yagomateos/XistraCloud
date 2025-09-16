@@ -31,13 +31,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         userStore.loadUserData(session.user.id)
       } else {
-        // En desarrollo, cargar datos mock automáticamente
-        if (import.meta.env.DEV) {
-          console.log('🔄 Loading mock user data for development');
-          userStore.loadUserData('mock-user-123');
-        } else {
-          userStore.clearUserData()
-        }
+        // No cargar datos mock automáticamente - solo limpiar datos
+        userStore.clearUserData()
       }
     })
 

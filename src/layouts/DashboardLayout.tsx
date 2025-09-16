@@ -1,16 +1,17 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from '@/components/Sidebar';
-import { useEffect, useState } from 'react';
+import { useUserData } from '@/hooks/useUserData';
 
 const DashboardLayout = () => {
-  const [user, setUser] = useState<{ name: string; email: string; } | null>(null);
+  const { userData } = useUserData();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+  // Convertir userData al formato que espera el Sidebar
+  // Siempre mostrar al menos datos por defecto para que aparezca el perfil
+  const user = {
+    name: userData?.name || 'Usuario',
+    email: userData?.email || 'usuario@ejemplo.com',
+    avatar: userData?.avatar || ''
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-background">

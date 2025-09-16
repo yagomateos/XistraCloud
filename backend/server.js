@@ -1684,6 +1684,9 @@ app.post('/apps/deploy', async (req, res) => {
       currentPort++;
     }
     
+    // Fix any malformed port lines (ensure proper quotes)
+    composeContent = composeContent.replace(/- "(\d+):(\d+)(?!")/g, '- "$1:$2"');
+    
     // Add project name prefix to container names
     composeContent = composeContent.replace(/container_name: ([\\w-]+)/g, `container_name: ${projectId}-$1`);
     
@@ -1709,6 +1712,25 @@ app.post('/apps/deploy', async (req, res) => {
       const mappedPort = basePort + index;
       return `http://localhost:${mappedPort}`;
     });
+    
+    // Wait a bit for the application to fully start
+    console.log('⏳ Esperando que la aplicación se inicie completamente...');
+    await new Promise(resolve => setTimeout(resolve, 5000)); // 5 segundos
+    
+    // Verify the application is responding
+    try {
+      const healthCheckUrl = urls[0];
+      const { execSync } = require('child_process');
+      const healthCheck = execSync(`curl -s -o /dev/null -w "%{http_code}" ${healthCheckUrl}`, { encoding: 'utf8', timeout: 10000 });
+      
+      if (healthCheck.trim() === '200' || healthCheck.trim() === '302') {
+        console.log('✅ Aplicación verificada y funcionando');
+      } else {
+        console.log(`⚠️ Aplicación respondiendo con código: ${healthCheck.trim()}`);
+      }
+    } catch (error) {
+      console.log('⚠️ No se pudo verificar la aplicación, pero el despliegue fue exitoso');
+    }
     
     // Store deployment in database (usando tabla deployments existente)
     const deploymentData = {
@@ -1753,7 +1775,12 @@ app.post('/apps/deploy', async (req, res) => {
         template: template.name,
         status: 'running',
         urls: urls,
-        ports: template.ports.map((_, index) => basePort + index)
+        ports: template.ports.map((_, index) => basePort + index),
+        accessUrl: urls[0],
+        instructions: {
+          wordpress: "WordPress está listo. Si ves 'aplicación no encontrada', espera unos segundos y recarga la página. WordPress puede tardar un momento en inicializarse completamente.",
+          general: "La aplicación puede tardar unos segundos en estar completamente disponible. Si no funciona inmediatamente, espera y recarga la página."
+        }
       }
     });
     

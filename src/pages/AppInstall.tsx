@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Loader2, CheckCircle, Server, Globe, Shield, Zap, Database, Palette } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import { API_URL } from '@/lib/api';
 
 interface AppTemplate {
   id: string;
@@ -34,7 +34,23 @@ const templates: Record<string, AppTemplate> = {
       'Responsive y mobile-first',
       'Actualizaciones automáticas'
     ],
-    icon: '�'
+    icon: '📝'
+  },
+  'wordpress-mysql': {
+    id: 'wordpress-mysql',
+    name: 'WordPress',
+    description: 'El CMS más poderoso del mundo para crear sitios web increíbles',
+    features: [
+      'Sistema de gestión de contenidos completo',
+      'Base de datos MySQL 8.0 optimizada', 
+      'Panel de administración intuitivo',
+      'Soporte para temas y plugins',
+      'Editor de bloques Gutenberg',
+      'SEO optimizado por defecto',
+      'Responsive y mobile-first',
+      'Actualizaciones automáticas'
+    ],
+    icon: '📝'
   },
   n8n: {
     id: 'n8n',
@@ -115,7 +131,7 @@ export default function AppInstall() {
       return;
     }
 
-    if (template.id === 'wordpress') {
+    if (template.id === 'wordpress' || template.id === 'wordpress-mysql') {
       if (!config.siteName.trim()) {
         alert('Por favor ingresa el nombre de tu sitio web');
         return;
@@ -393,7 +409,7 @@ export default function AppInstall() {
 
                 <Separator />
 
-                {template.id === 'wordpress' ? renderWordPressConfig() : renderDefaultConfig()}
+                {(template.id === 'wordpress' || template.id === 'wordpress-mysql') ? renderWordPressConfig() : renderDefaultConfig()}
 
                 {/* Botón de instalación mejorado */}
                 <div className="pt-6">

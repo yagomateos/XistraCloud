@@ -21,7 +21,7 @@ try {
   docker = new Docker({ socketPath: socket });
   console.log('✅ Docker client initialized.');
 } catch (error) {
-  console.error('❌ Failed to initialize Docker client. Docker-related features will be disabled.', error.message);
+  console.error('❌ Failed to initialize Docker client. Docker-related features will be disabled.', error instanceof Error ? error.message : String(error));
   docker = null as any;
 }
 
@@ -75,6 +75,20 @@ app.get('/', (req, res) => {
   app.post('/apps/deploy', (req, res) => {
     console.log('[backend] POST /apps/deploy from', req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress, 'body:', JSON.stringify(req.body || {}));
     const { templateId, name, environment } = req.body;
+    
+    // Get the actual port from running WordPress container
+    let wordpressPort = '9645'; // Default port for WordPress
+    try {
+      const { execSync } = require('child_process');
+      const portOutput = execSync('docker port miwp-yago-wordpress 2>/dev/null || echo "80/tcp -> 0.0.0.0:9645"', { encoding: 'utf8' });
+      const portMatch = portOutput.match(/:(\d+)/);
+      if (portMatch) {
+        wordpressPort = portMatch[1];
+      }
+    } catch (error) {
+      console.log('Using default WordPress port 9645');
+    }
+    
     // Simula despliegue exitoso y devuelve URL de la app
     res.json({
       success: true,
@@ -82,7 +96,7 @@ app.get('/', (req, res) => {
         id: `${templateId}-instance-001`,
         name,
         status: 'running',
-        urls: [`http://localhost:8080/${templateId}`],
+        urls: [`http://localhost:${wordpressPort}`],
         environment
       }
     });

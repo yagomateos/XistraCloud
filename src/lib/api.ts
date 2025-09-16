@@ -66,14 +66,15 @@ export interface DashboardStats {
   }>;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-const USE_MOCK_DATA = false; // ✅ FORCED REAL DATA ONLY
+export const API_URL = 'http://localhost:3001';
+const USE_MOCK_DATA = false;
 
 // Debug logs
 console.log('🔧 DEBUG - API Configuration:');
 console.log('  API_URL:', API_URL);
 console.log('  VITE_USE_MOCK_DATA:', import.meta.env.VITE_USE_MOCK_DATA);
 console.log('  USE_MOCK_DATA:', USE_MOCK_DATA);
+console.log('🔥 FORCE RELOAD - Cache busting:', Date.now());
 
 // Mock data for fallback (mutable para permitir eliminaciones)
 let MOCK_PROJECTS: Project[] = [
@@ -787,23 +788,19 @@ export const redeployProject = async (projectId: string): Promise<void> => {
 
 // Nueva función para obtener templates de apps
 export const getAppTemplates = async () => {
-  if (USE_MOCK_DATA) {
-    console.log('📦 Using mock templates data');
-    return MOCK_TEMPLATES;
-  }
-
+  // Use local backend for development
   try {
-    console.log('📦 Fetching templates from API:', `${API_URL}/apps/templates`);
+    console.log('📦 Fetching templates from local backend:', `${API_URL}/apps/templates`);
     const response = await fetch(`${API_URL}/apps/templates`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    console.log('✅ Successfully fetched templates from API');
+    console.log('✅ SUCCESS - Templates count:', data.templates?.length);
     return data;
   } catch (error) {
-    console.error('❌ Error fetching templates from API, falling back to mock data:', error);
-    return MOCK_TEMPLATES;
+    console.error('❌ FAILED:', error);
+    throw error; // NO FALLBACK TO MOCK
   }
 };
 
