@@ -1422,6 +1422,17 @@ const APP_TEMPLATES = {
     icon: '🐘'
   },
 
+  // Automation
+  'n8n': {
+    name: 'n8n (Free)',
+    description: 'Automatización con editor visual self-hosted',
+    compose: 'n8n/compose.yaml',
+    env_required: [],
+    ports: [5678],
+    category: 'automation',
+    icon: '⚡'
+  },
+
   // Development Tools
   'gitea-postgres': {
     name: 'Gitea',
