@@ -1688,18 +1688,21 @@ app.post('/apps/deploy', async (req, res) => {
     let composeContent = await fs.readFile(composePath, 'utf8');
     
     // Replace static ports with dynamic ones without corrupting target port
-    // Handles lines like:
-    //   - "25565:25565"  -> "<dynamic>:25565"
-    //   - 25565:25565    -> <dynamic>:25565
+    // Special-case minecraft which uses 25565
     let currentPort = basePort;
-    for (const containerPort of template.ports) {
-      // Replace quoted mappings first
-      const quotedMapping = new RegExp(`-\\s*\"(\\d+):(${containerPort})\"`, 'gm');
-      composeContent = composeContent.replace(quotedMapping, (_m, _hp, cp) => `- "${currentPort}:${cp}"`);
-      // Then unquoted mappings
-      const unquotedMapping = new RegExp(`-\\s*(\\d+):(${containerPort})(?!\\S)`, 'gm');
-      composeContent = composeContent.replace(unquotedMapping, (_m, _hp, cp) => `- ${currentPort}:${cp}`);
+    if (templateId === 'minecraft') {
+      composeContent = composeContent.replace(/-\s*"?25565:25565"?/g, `- "${currentPort}:25565"`);
       currentPort++;
+    } else {
+      for (const containerPort of template.ports) {
+        // Replace quoted mappings first
+        const quotedMapping = new RegExp(`-\\s*\"(\\d+):(${containerPort})\"`, 'gm');
+        composeContent = composeContent.replace(quotedMapping, (_m, _hp, cp) => `- "${currentPort}:${cp}"`);
+        // Then unquoted mappings
+        const unquotedMapping = new RegExp(`-\\s*(\\d+):(${containerPort})(?!\\S)`, 'gm');
+        composeContent = composeContent.replace(unquotedMapping, (_m, _hp, cp) => `- ${currentPort}:${cp}`);
+        currentPort++;
+      }
     }
     
     // Fix any malformed port lines (ensure proper quotes)
