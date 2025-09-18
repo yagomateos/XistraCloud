@@ -1688,17 +1688,17 @@ app.post('/apps/deploy', async (req, res) => {
     let composeContent = await fs.readFile(composePath, 'utf8');
     
     // Replace static ports with dynamic ones without corrupting target port
-    // Examples to handle:
+    // Handles lines like:
     //   - "25565:25565"  -> "<dynamic>:25565"
     //   - 25565:25565    -> <dynamic>:25565
     let currentPort = basePort;
     for (const containerPort of template.ports) {
-      // Quoted mapping
-      const quotedMapping = new RegExp(`-\s*"?\\d+:${containerPort}"?`, 'g');
-      composeContent = composeContent.replace(quotedMapping, `- "${currentPort}:${containerPort}"`);
-      // Unquoted mapping
-      const unquotedMapping = new RegExp(`-\s*\\d+:${containerPort}`, 'g');
-      composeContent = composeContent.replace(unquotedMapping, `- ${currentPort}:${containerPort}`);
+      // Replace quoted mappings first
+      const quotedMapping = new RegExp(`-\\s*\"(\\d+):(${containerPort})\"`, 'gm');
+      composeContent = composeContent.replace(quotedMapping, (_m, _hp, cp) => `- "${currentPort}:${cp}"`);
+      // Then unquoted mappings
+      const unquotedMapping = new RegExp(`-\\s*(\\d+):(${containerPort})(?!\\S)`, 'gm');
+      composeContent = composeContent.replace(unquotedMapping, (_m, _hp, cp) => `- ${currentPort}:${cp}`);
       currentPort++;
     }
     
