@@ -321,7 +321,7 @@ export default function AppInstall() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
         {/* Header mejorado */}
         <div className="mb-8">
           <Button 
@@ -334,14 +334,14 @@ export default function AppInstall() {
             Volver al Marketplace
           </Button>
           
-          <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-2xl p-8 border border-white/20 dark:border-slate-700/50 shadow-xl">
-            <div className="flex items-start gap-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">
+          <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-2xl p-5 sm:p-8 border border-white/20 dark:border-slate-700/50 shadow-xl">
+            <div className="flex items-start gap-4 sm:gap-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl sm:text-3xl shadow-lg">
                 {template.icon}
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
                     Instalar {template.name}
                   </h1>
                   <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
@@ -349,7 +349,7 @@ export default function AppInstall() {
                     Hosting Profesional
                   </Badge>
                 </div>
-                <p className="text-lg text-slate-600 dark:text-slate-300 mb-4">
+                <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-300 mb-4">
                   {template.description}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -371,7 +371,7 @@ export default function AppInstall() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 xl:gap-8">
           {/* Configuración principal */}
           <div className="xl:col-span-2">
             <Card className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-white/20 dark:border-slate-700/50 shadow-xl">
@@ -381,8 +381,8 @@ export default function AppInstall() {
                     <Server className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl">Configuración de {template.name}</CardTitle>
-                    <CardDescription className="text-base">
+                    <CardTitle className="text-lg sm:text-xl">Configuración de {template.name}</CardTitle>
+                    <CardDescription className="text-sm sm:text-base">
                       Personaliza tu instalación con los siguientes parámetros
                     </CardDescription>
                   </div>

@@ -146,28 +146,28 @@ const Apps = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Apps Marketplace</h1>
-        <p className="text-muted-foreground mb-6">
+    <div className="space-y-6 px-4 sm:px-6">
+      <div className="mt-6 sm:mt-8 lg:mt-10">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Apps Marketplace</h1>
+        <p className="text-muted-foreground mb-4 sm:mb-6">
           Despliega aplicaciones y servicios con un solo clic.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {templates.map((template) => (
           <Card key={template.id} className="h-full hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <span className="text-2xl">{template.icon || '📝'}</span>
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <span className="text-xl sm:text-2xl">{template.icon || '📝'}</span>
                   {template.name}
                 </CardTitle>
                 <Badge variant="secondary" className="text-xs">
                   {categories[template.category]?.name || template.category}
                 </Badge>
               </div>
-              <CardDescription className="text-sm leading-relaxed">
+              <CardDescription className="text-xs sm:text-sm leading-relaxed">
                 {template.description}
               </CardDescription>
             </CardHeader>
@@ -175,13 +175,13 @@ const Apps = () => {
             <CardContent>
               <div className="flex flex-wrap gap-1 mb-3">
                 {template.ports.map((port, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                  <Badge key={index} variant="outline" className="text-[10px] sm:text-xs">
                     Puerto {port}
                   </Badge>
                 ))}
               </div>
               {template.env_required.length > 0 && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   Requiere configuración de variables de entorno
                 </p>
               )}
