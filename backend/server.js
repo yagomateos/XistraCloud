@@ -1676,12 +1676,12 @@ app.post('/apps/deploy', async (req, res) => {
     
     console.log(`🚀 Iniciando despliegue de ${template.name} como ${name}...`);
     
-    // Create deployment directory
-    const deployPath = path.join(process.cwd(), '..', 'deployments', projectId);
+    // Create deployment directory (use absolute path relative to this file)
+    const deployPath = path.resolve(__dirname, 'deployed-apps', projectId);
     await execAsync(`mkdir -p ${deployPath}`);
     
-    // Copy compose file
-    const composePath = path.join(process.cwd(), '..', 'awesome-compose', template.compose);
+    // Resolve compose file from repo (absolute path, independent of cwd)
+    const composePath = path.resolve(__dirname, '..', 'awesome-compose', template.compose);
     const targetComposePath = path.join(deployPath, 'compose.yaml');
     
     // Read and modify compose file with dynamic ports
