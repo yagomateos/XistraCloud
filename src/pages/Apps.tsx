@@ -37,29 +37,49 @@ const Apps = () => {
     const fetchTemplates = async () => {
       try {
         const data = await getAppTemplates();
-        // Filtrar solo WordPress
-        const wordpressOnly = (data.templates || []).filter(template => 
-          template.id === 'wordpress' || 
+        // Filtrar WordPress y n8n
+        const filteredTemplates = (data.templates || []).filter(template => 
           template.id === 'wordpress-mysql' || 
-          template.name.toLowerCase().includes('wordpress')
+          template.id === 'n8n' ||
+          template.name.toLowerCase().includes('wordpress') ||
+          template.name.toLowerCase().includes('n8n')
         );
-        setTemplates(wordpressOnly);
+        
+        console.log('🚀 Filtered templates:', filteredTemplates);
+        console.log('🚀 Filtered template IDs:', filteredTemplates.map(t => t.id));
+        
+        setTemplates(data.templates || []);
         setCategories(data.categories || {});
       } catch (error) {
         console.error('Error fetching templates:', error);
-        // Fallback: crear template de WordPress manualmente
-        setTemplates([{
-          id: 'wordpress',
-          name: 'WordPress',
-          description: 'CMS popular para blogs y webs. Incluye MySQL.',
-          category: 'cms',
-          ports: [80],
-          env_required: ['DB_PASSWORD', 'DB_ROOT_PASSWORD'],
-          icon: '📝',
-          features: ['CMS completo', 'MySQL incluida', 'Panel de admin', 'Temas y plugins']
-        }]);
+        // Fallback: crear templates de WordPress y n8n manualmente
+        const fallbackTemplates = [
+          {
+            id: 'wordpress-mysql',
+            name: 'WordPress',
+            description: 'CMS popular para blogs y webs. Incluye MySQL.',
+            category: 'cms',
+            ports: [80],
+            env_required: ['DB_PASSWORD', 'DB_ROOT_PASSWORD'],
+            icon: '📝',
+            features: ['CMS completo', 'MySQL incluida', 'Panel de admin', 'Temas y plugins']
+          },
+          {
+            id: 'n8n',
+            name: 'n8n (Free)',
+            description: 'Automatización de flujos con editor visual. Base de datos incluida.',
+            category: 'automation',
+            ports: [5678],
+            env_required: [],
+            icon: '⚡',
+            features: ['Editor visual de workflows', '200+ integraciones', 'Base de datos PostgreSQL']
+          }
+        ];
+        
+        setTemplates(fallbackTemplates);
         setCategories({
-          cms: { name: 'CMS & Websites', icon: '📝' }
+          cms: { name: 'CMS & Websites', icon: '📝' },
+          automation: { name: 'Automatización', icon: '⚡' }
         });
       } finally {
         setLoading(false);
@@ -72,7 +92,9 @@ const Apps = () => {
   const handleInstall = (template: Template) => {
     // Redirigir a la página de instalación en lugar de mostrar modal
     navigate(`/dashboard/apps/install/${template.id}`);
-  };  const confirmInstall = async () => {
+  };
+
+  const confirmInstall = async () => {
     if (selectedTemplate && !isDeploying) {
       setIsDeploying(true);
       try {
@@ -97,19 +119,8 @@ const Apps = () => {
         
         if (result.success) {
           const url = result.deployment.accessUrl || result.deployment.urls?.[0] || 'URL no disponible';
-          const instructions = result.deployment.instructions;
           
-          let message = `✅ ${selectedTemplate.name} desplegado exitosamente!\\n\\n🌐 URL: ${url}\\n\\n⏱️ Puede tardar unos segundos en estar disponible.`;
-          
-          if (instructions) {
-            if (instructions.wordpress) {
-              message += `\\n\\n📝 Instrucciones: ${instructions.wordpress}`;
-            } else if (instructions.general) {
-              message += `\\n\\n📝 Instrucciones: ${instructions.general}`;
-            }
-          }
-          
-          alert(message);
+          alert(`✅ ${selectedTemplate.name} desplegado exitosamente!\n\n🌐 URL: ${url}\n\n⏱️ Puede tardar unos segundos en estar disponible.`);
           navigate('/dashboard/projects');
         } else {
           throw new Error(result.error || result.message || 'Error en el despliegue');
@@ -125,9 +136,6 @@ const Apps = () => {
     setIsInstallDialogOpen(false);
   };
 
-  // Solo mostrar templates de WordPress (ya filtrados en useEffect)
-  const wordpressTemplates = templates;
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -140,15 +148,14 @@ const Apps = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">📝 WordPress</h1>
+        <h1 className="text-3xl font-bold mb-2">Apps Marketplace</h1>
         <p className="text-muted-foreground mb-6">
-          Despliega WordPress con un solo clic. El CMS más popular del mundo listo en segundos.
+          Despliega aplicaciones y servicios con un solo clic.
         </p>
       </div>
 
-      {/* WordPress Template */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {wordpressTemplates.map((template) => (
+        {templates.map((template) => (
           <Card key={template.id} className="h-full hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -185,19 +192,19 @@ const Apps = () => {
                 className="w-full"
                 onClick={() => handleInstall(template)}
               >
-                🚀 Desplegar WordPress
+                🚀 Desplegar {template.name}
               </Button>
             </CardFooter>
           </Card>
         ))}
       </div>
       
-      {wordpressTemplates.length === 0 && (
+      {templates.length === 0 && (
         <div className="text-center py-12">
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">WordPress no disponible</h3>
+          <h3 className="text-lg font-semibold mb-2">No hay apps disponibles</h3>
           <p className="text-muted-foreground">
-            No se pudo cargar el template de WordPress
+            No se encontraron aplicaciones para desplegar en este momento.
           </p>
         </div>
       )}
