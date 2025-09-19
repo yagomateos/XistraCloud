@@ -66,12 +66,23 @@ export interface DashboardStats {
   }>;
 }
 
-// Resolve API base URL: prefer env, then production domain, else localhost
+// Resolve API base URL: localStorage > env > production domain > localhost
+let LS_API = '';
+try {
+  if (typeof window !== 'undefined') {
+    // If running on localhost, force a sensible default for local dev
+    if (window.location.hostname === 'localhost') {
+      localStorage.setItem('VITE_API_URL', 'http://localhost:3001');
+    }
+    LS_API = localStorage.getItem('VITE_API_URL') || '';
+  }
+} catch {}
 export const API_URL =
-  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
-  (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost'
-    ? 'https://xistracloud.com/api'
-    : 'http://localhost:3001');
+  LS_API ||
+  ((typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
+    (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost'
+      ? 'https://xistracloud.com/api'
+      : 'http://localhost:3001'));
 const USE_MOCK_DATA = false;
 
 // Debug logs
