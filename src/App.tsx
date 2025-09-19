@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import DashboardLayout from "./layouts/DashboardLayout";
+import DashboardLayoutSimple from "./layouts/DashboardLayoutSimple";
 import Dashboard from "@/pages/Dashboard";
 import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
@@ -20,6 +21,7 @@ import Pricing from "@/pages/Pricing";
 import Webhooks from "@/pages/Webhooks";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
+import LoginSimple from "@/pages/LoginSimple";
 import Register from "@/pages/Register";
 import EmailConfirmed from "@/pages/EmailConfirmed";
 import NotFound from "@/pages/NotFound";
@@ -42,10 +44,10 @@ const App = () => (
           >
             <Routes>
               <Route path="/" element={<Landing />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<LoginSimple />} />
               <Route path="/register" element={<Register />} />
               <Route path="/email-confirmed" element={<EmailConfirmed />} />
-              <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route path="/dashboard" element={<DashboardLayoutSimple />}>
                 <Route index element={<Dashboard />} />
                 <Route path="projects" element={<Projects />} />
                 <Route path="project/:id" element={<ProjectDetail />} />

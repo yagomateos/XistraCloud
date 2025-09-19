@@ -1379,6 +1379,42 @@ app.post('/projects/force-complete-building', async (req, res) => {
 });
 
 // ======================================
+// 🔐 AUTH ENDPOINTS (Simple login for testing)
+// ======================================
+
+// Simple login endpoint for testing
+app.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Simple validation - accept any email/password for testing
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+    
+    // Mock user data
+    const user = {
+      id: 'test-user-123',
+      email: email,
+      name: email.split('@')[0],
+      plan_type: 'free'
+    };
+    
+    console.log(`🔐 Login attempt: ${email}`);
+    
+    res.json({
+      user,
+      token: 'mock-token-' + Date.now(),
+      message: 'Login successful'
+    });
+    
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// ======================================
 // 🔗 GITHUB WEBHOOKS SYSTEM (Vercel/Zeabur-style)
 // ======================================
 

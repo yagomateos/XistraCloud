@@ -50,9 +50,15 @@ const Sidebar = ({ user }: SidebarProps) => {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    // Limpiar localStorage
     localStorage.removeItem('user');
-    navigate('/');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('authToken');
+    
+    console.log('✅ Logout successful');
+    
+    // Redirigir al login
+    window.location.href = '/login';
   };
 
   const navigation = [
