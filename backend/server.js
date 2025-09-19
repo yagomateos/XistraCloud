@@ -1382,8 +1382,6 @@ app.post('/projects/force-complete-building', async (req, res) => {
 // 🔗 GITHUB WEBHOOKS SYSTEM (Vercel/Zeabur-style)
 // ======================================
 
-const crypto = require('crypto');
-
 // GitHub webhook signature verification
 function verifyGitHubSignature(payload, signature, secret) {
   if (!secret) return true; // Skip verification if no secret set

@@ -104,9 +104,9 @@ const Webhooks = () => {
             Configura despliegues automáticos desde GitHub
           </p>
         </div>
-        <Button onClick={() => window.open('https://github.com/settings/webhooks', '_blank')}>
+        <Button onClick={() => window.open('https://github.com/new', '_blank')}>
           <Github className="h-4 w-4 mr-2" />
-          Configurar en GitHub
+          Crear Repositorio
         </Button>
       </div>
 
@@ -128,9 +128,12 @@ const Webhooks = () => {
                 1
               </div>
               <div>
-                <p className="font-medium">Ve a la configuración de webhooks de tu repositorio</p>
+                <p className="font-medium">Ve a tu repositorio en GitHub</p>
                 <p className="text-sm text-muted-foreground">
                   GitHub → Tu repositorio → Settings → Webhooks → Add webhook
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  ⚠️ No uses la configuración general de GitHub, debe ser en el repositorio específico
                 </p>
               </div>
             </div>
@@ -140,44 +143,52 @@ const Webhooks = () => {
                 2
               </div>
               <div>
-                <p className="font-medium">Configura la URL del webhook</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="px-2 py-1 bg-muted rounded text-sm">
-                    https://xistracloud.com/api/webhooks/github
-                  </code>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => copyToClipboard('https://xistracloud.com/api/webhooks/github')}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
+                <p className="font-medium">Configura el webhook en GitHub</p>
+                <div className="space-y-2 mt-2">
+                  <div>
+                    <p className="text-sm font-medium">Payload URL:</p>
+                    <div className="flex items-center gap-2">
+                      <code className="px-2 py-1 bg-muted rounded text-sm">
+                        https://xistracloud.com/api/webhooks/github
+                      </code>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => copyToClipboard('https://xistracloud.com/api/webhooks/github')}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium">Content type:</p>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      application/json
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ⚠️ Cambia de "application/x-www-form-urlencoded" a "application/json"
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium">Events:</p>
+                    <div className="flex gap-2 mt-1">
+                      <Badge variant="secondary">Push</Badge>
+                      <Badge variant="secondary">Pull Request</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Selecciona "Let me select individual events" y marca Push + Pull Request
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm font-medium">Secret:</p>
+                    <p className="text-xs text-muted-foreground">
+                      Genera un secreto aleatorio o usa el generador de abajo
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                3
-              </div>
-              <div>
-                <p className="font-medium">Selecciona los eventos</p>
-                <div className="flex gap-2 mt-1">
-                  <Badge variant="secondary">Push</Badge>
-                  <Badge variant="secondary">Pull Request</Badge>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                4
-              </div>
-              <div>
-                <p className="font-medium">Añade un secreto (opcional pero recomendado)</p>
-                <p className="text-sm text-muted-foreground">
-                  Usa el generador de secretos o crea uno personalizado
-                </p>
               </div>
             </div>
           </div>
