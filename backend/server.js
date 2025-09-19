@@ -2162,7 +2162,7 @@ app.post('/apps/deploy', async (req, res) => {
     // Create .env file
     const envContent = Object.entries(environment)
       .map(([key, value]) => `${key}=${value}`)
-      .join('\\n');
+      .join('\n');
     await fs.writeFile(path.join(deployPath, '.env'), envContent);
     
     // Deploy with docker-compose
