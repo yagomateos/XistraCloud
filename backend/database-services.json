@@ -1,0 +1,12 @@
+[
+  {
+    "id": "test-1758308508652",
+    "name": "mysql-1758308508641",
+    "type": "mysql",
+    "status": "running",
+    "port": 3306,
+    "admin_port": 8080,
+    "created_at": "2025-09-19T19:01:48.652Z",
+    "connection_string": "mysql://app_user:xistra_1758308508641@localhost:3306"
+  }
+]

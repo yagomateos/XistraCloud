@@ -77,12 +77,24 @@ try {
     LS_API = localStorage.getItem('VITE_API_URL') || '';
   }
 } catch {}
-export const API_URL =
-  LS_API ||
-  ((typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
-    (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost'
-      ? 'https://xistracloud.com/api'
-      : 'http://localhost:3001'));
+// Force production API URL if we're on xistracloud.com
+if (typeof window !== 'undefined' && window.location.hostname === 'xistracloud.com') {
+  localStorage.setItem('VITE_API_URL', 'https://xistracloud.com/api');
+}
+
+// Get the updated API URL after potentially setting it
+const getApiUrl = () => {
+  if (typeof window !== 'undefined' && window.location.hostname === 'xistracloud.com') {
+    return 'https://xistracloud.com/api';
+  }
+  return localStorage.getItem('VITE_API_URL') ||
+    ((typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
+      (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost'
+        ? 'https://xistracloud.com/api'
+        : 'http://localhost:3001'));
+};
+
+export const API_URL = getApiUrl();
 const USE_MOCK_DATA = false;
 
 // Debug logs
@@ -921,8 +933,13 @@ export const deployApp = async (deploymentData: { templateId: string; name: stri
   }
 
   try {
-    console.log('🚀 Deploying app via API:', `${API_URL}/apps/deploy`);
-    const response = await fetch(`${API_URL}/apps/deploy`, {
+    // Force production URL for deployment
+    const deployUrl = typeof window !== 'undefined' && window.location.hostname === 'xistracloud.com' 
+      ? 'https://xistracloud.com/api/apps/deploy'
+      : `${API_URL}/apps/deploy`;
+    
+    console.log('🚀 Deploying app via API:', deployUrl);
+    const response = await fetch(deployUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
