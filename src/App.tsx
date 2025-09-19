@@ -12,6 +12,7 @@ import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
 import Apps from "@/pages/Apps";
 import AppInstall from "@/pages/AppInstall";
+import DatabaseServices from "@/pages/DatabaseServices";
 import Deployments from "@/pages/Deployments";
 import Logs from "@/pages/Logs";
 import Settings from "@/pages/Settings";
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="project/:id" element={<ProjectDetail />} />
                 <Route path="apps" element={<Apps />} />
                 <Route path="apps/install/:templateId" element={<AppInstall />} />
+                <Route path="databases" element={<DatabaseServices />} />
                 <Route path="deployments" element={<Deployments />} />
                 <Route path="logs" element={<Logs />} />
                 <Route path="domains" element={<Domains />} />

@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -31,6 +32,94 @@ app.get('/', (req, res) => {
       delete_project: 'DELETE /projects/:id',
       health: 'GET /health'
     }
+  });
+});
+
+// Store deployed database services in memory (for local testing)
+let deployedDatabaseServices = [];
+
+// Load services from file on startup
+const servicesFile = path.join(__dirname, 'database-services.json');
+
+// Load existing services
+try {
+  const fsSync = require('fs');
+  if (fsSync.existsSync(servicesFile)) {
+    const data = fsSync.readFileSync(servicesFile, 'utf8');
+    deployedDatabaseServices = JSON.parse(data);
+    console.log(`📊 Loaded ${deployedDatabaseServices.length} database services from file`);
+  }
+} catch (error) {
+  console.error('Error loading database services:', error);
+  deployedDatabaseServices = [];
+}
+
+// Test endpoint for database deployment (without Docker)
+app.post('/test/database-deploy', (req, res) => {
+  const { templateId, name, environment } = req.body;
+  
+  console.log('🧪 Test database deployment:', { templateId, name, environment });
+  
+  const service = {
+    id: `test-${Date.now()}`,
+    name,
+    type: templateId.replace('-standalone', ''),
+    status: 'running',
+    port: environment.MYSQL_PORT || environment.POSTGRES_PORT || environment.REDIS_PORT || 8080,
+    admin_port: environment.PHPMYADMIN_PORT || environment.PGADMIN_PORT || environment.REDIS_COMMANDER_PORT || 8080,
+    created_at: new Date().toISOString(),
+    connection_string: `${templateId.replace('-standalone', '')}://${environment.MYSQL_USER || environment.POSTGRES_USER || 'user'}:${environment.MYSQL_PASSWORD || environment.POSTGRES_PASSWORD || environment.REDIS_PASSWORD}@localhost:${environment.MYSQL_PORT || environment.POSTGRES_PORT || environment.REDIS_PORT || 8080}`
+  };
+  
+  deployedDatabaseServices.push(service);
+  
+  // Save to file
+  try {
+    const fsSync = require('fs');
+    fsSync.writeFileSync(servicesFile, JSON.stringify(deployedDatabaseServices, null, 2));
+    console.log(`💾 Saved ${deployedDatabaseServices.length} database services to file`);
+  } catch (error) {
+    console.error('Error saving database services:', error);
+  }
+  
+  res.json({
+    success: true,
+    message: 'Test deployment successful',
+    deployment: service
+  });
+});
+
+// Get deployed database services
+app.get('/database/services', (req, res) => {
+  res.json({
+    services: deployedDatabaseServices
+  });
+});
+
+// Delete database service
+app.delete('/database/services/:id', (req, res) => {
+  const { id } = req.params;
+  
+  const serviceIndex = deployedDatabaseServices.findIndex(service => service.id === id);
+  if (serviceIndex === -1) {
+    return res.status(404).json({ error: 'Service not found' });
+  }
+  
+  const deletedService = deployedDatabaseServices.splice(serviceIndex, 1)[0];
+  
+  // Save to file
+  try {
+    const fsSync = require('fs');
+    fsSync.writeFileSync(servicesFile, JSON.stringify(deployedDatabaseServices, null, 2));
+    console.log(`🗑️ Deleted database service: ${deletedService.name}`);
+  } catch (error) {
+    console.error('Error saving database services:', error);
+  }
+  
+  res.json({
+    success: true,
+    message: 'Service deleted successfully',
+    deletedService
   });
 });
 
@@ -1716,7 +1805,6 @@ async function deployRepository(repoUrl, name, framework) {
 const Docker = require('dockerode');
 const docker = new Docker();
 const fs = require('fs').promises;
-const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
@@ -1751,6 +1839,33 @@ const APP_TEMPLATES = {
     ports: [5432, 5050],
     category: 'database',
     icon: '🐘'
+  },
+  'mysql-standalone': {
+    name: 'MySQL + phpMyAdmin',
+    description: 'Base de datos MySQL con interfaz de administración phpMyAdmin',
+    compose: 'mysql-standalone/compose.yaml',
+    env_required: ['MYSQL_ROOT_PASSWORD', 'MYSQL_DATABASE', 'MYSQL_USER', 'MYSQL_PASSWORD'],
+    ports: [3306, 8080],
+    category: 'database',
+    icon: '🐬'
+  },
+  'postgresql-standalone': {
+    name: 'PostgreSQL + pgAdmin',
+    description: 'Base de datos PostgreSQL con interfaz de administración pgAdmin',
+    compose: 'postgresql-standalone/compose.yaml',
+    env_required: ['POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'PGADMIN_PASSWORD'],
+    ports: [5432, 8080],
+    category: 'database',
+    icon: '🐘'
+  },
+  'redis-standalone': {
+    name: 'Redis + Commander',
+    description: 'Base de datos Redis con interfaz de administración Redis Commander',
+    compose: 'redis-standalone/compose.yaml',
+    env_required: ['REDIS_PASSWORD'],
+    ports: [6379, 8080],
+    category: 'database',
+    icon: '🔴'
   },
 
   // Automation
@@ -2118,6 +2233,34 @@ app.post('/apps/deploy', async (req, res) => {
     // Generate logs
     await generateAppDeploymentLogs(projectId, template.name, name, 'success', urls[0]);
     
+    // If it's a database service, also save it to the database services list
+    if (templateId.includes('-standalone')) {
+      const dbType = templateId.replace('-standalone', '');
+      const adminPort = environment.PHPMYADMIN_PORT || environment.PGADMIN_PORT || environment.REDIS_COMMANDER_PORT || 8080;
+      
+      const dbService = {
+        id: projectId,
+        name: name,
+        type: dbType,
+        status: 'running',
+        port: template.ports[0] ? basePort : 3306,
+        admin_port: adminPort,
+        created_at: new Date().toISOString(),
+        connection_string: `${dbType}://${environment.MYSQL_USER || environment.POSTGRES_USER || 'user'}:${environment.MYSQL_PASSWORD || environment.POSTGRES_PASSWORD || environment.REDIS_PASSWORD}@localhost:${template.ports[0] ? basePort : 3306}`
+      };
+      
+      deployedDatabaseServices.push(dbService);
+      
+      // Save to file
+      try {
+        const fsSync = require('fs');
+        fsSync.writeFileSync(servicesFile, JSON.stringify(deployedDatabaseServices, null, 2));
+        console.log(`💾 Saved database service: ${dbService.name}`);
+      } catch (error) {
+        console.error('Error saving database service:', error);
+      }
+    }
+    
     res.json({
       success: true,
       message: `${template.name} desplegado exitosamente como ${name}`,
@@ -2350,7 +2493,7 @@ async function generateAppDeploymentLogs(projectId, templateName, appName, statu
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);
-  console.log(`🔗 Access: http://localhost:${port}`);
+  console.log(`🔗 Access: yo no veo http://localhost:${port}`);   
 });
 
 module.exports = app;
