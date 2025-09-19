@@ -1379,6 +1379,303 @@ app.post('/projects/force-complete-building', async (req, res) => {
 });
 
 // ======================================
+// 🔗 GITHUB WEBHOOKS SYSTEM (Vercel/Zeabur-style)
+// ======================================
+
+const crypto = require('crypto');
+
+// GitHub webhook signature verification
+function verifyGitHubSignature(payload, signature, secret) {
+  if (!secret) return true; // Skip verification if no secret set
+  
+  const expectedSignature = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+
+// Generate preview URL for branches/PRs
+function generatePreviewUrl(projectName, branchOrPr) {
+  const sanitizedProject = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  const sanitizedBranch = branchOrPr.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  return `https://${sanitizedProject}-${sanitizedBranch}.xistracloud.com`;
+}
+
+// POST /webhooks/github - GitHub webhook endpoint
+app.post('/webhooks/github', async (req, res) => {
+  try {
+    const signature = req.headers['x-hub-signature-256'];
+    const event = req.headers['x-github-event'];
+    const payload = JSON.stringify(req.body);
+    
+    // Verify signature (optional - set GITHUB_WEBHOOK_SECRET in env)
+    const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
+    if (webhookSecret && !verifyGitHubSignature(payload, signature, webhookSecret)) {
+      console.log('❌ Invalid GitHub webhook signature');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+    
+    console.log(`🔗 GitHub webhook received: ${event}`);
+    
+    if (event === 'push') {
+      await handlePushEvent(req.body);
+    } else if (event === 'pull_request') {
+      await handlePullRequestEvent(req.body);
+    } else if (event === 'delete') {
+      await handleDeleteEvent(req.body);
+    }
+    
+    res.status(200).json({ message: 'Webhook processed successfully' });
+  } catch (error) {
+    console.error('❌ Error processing GitHub webhook:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Handle push events (main branch = production, other branches = preview)
+async function handlePushEvent(payload) {
+  const { ref, repository, commits, pusher } = payload;
+  const branch = ref.replace('refs/heads/', '');
+  const repoName = repository.name;
+  const repoUrl = repository.clone_url;
+  
+  console.log(`📦 Push to ${branch} branch in ${repoName}`);
+  
+  // Check if this repository is registered in our system
+  const { data: existingProject } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('repository', repoUrl)
+    .single();
+  
+  if (!existingProject) {
+    console.log(`⚠️ Repository ${repoUrl} not found in our system`);
+    return;
+  }
+  
+  if (branch === 'main' || branch === 'master') {
+    // Production deployment
+    console.log(`🚀 Production deployment for ${repoName}`);
+    await deployToProduction(existingProject, commits[0]);
+  } else {
+    // Preview deployment
+    console.log(`🔍 Preview deployment for ${repoName}:${branch}`);
+    await deployPreview(existingProject, branch, commits[0]);
+  }
+}
+
+// Handle pull request events
+async function handlePullRequestEvent(payload) {
+  const { action, pull_request, repository } = payload;
+  const prNumber = pull_request.number;
+  const branch = pull_request.head.ref;
+  const repoName = repository.name;
+  const repoUrl = repository.clone_url;
+  
+  console.log(`🔀 PR ${action}: #${prNumber} in ${repoName}`);
+  
+  // Check if this repository is registered
+  const { data: existingProject } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('repository', repoUrl)
+    .single();
+  
+  if (!existingProject) {
+    console.log(`⚠️ Repository ${repoUrl} not found in our system`);
+    return;
+  }
+  
+  if (action === 'opened' || action === 'synchronize') {
+    // Create/update preview deployment
+    await deployPreview(existingProject, `pr-${prNumber}`, pull_request.head.sha);
+  } else if (action === 'closed') {
+    // Clean up preview deployment
+    await cleanupPreview(existingProject.id, `pr-${prNumber}`);
+  }
+}
+
+// Handle branch deletion events
+async function handleDeleteEvent(payload) {
+  const { ref, repository } = payload;
+  const branch = ref.replace('refs/heads/', '');
+  const repoName = repository.name;
+  const repoUrl = repository.clone_url;
+  
+  console.log(`🗑️ Branch ${branch} deleted in ${repoName}`);
+  
+  // Clean up any preview deployments for this branch
+  const { data: existingProject } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('repository', repoUrl)
+    .single();
+  
+  if (existingProject) {
+    await cleanupPreview(existingProject.id, branch);
+  }
+}
+
+// Deploy to production (main/master branch)
+async function deployToProduction(project, commit) {
+  try {
+    console.log(`🚀 Deploying ${project.name} to production...`);
+    
+    // Update project status
+    await supabase
+      .from('projects')
+      .update({ 
+        status: 'building',
+        last_deploy: new Date().toISOString(),
+        commit_sha: commit.id,
+        commit_message: commit.message
+      })
+      .eq('id', project.id);
+    
+    // Use existing deployment logic
+    const deploymentResult = await deployRepository(project.repository, project.name, project.framework);
+    
+    if (deploymentResult.success) {
+      await supabase
+        .from('projects')
+        .update({ 
+          status: 'deployed',
+          url: deploymentResult.url || `https://${project.name}.xistracloud.com`
+        })
+        .eq('id', project.id);
+      
+      console.log(`✅ Production deployment successful for ${project.name}`);
+    } else {
+      await supabase
+        .from('projects')
+        .update({ status: 'error' })
+        .eq('id', project.id);
+      
+      console.log(`❌ Production deployment failed for ${project.name}`);
+    }
+  } catch (error) {
+    console.error('❌ Error in production deployment:', error);
+    await supabase
+      .from('projects')
+      .update({ status: 'error' })
+      .eq('id', project.id);
+  }
+}
+
+// Deploy preview (branches/PRs)
+async function deployPreview(project, branchOrPr, commitSha) {
+  try {
+    const previewId = `${project.id}-${branchOrPr}`;
+    const previewUrl = generatePreviewUrl(project.name, branchOrPr);
+    
+    console.log(`🔍 Creating preview deployment: ${previewId}`);
+    
+    // Check if preview already exists
+    const { data: existingPreview } = await supabase
+      .from('deployments')
+      .select('*')
+      .eq('id', previewId)
+      .single();
+    
+    if (existingPreview) {
+      console.log(`🔄 Updating existing preview: ${previewId}`);
+      // Update existing preview
+      await supabase
+        .from('deployments')
+        .update({
+          status: 'building',
+          commit_sha: commitSha,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', previewId);
+    } else {
+      console.log(`🆕 Creating new preview: ${previewId}`);
+      // Create new preview deployment
+      await supabase
+        .from('deployments')
+        .insert([{
+          id: previewId,
+          project_id: project.id,
+          name: `${project.name} (${branchOrPr})`,
+          status: 'building',
+          url: previewUrl,
+          framework: project.framework,
+          repository: project.repository,
+          type: 'preview_deployment',
+          branch: branchOrPr,
+          commit_sha: commitSha,
+          created_at: new Date().toISOString()
+        }]);
+    }
+    
+    // Deploy the preview (simplified version)
+    const deploymentResult = await deployRepository(project.repository, `${project.name}-${branchOrPr}`, project.framework);
+    
+    if (deploymentResult.success) {
+      await supabase
+        .from('deployments')
+        .update({ 
+          status: 'running',
+          url: deploymentResult.url || previewUrl
+        })
+        .eq('id', previewId);
+      
+      console.log(`✅ Preview deployment successful: ${previewUrl}`);
+    } else {
+      await supabase
+        .from('deployments')
+        .update({ status: 'error' })
+        .eq('id', previewId);
+      
+      console.log(`❌ Preview deployment failed: ${previewId}`);
+    }
+  } catch (error) {
+    console.error('❌ Error in preview deployment:', error);
+  }
+}
+
+// Clean up preview deployment
+async function cleanupPreview(projectId, branchOrPr) {
+  try {
+    const previewId = `${projectId}-${branchOrPr}`;
+    
+    console.log(`🗑️ Cleaning up preview deployment: ${previewId}`);
+    
+    // Update status to stopped
+    await supabase
+      .from('deployments')
+      .update({ 
+        status: 'stopped',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', previewId);
+    
+    // TODO: Actually stop the Docker containers
+    // This would involve stopping containers with the preview ID
+    
+    console.log(`✅ Preview cleanup completed: ${previewId}`);
+  } catch (error) {
+    console.error('❌ Error cleaning up preview:', error);
+  }
+}
+
+// Helper function to deploy repository (reuse existing logic)
+async function deployRepository(repoUrl, name, framework) {
+  // This would integrate with your existing deployment logic
+  // For now, return a mock success
+  return {
+    success: true,
+    url: `https://${name.toLowerCase().replace(/[^a-z0-9-]/g, '-')}.xistracloud.com`,
+    method: 'github-webhook'
+  };
+}
+
+// ======================================
 // 🚀 APPS DEPLOYMENT SYSTEM (Dokploy-style)
 // ======================================
 
@@ -1863,6 +2160,41 @@ app.get('/apps/deployments', async (req, res) => {
     res.json(processedData);
   } catch (error) {
     console.error('❌ Error fetching deployments:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /deployments - Get all deployments (projects + preview deployments)
+app.get('/deployments', async (req, res) => {
+  try {
+    // Get both projects and deployments
+    const [projectsResult, deploymentsResult] = await Promise.all([
+      supabase.from('projects').select('*').order('created_at', { ascending: false }),
+      supabase.from('deployments').select('*').order('created_at', { ascending: false })
+    ]);
+
+    if (projectsResult.error) {
+      console.error('❌ Error fetching projects:', projectsResult.error);
+      return res.status(500).json({ error: 'Error fetching projects' });
+    }
+
+    if (deploymentsResult.error) {
+      console.error('❌ Error fetching deployments:', deploymentsResult.error);
+      return res.status(500).json({ error: 'Error fetching deployments' });
+    }
+
+    // Combine projects and deployments
+    const allDeployments = [
+      ...(projectsResult.data || []).map(project => ({
+        ...project,
+        type: 'project'
+      })),
+      ...(deploymentsResult.data || [])
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    res.json(allDeployments);
+  } catch (error) {
+    console.error('❌ Error in deployments endpoint:', error);
     res.status(500).json({ error: error.message });
   }
 });

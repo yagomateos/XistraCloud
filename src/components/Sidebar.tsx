@@ -12,7 +12,8 @@ import {
   BarChart3,
   Globe,
   X,
-  Package
+  Package,
+  Webhook
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -61,6 +62,7 @@ const Sidebar = ({ user }: SidebarProps) => {
     { name: 'Despliegues', href: '/dashboard/deployments', icon: Rocket },
     { name: 'Logs', href: '/dashboard/logs', icon: FileText },
     { name: 'Dominios', href: '/dashboard/domains', icon: Globe },
+    { name: 'Webhooks', href: '/dashboard/webhooks', icon: Webhook },
     { name: 'Configuración', href: '/dashboard/settings', icon: Settings },
   ];
 

@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, RotateCcw, ExternalLink, Calendar, Trash2 } from 'lucide-react';
-import { getProjects, deleteProject, redeployProject } from '@/lib/api';
+import { getAllDeployments, deleteProject, redeployProject } from '@/lib/api';
 import { toast } from 'sonner';
 
 // Updated interface to match backend data
@@ -23,6 +23,9 @@ interface Deployment {
   url?: string;
   repository: string; // This is the gitUrl
   framework: string;
+  type?: string; // 'preview_deployment' | 'app_deployment' | undefined
+  branch?: string; // For preview deployments
+  commit_sha?: string; // For preview deployments
 }
 
 const Deployments = () => {
@@ -34,7 +37,7 @@ const Deployments = () => {
   // Use React Query with our API function that has mock data support
   const { data: deployments = [], isLoading, error, refetch } = useQuery({
     queryKey: ['deployments'],
-    queryFn: getProjects,
+    queryFn: getAllDeployments,
     refetchInterval: 10000, // Refetch every 10 seconds
   });
 
@@ -135,7 +138,16 @@ const Deployments = () => {
 
   const filteredDeployments = deployments.filter(deployment => {
     const matchesSearch = deployment.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || deployment.status.toLowerCase() === statusFilter;
+    
+    let matchesStatus = false;
+    if (statusFilter === 'all') {
+      matchesStatus = true;
+    } else if (statusFilter === 'preview') {
+      matchesStatus = deployment.type === 'preview_deployment';
+    } else {
+      matchesStatus = deployment.status.toLowerCase() === statusFilter;
+    }
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -167,6 +179,7 @@ const Deployments = () => {
             <SelectItem value="deployed">Exitosos</SelectItem>
             <SelectItem value="building">En progreso</SelectItem>
             <SelectItem value="failed">Fallidos</SelectItem>
+            <SelectItem value="preview">Preview Deployments</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -220,15 +233,37 @@ const Deployments = () => {
                         <h3 className="font-semibold text-foreground text-base lg:text-lg">
                           {deployment.name}
                         </h3>
-                        <Badge className={`${getStatusColor(isBuilding ? 'building' : deployment.status)} mt-1 lg:mt-0 w-fit`}>
-                          <div className={`status-dot mr-1 status-${isBuilding ? 'warning' : deployment.status.toLowerCase() === 'deployed' ? 'success' : 'error'}`} />
-                          {isBuilding ? 'En progreso' : getStatusText(deployment.status)}
-                        </Badge>
+                        <div className="flex gap-2 mt-1 lg:mt-0">
+                          {deployment.type === 'preview_deployment' && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              Preview
+                            </Badge>
+                          )}
+                          <Badge className={`${getStatusColor(isBuilding ? 'building' : deployment.status)} w-fit`}>
+                            <div className={`status-dot mr-1 status-${isBuilding ? 'warning' : deployment.status.toLowerCase() === 'deployed' ? 'success' : 'error'}`} />
+                            {isBuilding ? 'En progreso' : getStatusText(deployment.status)}
+                          </Badge>
+                        </div>
                       </div>
 
                       <p className="text-xs lg:text-sm text-muted-foreground mb-2 truncate">
                         {deployment.repository}
                       </p>
+
+                      {deployment.type === 'preview_deployment' && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {deployment.branch && (
+                            <Badge variant="secondary" className="text-xs">
+                              Branch: {deployment.branch}
+                            </Badge>
+                          )}
+                          {deployment.commit_sha && (
+                            <Badge variant="secondary" className="text-xs">
+                              Commit: {deployment.commit_sha.substring(0, 7)}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
 
                       <div className="flex items-center text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />

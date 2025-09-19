@@ -17,6 +17,7 @@ import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import Domains from "@/pages/Domains";
 import Pricing from "@/pages/Pricing";
+import Webhooks from "@/pages/Webhooks";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="deployments" element={<Deployments />} />
                 <Route path="logs" element={<Logs />} />
                 <Route path="domains" element={<Domains />} />
+                <Route path="webhooks" element={<Webhooks />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="pricing" element={<Pricing />} />
