@@ -14,7 +14,8 @@ import {
   X,
   Package,
   Webhook,
-  Database
+  Database,
+  Key
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -68,6 +69,7 @@ const Sidebar = ({ user }: SidebarProps) => {
     { name: 'Apps', href: '/dashboard/apps', icon: Package },
     { name: 'Bases de Datos', href: '/dashboard/databases', icon: Database },
     { name: 'Despliegues', href: '/dashboard/deployments', icon: Rocket },
+    { name: 'Variables de Entorno', href: '/dashboard/environment', icon: Key },
     { name: 'Logs', href: '/dashboard/logs', icon: FileText },
     { name: 'Dominios', href: '/dashboard/domains', icon: Globe },
     { name: 'Webhooks', href: '/dashboard/webhooks', icon: Webhook },

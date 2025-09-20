@@ -2520,6 +2520,107 @@ app.get('/subdomain/:subdomain/*', async (req, res) => {
   }
 });
 
+// ======================================
+// 🔧 ENVIRONMENT VARIABLES MANAGEMENT
+// ======================================
+
+// GET /projects/:id/environment - Get environment variables for a project
+app.get('/projects/:id/environment', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // For now, return mock data based on deployment
+    // In production, this would fetch from database
+    const mockEnvironment = [
+      { key: 'NODE_ENV', value: 'production', isSecret: false },
+      { key: 'PORT', value: '3000', isSecret: false },
+      { key: 'DATABASE_URL', value: 'postgresql://user:pass@localhost:5432/db', isSecret: true },
+      { key: 'API_KEY', value: 'sk-1234567890abcdef', isSecret: true }
+    ];
+    
+    res.json({
+      success: true,
+      environment: mockEnvironment
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching environment variables:', error);
+    res.status(500).json({ error: 'Error al obtener variables de entorno' });
+  }
+});
+
+// POST /projects/:id/environment - Add new environment variable
+app.post('/projects/:id/environment', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { key, value } = req.body;
+    
+    if (!key || !value) {
+      return res.status(400).json({ error: 'Clave y valor son requeridos' });
+    }
+    
+    console.log(`🔧 Adding environment variable: ${key} for project ${id}`);
+    
+    // For now, return success
+    // In production, this would save to database
+    res.json({
+      success: true,
+      message: 'Variable de entorno añadida exitosamente',
+      variable: { key, value, isSecret: false }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error adding environment variable:', error);
+    res.status(500).json({ error: 'Error al añadir variable de entorno' });
+  }
+});
+
+// PUT /projects/:id/environment/:key - Update environment variable
+app.put('/projects/:id/environment/:key', async (req, res) => {
+  try {
+    const { id, key } = req.params;
+    const { key: newKey, value } = req.body;
+    
+    if (!newKey || !value) {
+      return res.status(400).json({ error: 'Nueva clave y valor son requeridos' });
+    }
+    
+    console.log(`🔧 Updating environment variable: ${key} -> ${newKey} for project ${id}`);
+    
+    // For now, return success
+    // In production, this would update in database
+    res.json({
+      success: true,
+      message: 'Variable de entorno actualizada exitosamente',
+      variable: { key: newKey, value, isSecret: false }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error updating environment variable:', error);
+    res.status(500).json({ error: 'Error al actualizar variable de entorno' });
+  }
+});
+
+// DELETE /projects/:id/environment/:key - Delete environment variable
+app.delete('/projects/:id/environment/:key', async (req, res) => {
+  try {
+    const { id, key } = req.params;
+    
+    console.log(`🔧 Deleting environment variable: ${key} for project ${id}`);
+    
+    // For now, return success
+    // In production, this would delete from database
+    res.json({
+      success: true,
+      message: 'Variable de entorno eliminada exitosamente'
+    });
+    
+  } catch (error) {
+    console.error('❌ Error deleting environment variable:', error);
+    res.status(500).json({ error: 'Error al eliminar variable de entorno' });
+  }
+});
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);
