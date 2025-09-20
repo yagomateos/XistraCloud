@@ -2363,12 +2363,69 @@ app.get('/apps/deployments', async (req, res) => {
 // GET /deployments - Get all deployments (projects + preview deployments)
 app.get('/deployments', async (req, res) => {
   try {
-    console.log('📊 Fetching deployments from PostgreSQL database');
+    console.log('📊 Fetching deployments');
     
-    const deployments = await Database.getDeployments();
-    console.log(`📊 Found ${deployments.length} deployments from database`);
+    // Use mock data for development
+    const mockDeployments = [
+      {
+        id: 'deploy-1',
+        name: 'xistracloud-frontend',
+        domain: 'frontend.xistracloud.com',
+        status: 'running',
+        framework: 'React',
+        repository: 'https://github.com/yagomateos/XistraCloud-Frontend.git',
+        branch: 'main',
+        lastDeploy: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        deployedAt: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
+        buildTime: '2m 34s',
+        size: '45 MB',
+        visits: 1247,
+        environment: [
+          { key: 'NODE_ENV', value: 'production', isSecret: false },
+          { key: 'VITE_API_URL', value: 'https://api.xistracloud.com', isSecret: false }
+        ]
+      },
+      {
+        id: 'deploy-2',
+        name: 'xistracloud-api',
+        domain: 'api.xistracloud.com',
+        status: 'running',
+        framework: 'Node.js',
+        repository: 'https://github.com/yagomateos/XistraCloud-API.git',
+        branch: 'main',
+        lastDeploy: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+        deployedAt: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
+        buildTime: '1m 52s',
+        size: '128 MB',
+        visits: 3421,
+        environment: [
+          { key: 'NODE_ENV', value: 'production', isSecret: false },
+          { key: 'PORT', value: '3001', isSecret: false },
+          { key: 'DATABASE_URL', value: 'postgresql://...', isSecret: true }
+        ]
+      },
+      {
+        id: 'deploy-3',
+        name: 'demo-app',
+        domain: 'demo.xistracloud.com',
+        status: 'building',
+        framework: 'Next.js',
+        repository: 'https://github.com/yagomateos/demo-nextjs.git',
+        branch: 'main',
+        lastDeploy: new Date().toISOString(),
+        deployedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        buildTime: '3m 12s',
+        size: '67 MB',
+        visits: 89,
+        environment: [
+          { key: 'NEXT_PUBLIC_API_URL', value: 'https://demo-api.xistracloud.com', isSecret: false }
+        ]
+      }
+    ];
+    
+    console.log(`📊 Found ${mockDeployments.length} deployments`);
 
-    res.json(deployments);
+    res.json(mockDeployments);
   } catch (error) {
     console.error('❌ Error in deployments endpoint:', error);
     res.status(500).json({ error: error.message });
@@ -2854,14 +2911,56 @@ app.get('/system/health', async (req, res) => {
 // GET /backups - Get all backups
 app.get('/backups', async (req, res) => {
   try {
-    console.log('💾 Fetching backups from PostgreSQL database');
+    console.log('💾 Fetching backups');
     
-    const backups = await Database.getBackups();
-    console.log(`💾 Found ${backups.length} backups from database`);
+    // Use mock data for development
+    const mockBackups = [
+      {
+        id: 'backup-1',
+        name: 'Daily Backup - XistraCloud API',
+        projectId: 'project-1',
+        projectName: 'XistraCloud API',
+        type: 'database',
+        size: '125 MB',
+        status: 'completed',
+        schedule: 'daily',
+        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        nextBackup: new Date(Date.now() + 43200000).toISOString(), // 12 hours from now
+        retentionDays: 30
+      },
+      {
+        id: 'backup-2',
+        name: 'Weekly Backup - Frontend',
+        projectId: 'project-2',
+        projectName: 'React Dashboard',
+        type: 'full',
+        size: '2.1 GB',
+        status: 'completed',
+        schedule: 'weekly',
+        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
+        nextBackup: new Date(Date.now() + 86400000 * 4).toISOString(), // 4 days from now
+        retentionDays: 90
+      },
+      {
+        id: 'backup-3',
+        name: 'Manual Backup - Before Deploy',
+        projectId: 'project-1',
+        projectName: 'XistraCloud API',
+        type: 'database',
+        size: '118 MB',
+        status: 'in_progress',
+        schedule: 'manual',
+        createdAt: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
+        nextBackup: null,
+        retentionDays: 7
+      }
+    ];
+    
+    console.log(`💾 Found ${mockBackups.length} backups`);
     
     res.json({
       success: true,
-      backups: backups
+      backups: mockBackups
     });
     
   } catch (error) {
@@ -2955,14 +3054,50 @@ app.delete('/backups/:id', async (req, res) => {
 // GET /team/members - Get team members
 app.get('/team/members', async (req, res) => {
   try {
-    console.log('👥 Fetching team members from PostgreSQL database');
+    console.log('👥 Fetching team members');
     
-    const members = await Database.getTeamMembers();
-    console.log(`👥 Found ${members.length} team members from database`);
+    // Use mock data for development
+    const mockMembers = [
+      {
+        id: 'member-1',
+        name: 'Yago Mateos',
+        email: 'yago@xistracloud.com',
+        role: 'admin',
+        avatar: '',
+        status: 'active',
+        joinedAt: new Date(Date.now() - 86400000 * 30).toISOString(), // 30 days ago
+        lastActive: new Date().toISOString(),
+        projectAccess: ['all']
+      },
+      {
+        id: 'member-2',
+        name: 'María García',
+        email: 'maria@empresa.com',
+        role: 'developer',
+        avatar: '',
+        status: 'active',
+        joinedAt: new Date(Date.now() - 86400000 * 15).toISOString(), // 15 days ago
+        lastActive: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        projectAccess: ['project-1', 'project-2']
+      },
+      {
+        id: 'member-3',
+        name: 'Carlos López',
+        email: 'carlos@freelance.com',
+        role: 'viewer',
+        avatar: '',
+        status: 'inactive',
+        joinedAt: new Date(Date.now() - 86400000 * 7).toISOString(), // 7 days ago
+        lastActive: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
+        projectAccess: ['project-1']
+      }
+    ];
+    
+    console.log(`👥 Found ${mockMembers.length} team members`);
     
     res.json({
       success: true,
-      members: members
+      members: mockMembers
     });
     
   } catch (error) {
