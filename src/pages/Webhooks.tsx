@@ -93,17 +93,19 @@ const Webhooks = () => {
   };
 
   return (
-    <div className="space-y-6 px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 lg:pt-12">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
-            <Webhook className="h-8 w-8 text-primary" />
-            GitHub Webhooks
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Configura despliegues automáticos desde GitHub
-          </p>
-        </div>
+    <div className="pt-6 px-4 pb-4 lg:p-6">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+          <Webhook className="h-6 w-6 lg:h-8 lg:w-8 text-primary" />
+          GitHub Webhooks
+        </h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
+          Configura despliegues automáticos desde GitHub
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between mb-6">
+        <div></div>
         <Button onClick={() => window.open('https://github.com/new', '_blank')}>
           <Github className="h-4 w-4 mr-2" />
           Crear Repositorio
