@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,7 @@ interface NotificationSettings {
 
 const Settings: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const tabFromUrl = searchParams.get('tab') || 'profile';
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   
@@ -247,7 +248,7 @@ const Settings: React.FC = () => {
     return (
       <div className="space-y-4 md:space-y-6 pt-6 px-4 pb-4 lg:p-6">
         <div>
-          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Configuración</h1>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 mt-2">Configuración</h1>
           <p className="text-sm md:text-base text-muted-foreground mt-1">
             Cargando configuración...
           </p>
@@ -262,7 +263,7 @@ const Settings: React.FC = () => {
   return (
     <div className="space-y-4 md:space-y-6 pt-6 px-4 pb-4 lg:p-6">
       <div>
-        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Configuración</h1>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-3 mt-2">Configuración</h1>
         <p className="text-sm md:text-base text-muted-foreground mt-1">
           Gestiona tu cuenta y preferencias de XistraCloud
         </p>
@@ -743,7 +744,7 @@ const Settings: React.FC = () => {
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button variant="outline">
+                <Button variant="outline" onClick={() => navigate('/dashboard/pricing')}>
                   Actualizar Plan
                 </Button>
                 <Button variant="outline">

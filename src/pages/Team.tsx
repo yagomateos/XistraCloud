@@ -261,31 +261,31 @@ export default function Team() {
   }
 
   return (
-    <div className="pt-6 px-4 pb-4 lg:p-6">
+    <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Equipo</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Equipo</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
           Gestiona miembros del equipo, permisos y colaboración en proyectos
         </p>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div></div>
         
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={loadData}>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={loadData} className="w-full sm:w-auto">
             <Users className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
           
           <Dialog open={isInviteModalOpen} onOpenChange={setIsInviteModalOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <UserPlus className="h-4 w-4 mr-2" />
                 Invitar Miembro
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md mx-auto">
               <DialogHeader>
                 <DialogTitle>Invitar Miembro al Equipo</DialogTitle>
                 <DialogDescription>
@@ -302,6 +302,7 @@ export default function Team() {
                     placeholder="usuario@ejemplo.com"
                     value={newInvitation.email}
                     onChange={(e) => setNewInvitation(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full"
                   />
                 </div>
                 
@@ -313,7 +314,7 @@ export default function Team() {
                       setNewInvitation(prev => ({ ...prev, role: value }))
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -369,16 +370,18 @@ export default function Team() {
                 </div>
               </div>
               
-              <DialogFooter>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   variant="outline" 
                   onClick={() => setIsInviteModalOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   onClick={sendInvitation}
                   disabled={!newInvitation.email.trim()}
+                  className="w-full sm:w-auto"
                 >
                   <Mail className="h-4 w-4 mr-2" />
                   Enviar Invitación
@@ -438,22 +441,22 @@ export default function Team() {
           {members.map((member) => (
             <Card key={member.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                       <User className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{member.name}</CardTitle>
-                      <CardDescription>{member.email}</CardDescription>
+                      <CardTitle className="text-base sm:text-lg">{member.name}</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">{member.email}</CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getRoleColor(member.role)}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={`${getRoleColor(member.role)} text-xs`}>
                       {getRoleIcon(member.role)}
                       <span className="ml-1">{getRoleText(member.role)}</span>
                     </Badge>
-                    <Badge className={getStatusColor(member.status)}>
+                    <Badge className={`${getStatusColor(member.status)} text-xs`}>
                       {getStatusIcon(member.status)}
                       <span className="ml-1">{getStatusText(member.status)}</span>
                     </Badge>
@@ -462,8 +465,10 @@ export default function Team() {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeMember(member.id)}
+                        className="w-full sm:w-auto"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Eliminar
                       </Button>
                     )}
                   </div>
@@ -471,7 +476,7 @@ export default function Team() {
               </CardHeader>
               
               <CardContent>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs sm:text-sm text-muted-foreground">
                   <span>Se unió: {new Date(member.joinedAt).toLocaleDateString('es-ES')}</span>
                   {member.lastActive && (
                     <span>Última actividad: {new Date(member.lastActive).toLocaleDateString('es-ES')}</span>
@@ -491,24 +496,24 @@ export default function Team() {
             {invitations.map((invitation) => (
               <Card key={invitation.id}>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                         <Mail className="h-5 w-5 text-muted-foreground" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">{invitation.email}</CardTitle>
-                        <CardDescription>
+                        <CardTitle className="text-base sm:text-lg">{invitation.email}</CardTitle>
+                        <CardDescription className="text-xs sm:text-sm">
                           Invitado por {invitation.invitedBy} • {new Date(invitation.invitedAt).toLocaleDateString('es-ES')}
                         </CardDescription>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getRoleColor(invitation.role)}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className={`${getRoleColor(invitation.role)} text-xs`}>
                         {getRoleIcon(invitation.role)}
                         <span className="ml-1">{getRoleText(invitation.role)}</span>
                       </Badge>
-                      <Badge className={getStatusColor(invitation.status)}>
+                      <Badge className={`${getStatusColor(invitation.status)} text-xs`}>
                         {getStatusIcon(invitation.status)}
                         <span className="ml-1">{getStatusText(invitation.status)}</span>
                       </Badge>
@@ -516,8 +521,10 @@ export default function Team() {
                         variant="ghost"
                         size="sm"
                         onClick={() => cancelInvitation(invitation.id)}
+                        className="w-full sm:w-auto"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Cancelar
                       </Button>
                     </div>
                   </div>

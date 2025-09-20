@@ -14,7 +14,8 @@ import {
   CheckCircle, 
   AlertCircle,
   Settings,
-  Zap
+  Zap,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -93,9 +94,9 @@ const Webhooks = () => {
   };
 
   return (
-    <div className="pt-6 px-4 pb-4 lg:p-6">
+    <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2 flex items-center gap-3">
           <Webhook className="h-6 w-6 lg:h-8 lg:w-8 text-primary" />
           GitHub Webhooks
         </h1>
@@ -104,87 +105,89 @@ const Webhooks = () => {
         </p>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div></div>
-        <Button onClick={() => window.open('https://github.com/new', '_blank')}>
+        <Button onClick={() => window.open('https://github.com/new', '_blank')} className="w-full sm:w-auto">
           <Github className="h-4 w-4 mr-2" />
           Crear Repositorio
         </Button>
       </div>
 
       {/* Instructions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="mt-6">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Settings className="h-5 w-5" />
             Configuración de Webhooks
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm sm:text-base">
             Sigue estos pasos para configurar despliegues automáticos
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            <div className="flex items-start gap-3">
+        <CardContent className="space-y-8 pt-2">
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
                 1
               </div>
-              <div>
-                <p className="font-medium">Ve a tu repositorio en GitHub</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="space-y-2">
+                <p className="font-medium text-sm sm:text-base">Ve a tu repositorio en GitHub</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   GitHub → Tu repositorio → Settings → Webhooks → Add webhook
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground">
                   ⚠️ No uses la configuración general de GitHub, debe ser en el repositorio específico
                 </p>
               </div>
             </div>
             
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
                 2
               </div>
-              <div>
-                <p className="font-medium">Configura el webhook en GitHub</p>
-                <div className="space-y-2 mt-2">
-                  <div>
+              <div className="space-y-3">
+                <p className="font-medium text-sm sm:text-base">Configura el webhook en GitHub</p>
+                <div className="space-y-3">
+                  <div className="space-y-2">
                     <p className="text-sm font-medium">Payload URL:</p>
-                    <div className="flex items-center gap-2">
-                      <code className="px-2 py-1 bg-muted rounded text-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <code className="px-3 py-2 bg-muted rounded text-xs sm:text-sm break-all flex-1">
                         https://xistracloud.com/api/webhooks/github
                       </code>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => copyToClipboard('https://xistracloud.com/api/webhooks/github')}
+                        className="w-full sm:w-auto"
                       >
-                        <Copy className="h-3 w-3" />
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copiar
                       </Button>
                     </div>
                   </div>
                   
-                  <div>
+                  <div className="space-y-2">
                     <p className="text-sm font-medium">Content type:</p>
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
                       application/json
                     </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground">
                       ⚠️ Cambia de "application/x-www-form-urlencoded" a "application/json"
                     </p>
                   </div>
                   
-                  <div>
+                  <div className="space-y-2">
                     <p className="text-sm font-medium">Events:</p>
-                    <div className="flex gap-2 mt-1">
-                      <Badge variant="secondary">Push</Badge>
-                      <Badge variant="secondary">Pull Request</Badge>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="text-xs">Push</Badge>
+                      <Badge variant="secondary" className="text-xs">Pull Request</Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground">
                       Selecciona "Let me select individual events" y marca Push + Pull Request
                     </p>
                   </div>
                   
-                  <div>
+                  <div className="space-y-2">
                     <p className="text-sm font-medium">Secret:</p>
                     <p className="text-xs text-muted-foreground">
                       Genera un secreto aleatorio o usa el generador de abajo
@@ -198,50 +201,52 @@ const Webhooks = () => {
       </Card>
 
       {/* Add New Webhook */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="mt-8">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Zap className="h-5 w-5" />
             Añadir Nuevo Webhook
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm sm:text-base">
             Registra un repositorio para despliegues automáticos
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            <div>
+        <CardContent className="space-y-8 pt-2">
+          <div className="space-y-6">
+            <div className="space-y-2">
               <Label htmlFor="repository">URL del Repositorio</Label>
               <Input
                 id="repository"
                 placeholder="https://github.com/usuario/mi-repo.git"
                 value={newWebhook.repository}
                 onChange={(e) => setNewWebhook(prev => ({ ...prev, repository: e.target.value }))}
+                className="w-full"
               />
             </div>
             
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="secret">Secreto del Webhook</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Input
                   id="secret"
                   placeholder="webhook-secret-123"
                   value={newWebhook.secret}
                   onChange={(e) => setNewWebhook(prev => ({ ...prev, secret: e.target.value }))}
+                  className="flex-1"
                 />
-                <Button variant="outline" onClick={generateSecret}>
+                <Button variant="outline" onClick={generateSecret} className="w-full sm:w-auto">
                   Generar
                 </Button>
               </div>
             </div>
             
-            <div>
+            <div className="space-y-2">
               <Label>Eventos</Label>
-              <div className="flex gap-2 mt-2">
-                <Badge variant={newWebhook.events.includes('push') ? 'default' : 'outline'}>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant={newWebhook.events.includes('push') ? 'default' : 'outline'} className="text-xs">
                   Push
                 </Badge>
-                <Badge variant={newWebhook.events.includes('pull_request') ? 'default' : 'outline'}>
+                <Badge variant={newWebhook.events.includes('pull_request') ? 'default' : 'outline'} className="text-xs">
                   Pull Request
                 </Badge>
               </div>
@@ -256,91 +261,102 @@ const Webhooks = () => {
       </Card>
 
       {/* Webhooks List */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Webhooks Configurados</h2>
+      <div className="space-y-6 mt-10">
+        <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Webhooks Configurados</h2>
         
         {webhooks.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8">
+          <Card className="mt-6">
+            <CardContent className="flex flex-col items-center justify-center py-12">
               <Webhook className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No hay webhooks configurados</h3>
-              <p className="text-muted-foreground text-center">
+              <p className="text-muted-foreground text-center text-sm sm:text-base">
                 Añade tu primer webhook para habilitar despliegues automáticos
               </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="space-y-8 mt-6">
             {webhooks.map((webhook) => (
               <Card key={webhook.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <Github className="h-5 w-5" />
                       <div>
-                        <CardTitle className="text-base">
+                        <CardTitle className="text-base sm:text-lg">
                           {webhook.repository.split('/').pop()?.replace('.git', '')}
                         </CardTitle>
-                        <CardDescription className="text-sm">
+                        <CardDescription className="text-xs sm:text-sm break-all">
                           {webhook.repository}
                         </CardDescription>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={webhook.isActive}
-                        onCheckedChange={() => toggleWebhook(webhook.id)}
-                      />
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={webhook.isActive}
+                          onCheckedChange={() => toggleWebhook(webhook.id)}
+                        />
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          {webhook.isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => deleteWebhook(webhook.id)}
+                        className="w-full sm:w-auto text-red-600 hover:bg-red-50"
                       >
+                        <Trash2 className="h-3 w-3 mr-1" />
                         Eliminar
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                <CardContent className="space-y-6 pt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
                       <Label className="text-sm font-medium">URL del Webhook</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <code className="px-2 py-1 bg-muted rounded text-sm flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <code className="px-3 py-2 bg-muted rounded text-xs sm:text-sm flex-1 break-all">
                           {webhook.webhookUrl}
                         </code>
                         <Button 
                           size="sm" 
                           variant="outline"
                           onClick={() => copyToClipboard(webhook.webhookUrl)}
+                          className="w-full sm:w-auto"
                         >
-                          <Copy className="h-3 w-3" />
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copiar
                         </Button>
                       </div>
                     </div>
                     
-                    <div>
+                    <div className="space-y-2">
                       <Label className="text-sm font-medium">Secreto</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <code className="px-2 py-1 bg-muted rounded text-sm flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <code className="px-3 py-2 bg-muted rounded text-xs sm:text-sm flex-1 break-all">
                           {webhook.secret}
                         </code>
                         <Button 
                           size="sm" 
                           variant="outline"
                           onClick={() => copyToClipboard(webhook.secret)}
+                          className="w-full sm:w-auto"
                         >
-                          <Copy className="h-3 w-3" />
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copiar
                         </Button>
                       </div>
                     </div>
                   </div>
                   
-                  <div>
+                  <div className="space-y-2">
                     <Label className="text-sm font-medium">Eventos</Label>
-                    <div className="flex gap-2 mt-1">
+                    <div className="flex flex-wrap gap-2">
                       {webhook.events.map((event) => (
-                        <Badge key={event} variant="secondary">
+                        <Badge key={event} variant="secondary" className="text-xs">
                           {event}
                         </Badge>
                       ))}
@@ -361,10 +377,10 @@ const Webhooks = () => {
       </div>
 
       {/* Features */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Funcionalidades de Webhooks</CardTitle>
-          <CardDescription>
+      <Card className="mt-10">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg sm:text-xl">Funcionalidades de Webhooks</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             Lo que puedes hacer con los webhooks configurados
           </CardDescription>
         </CardHeader>

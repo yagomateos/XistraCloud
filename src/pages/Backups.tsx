@@ -237,31 +237,31 @@ export default function Backups() {
   }
 
   return (
-    <div className="pt-6 px-4 pb-4 lg:p-6">
+    <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Backups</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Backups</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
           Gestiona backups automáticos y manuales de tus aplicaciones y bases de datos
         </p>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div></div>
         
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={loadData}>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={loadData} className="w-full sm:w-auto">
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
           
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Crear Backup
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md mx-auto">
               <DialogHeader>
                 <DialogTitle>Crear Nuevo Backup</DialogTitle>
                 <DialogDescription>
@@ -277,6 +277,7 @@ export default function Backups() {
                     placeholder="backup-mi-app-2025-01-20"
                     value={newBackup.name}
                     onChange={(e) => setNewBackup(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full"
                   />
                 </div>
                 
@@ -286,7 +287,7 @@ export default function Backups() {
                     value={newBackup.projectId}
                     onValueChange={(value) => setNewBackup(prev => ({ ...prev, projectId: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecciona un proyecto" />
                     </SelectTrigger>
                     <SelectContent>
@@ -307,7 +308,7 @@ export default function Backups() {
                       setNewBackup(prev => ({ ...prev, type: value }))
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -326,7 +327,7 @@ export default function Backups() {
                       setNewBackup(prev => ({ ...prev, schedule: value }))
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -339,16 +340,18 @@ export default function Backups() {
                 </div>
               </div>
               
-              <DialogFooter>
+              <DialogFooter className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   variant="outline" 
                   onClick={() => setIsCreateModalOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   onClick={createBackup}
                   disabled={!newBackup.name.trim() || !newBackup.projectId}
+                  className="w-full sm:w-auto"
                 >
                   Crear Backup
                 </Button>
@@ -412,23 +415,23 @@ export default function Backups() {
           {backups.map((backup) => (
             <Card key={backup.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-3">
                     {getTypeIcon(backup.type)}
                     <div>
-                      <CardTitle className="text-lg">{backup.name}</CardTitle>
-                      <CardDescription>
+                      <CardTitle className="text-base sm:text-lg">{backup.name}</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">
                         {backup.projectName} • {getTypeText(backup.type)}
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(backup.status)}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={`${getStatusColor(backup.status)} text-xs`}>
                       {getStatusIcon(backup.status)}
                       <span className="ml-1">{getStatusText(backup.status)}</span>
                     </Badge>
                     {backup.scheduledAt && (
-                      <Badge variant="outline" className="text-blue-600 border-blue-200">
+                      <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
                         <Calendar className="h-3 w-3 mr-1" />
                         Programado
                       </Badge>
@@ -457,13 +460,14 @@ export default function Backups() {
                   </div>
                 </div>
                 
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
                   {backup.status === 'completed' && (
                     <>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => restoreBackup(backup.id)}
+                        className="w-full sm:w-auto"
                       >
                         <Upload className="h-3 w-3 mr-2" />
                         Restaurar
@@ -475,6 +479,7 @@ export default function Backups() {
                           // Download backup logic
                           console.log('Download backup:', backup.id);
                         }}
+                        className="w-full sm:w-auto"
                       >
                         <Download className="h-3 w-3 mr-2" />
                         Descargar
@@ -486,6 +491,7 @@ export default function Backups() {
                     variant="ghost"
                     size="sm"
                     onClick={() => deleteBackup(backup.id)}
+                    className="text-red-600 hover:bg-red-50 w-full sm:w-auto"
                   >
                     <Trash2 className="h-3 w-3 mr-2" />
                     Eliminar

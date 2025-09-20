@@ -114,9 +114,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-4 lg:p-6">
+    <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Dashboard</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
           Vista general de todos tus proyectos y métricas de rendimiento
         </p>

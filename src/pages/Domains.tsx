@@ -252,7 +252,7 @@ const Domains = () => {
     <div className="pt-6 px-4 pb-4 lg:p-6">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 lg:mb-8 gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Dominios</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Dominios</h1>
           <p className="text-muted-foreground text-sm lg:text-base">
             Gestiona dominios del sistema y dominios personalizados de tus proyectos
           </p>

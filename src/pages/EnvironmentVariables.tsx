@@ -140,9 +140,9 @@ export default function EnvironmentVariables() {
   }
 
   return (
-    <div className="pt-6 px-4 pb-4 lg:p-6">
+    <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Variables de Entorno</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Variables de Entorno</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
           Gestiona las variables de entorno para cada uno de tus proyectos desplegados
         </p>
@@ -168,21 +168,22 @@ export default function EnvironmentVariables() {
           {projects.map((project) => (
             <Card key={project.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <CardTitle className="text-lg">{project.name}</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-base sm:text-lg">{project.name}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                       {project.template || project.framework || 'Sin template'} • {project.environment?.length || 0} variables configuradas
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={project.status === 'running' ? 'default' : 'secondary'}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={project.status === 'running' ? 'default' : 'secondary'} className="text-xs">
                       {project.status}
                     </Badge>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setEditingProject(editingProject === project.id ? null : project.id)}
+                      className="w-full sm:w-auto"
                     >
                       <Edit className="h-4 w-4 mr-2" />
                       {editingProject === project.id ? 'Cerrar' : 'Editar'}
@@ -195,10 +196,10 @@ export default function EnvironmentVariables() {
                 {project.environment && project.environment.length > 0 ? (
                   <div className="space-y-3">
                     {project.environment.map((envVar, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-muted rounded-lg">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Label className="text-sm font-medium text-foreground">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
+                            <Label className="text-xs sm:text-sm font-medium text-foreground">
                               {envVar.key}
                             </Label>
                             {isSecretVariable(envVar.key) && (
@@ -207,8 +208,8 @@ export default function EnvironmentVariables() {
                               </Badge>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <code className="text-xs bg-background px-2 py-1 rounded border flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <code className="text-xs bg-background px-2 py-1 rounded border flex-1 break-all">
                               {isSecretVariable(envVar.key) && !showSecrets[`${project.id}-${envVar.key}`] 
                                 ? '••••••••' 
                                 : envVar.value
@@ -219,6 +220,7 @@ export default function EnvironmentVariables() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleSecretVisibility(project.id, envVar.key)}
+                                className="p-1"
                               >
                                 {showSecrets[`${project.id}-${envVar.key}`] ? (
                                   <EyeOff className="h-3 w-3" />
@@ -230,7 +232,7 @@ export default function EnvironmentVariables() {
                           </div>
                         </div>
                         {editingProject === project.id && (
-                          <div className="flex gap-1">
+                          <div className="flex flex-col sm:flex-row gap-1 mt-2 sm:mt-0">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -241,15 +243,19 @@ export default function EnvironmentVariables() {
                                   updateVariable(project.id, envVar.key, newKey, newValue);
                                 }
                               }}
+                              className="w-full sm:w-auto"
                             >
-                              <Edit className="h-3 w-3" />
+                              <Edit className="h-3 w-3 mr-1" />
+                              Editar
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => deleteVariable(project.id, envVar.key)}
+                              className="text-red-600 hover:bg-red-50 w-full sm:w-auto"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Eliminar
                             </Button>
                           </div>
                         )}
@@ -265,21 +271,24 @@ export default function EnvironmentVariables() {
                 {editingProject === project.id && (
                   <div className="mt-4 pt-4 border-t">
                     <div className="space-y-3">
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Input
                           placeholder="Nombre de la variable"
                           value={newVariable.key}
                           onChange={(e) => setNewVariable(prev => ({ ...prev, key: e.target.value }))}
+                          className="flex-1"
                         />
                         <Input
                           placeholder="Valor"
                           value={newVariable.value}
                           onChange={(e) => setNewVariable(prev => ({ ...prev, value: e.target.value }))}
                           type={isSecretVariable(newVariable.key) ? 'password' : 'text'}
+                          className="flex-1"
                         />
                         <Button
                           onClick={() => addVariable(project.id)}
                           disabled={!newVariable.key.trim() || !newVariable.value.trim()}
+                          className="w-full sm:w-auto"
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           Añadir

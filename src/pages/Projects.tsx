@@ -122,10 +122,10 @@ const Projects = () => {
   };
 
   return (
-    <div className="pt-6 px-4 pb-4 lg:p-6">
+    <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 space-y-4 lg:space-y-0">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Proyectos</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Proyectos</h1>
           <p className="text-sm lg:text-base text-muted-foreground">
             Gestiona y despliega tus proyectos desde repositorios de Git
           </p>
@@ -159,8 +159,7 @@ const Projects = () => {
               currentCount={filteredProjects.length}
               limit={projectLimit.limit}
               upgradeAction={() => {
-                // TODO: Navegar a la página de planes
-                console.log('Navegar a actualización de plan');
+                navigate('/dashboard/pricing');
               }}
             />
           </div>

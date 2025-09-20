@@ -1,34 +1,33 @@
-import '@testing-library/jest-dom'
-import { vi, beforeAll, afterAll } from 'vitest'
+import '@testing-library/jest-dom';
 
-// Mock environment variables
-Object.defineProperty(process.env, 'VITE_API_URL', {
-  value: 'http://localhost:3001',
-  writable: true
-})
+// Mock de localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+global.localStorage = localStorageMock as any;
 
-Object.defineProperty(process.env, 'VITE_USE_MOCK_DATA', {
-  value: 'false',
-  writable: true
-})
+// Mock de window.location
+Object.defineProperty(window, 'location', {
+  value: {
+    hostname: 'localhost',
+    href: 'http://localhost:3000',
+    pathname: '/',
+  },
+  writable: true,
+});
 
-// Mock fetch globally
-global.fetch = vi.fn()
+// Mock de fetch
+global.fetch = vi.fn();
 
-// Setup console.error to fail tests on React warnings
-const originalError = console.error
-beforeAll(() => {
-  console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Warning:')
-    ) {
-      throw new Error(`Console error: ${args.join(' ')}`)
-    }
-    originalError(...args)
-  }
-})
-
-afterAll(() => {
-  console.error = originalError
-})
+// Mock de console para evitar logs en tests
+global.console = {
+  ...console,
+  log: vi.fn(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+};

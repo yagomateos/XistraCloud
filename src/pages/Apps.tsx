@@ -52,19 +52,19 @@ const Apps = () => {
   const openPanel = () => window.open(panelUrl, '_blank');
 
   return (
-    <div className="pt-6 px-4 pb-4 lg:p-6">
+    <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Apps Marketplace</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Apps Marketplace</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
           Gestiona e instala tus apps desde el panel
         </p>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div></div>
-        <div className="flex gap-2">
-          <Button onClick={openPanel}>Abrir panel de apps</Button>
-          <Button variant="outline" onClick={() => (window.location.href = panelUrl)}>Ir en esta pestaña</Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={openPanel} className="w-full sm:w-auto">Abrir panel de apps</Button>
+          <Button variant="outline" onClick={() => (window.location.href = panelUrl)} className="w-full sm:w-auto">Ir en esta pestaña</Button>
         </div>
       </div>
 
