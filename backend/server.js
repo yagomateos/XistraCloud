@@ -14,6 +14,9 @@ const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXB
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Import database module
+const Database = require('./database');
+
 // Test endpoint
 app.get('/', (req, res) => {
   const buildId = process.env.BUILD_ID || 'local-dev';
@@ -2359,32 +2362,12 @@ app.get('/apps/deployments', async (req, res) => {
 // GET /deployments - Get all deployments (projects + preview deployments)
 app.get('/deployments', async (req, res) => {
   try {
-    // Get both projects and deployments
-    const [projectsResult, deploymentsResult] = await Promise.all([
-      supabase.from('projects').select('*').order('created_at', { ascending: false }),
-      supabase.from('deployments').select('*').order('created_at', { ascending: false })
-    ]);
+    console.log('📊 Fetching deployments from PostgreSQL database');
+    
+    const deployments = await Database.getDeployments();
+    console.log(`📊 Found ${deployments.length} deployments from database`);
 
-    if (projectsResult.error) {
-      console.error('❌ Error fetching projects:', projectsResult.error);
-      return res.status(500).json({ error: 'Error fetching projects' });
-    }
-
-    if (deploymentsResult.error) {
-      console.error('❌ Error fetching deployments:', deploymentsResult.error);
-      return res.status(500).json({ error: 'Error fetching deployments' });
-    }
-
-    // Combine projects and deployments
-    const allDeployments = [
-      ...(projectsResult.data || []).map(project => ({
-        ...project,
-        type: 'project'
-      })),
-      ...(deploymentsResult.data || [])
-    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    res.json(allDeployments);
+    res.json(deployments);
   } catch (error) {
     console.error('❌ Error in deployments endpoint:', error);
     res.status(500).json({ error: error.message });
@@ -2532,6 +2515,25 @@ app.get('/subdomain/:subdomain/*', async (req, res) => {
 // ======================================
 // 🔧 ENVIRONMENT VARIABLES MANAGEMENT
 // ======================================
+
+// GET /projects - Get all projects
+app.get('/projects', async (req, res) => {
+  try {
+    console.log('📊 Fetching projects from PostgreSQL database');
+    
+    const projects = await Database.getProjects();
+    console.log(`📊 Found ${projects.length} projects from database`);
+    
+    res.json({
+      success: true,
+      projects: projects
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching projects:', error);
+    res.status(500).json({ error: 'Error al obtener proyectos' });
+  }
+});
 
 // GET /projects/:id/environment - Get environment variables for a project
 app.get('/projects/:id/environment', async (req, res) => {
@@ -2851,49 +2853,14 @@ app.get('/system/health', async (req, res) => {
 // GET /backups - Get all backups
 app.get('/backups', async (req, res) => {
   try {
-    // For now, return mock data
-    // In production, this would fetch from database
-    const mockBackups = [
-      {
-        id: 'backup-1',
-        name: 'backup-wordpress-2025-01-20',
-        type: 'full',
-        projectId: 'project-1',
-        projectName: 'WordPress Blog',
-        status: 'completed',
-        size: '245 MB',
-        createdAt: new Date().toISOString(),
-        retentionDays: 30
-      },
-      {
-        id: 'backup-2',
-        name: 'backup-mysql-daily',
-        type: 'database',
-        projectId: 'project-2',
-        projectName: 'MySQL Database',
-        status: 'in_progress',
-        size: '89 MB',
-        createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-        scheduledAt: new Date(Date.now() + 86400000).toISOString(), // tomorrow
-        retentionDays: 7
-      },
-      {
-        id: 'backup-3',
-        name: 'backup-react-app-weekly',
-        type: 'files',
-        projectId: 'project-3',
-        projectName: 'React Portfolio',
-        status: 'scheduled',
-        size: '156 MB',
-        createdAt: new Date(Date.now() - 86400000).toISOString(), // yesterday
-        scheduledAt: new Date(Date.now() + 604800000).toISOString(), // next week
-        retentionDays: 14
-      }
-    ];
+    console.log('💾 Fetching backups from PostgreSQL database');
+    
+    const backups = await Database.getBackups();
+    console.log(`💾 Found ${backups.length} backups from database`);
     
     res.json({
       success: true,
-      backups: mockBackups
+      backups: backups
     });
     
   } catch (error) {
@@ -2987,54 +2954,14 @@ app.delete('/backups/:id', async (req, res) => {
 // GET /team/members - Get team members
 app.get('/team/members', async (req, res) => {
   try {
-    // For now, return mock data
-    // In production, this would fetch from database
-    const mockMembers = [
-      {
-        id: 'member-1',
-        name: 'Yago Mateos',
-        email: 'yago@xistracloud.com',
-        role: 'owner',
-        status: 'active',
-        joinedAt: new Date(Date.now() - 86400000 * 30).toISOString(), // 30 days ago
-        lastActive: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-        avatar: null
-      },
-      {
-        id: 'member-2',
-        name: 'María García',
-        email: 'maria@ejemplo.com',
-        role: 'admin',
-        status: 'active',
-        joinedAt: new Date(Date.now() - 86400000 * 15).toISOString(), // 15 days ago
-        lastActive: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-        avatar: null
-      },
-      {
-        id: 'member-3',
-        name: 'Carlos López',
-        email: 'carlos@ejemplo.com',
-        role: 'developer',
-        status: 'active',
-        joinedAt: new Date(Date.now() - 86400000 * 7).toISOString(), // 7 days ago
-        lastActive: new Date(Date.now() - 14400000).toISOString(), // 4 hours ago
-        avatar: null
-      },
-      {
-        id: 'member-4',
-        name: 'Ana Martín',
-        email: 'ana@ejemplo.com',
-        role: 'viewer',
-        status: 'pending',
-        joinedAt: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
-        lastActive: null,
-        avatar: null
-      }
-    ];
+    console.log('👥 Fetching team members from PostgreSQL database');
+    
+    const members = await Database.getTeamMembers();
+    console.log(`👥 Found ${members.length} team members from database`);
     
     res.json({
       success: true,
-      members: mockMembers
+      members: members
     });
     
   } catch (error) {
