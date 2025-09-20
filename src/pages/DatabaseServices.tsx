@@ -204,6 +204,15 @@ const DatabaseServices = () => {
   };
 
   const deleteService = async (serviceId: string) => {
+    // Mostrar confirmación
+    const confirmed = window.confirm(
+      '¿Estás seguro de que quieres eliminar este servicio de base de datos?\n\nEsta acción no se puede deshacer.'
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/database/services/${serviceId}`, {
         method: 'DELETE',
