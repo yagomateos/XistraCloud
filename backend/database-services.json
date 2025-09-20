@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "app-redis-standalone-3f0bd7e3",
+    "name": "redis-1758353264818",
+    "type": "redis",
+    "status": "running",
+    "port": 8481,
+    "admin_port": 8080,
+    "created_at": "2025-09-20T07:27:50.493Z",
+    "connection_string": "redis://user:xistra_1758353264818@localhost:8481"
+  }
+]

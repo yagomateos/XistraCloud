@@ -2120,6 +2120,10 @@ app.post('/apps/deploy', async (req, res) => {
     const projectId = `app-${templateId}-${crypto.randomUUID().substring(0, 8)}`;
     const basePort = 8000 + Math.floor(Math.random() * 1000);
     
+    // Generate subdomain
+    const subdomain = `${name.toLowerCase().replace(/[^a-z0-9-]/g, '-')}-${crypto.randomUUID().substring(0, 6)}`;
+    const subdomainUrl = `https://${subdomain}.xistracloud.com`;
+    
     console.log(`🚀 Iniciando despliegue de ${template.name} como ${name}...`);
     
     // Create deployment directory (use absolute path relative to this file)
@@ -2272,6 +2276,8 @@ app.post('/apps/deploy', async (req, res) => {
         urls: urls,
         ports: template.ports.map((_, index) => basePort + index),
         accessUrl: urls[0],
+        subdomain: subdomain,
+        subdomainUrl: subdomainUrl,
         instructions: {
           wordpress: "WordPress está listo. Si ves 'aplicación no encontrada', espera unos segundos y recarga la página. WordPress puede tardar un momento en inicializarse completamente.",
           general: "La aplicación puede tardar unos segundos en estar completamente disponible. Si no funciona inmediatamente, espera y recarga la página."
@@ -2489,6 +2495,30 @@ async function generateAppDeploymentLogs(projectId, templateName, appName, statu
     }
   }
 }
+
+// GET /subdomain/:subdomain - Proxy requests to subdomains
+app.get('/subdomain/:subdomain/*', async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+    const path = req.params[0] || '';
+    
+    console.log(`🌐 Subdomain request: ${subdomain}.xistracloud.com/${path}`);
+    
+    // For now, return a placeholder response
+    // In production, this would proxy to the actual deployed app
+    res.json({
+      success: true,
+      message: `Subdomain ${subdomain}.xistracloud.com is ready`,
+      subdomain: subdomain,
+      path: path,
+      note: "This is a placeholder. In production, this would proxy to the actual deployed application."
+    });
+    
+  } catch (error) {
+    console.error('❌ Error handling subdomain request:', error);
+    res.status(500).json({ error: 'Subdomain request failed' });
+  }
+});
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => {

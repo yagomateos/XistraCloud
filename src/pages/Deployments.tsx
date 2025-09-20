@@ -273,6 +273,17 @@ const Deployments = () => {
                   </div>
 
                   <div className="flex flex-col lg:flex-row gap-2 lg:gap-2 lg:justify-end">
+                    {deployment.subdomainUrl && !isBuilding && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => window.open(deployment.subdomainUrl, '_blank')}
+                        className="w-full lg:w-auto h-9 text-xs bg-green-600 hover:bg-green-700"
+                      >
+                        <ExternalLink className="h-3 w-3 mr-2" />
+                        {deployment.subdomain}.xistracloud.com
+                      </Button>
+                    )}
                     {deployment.url && !isBuilding && (
                       <Button
                         variant="outline"
@@ -281,7 +292,7 @@ const Deployments = () => {
                         className="w-full lg:w-auto h-9 text-xs"
                       >
                         <ExternalLink className="h-3 w-3 mr-2" />
-                        Ver sitio
+                        Ver sitio local
                       </Button>
                     )}
                     <Button 
