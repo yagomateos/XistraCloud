@@ -272,22 +272,22 @@ const DatabaseServices = () => {
   }
 
   return (
-    <div className="pt-6 px-4 pb-4 lg:p-6">
+    <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Servicios de Base de Datos</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Servicios de Base de Datos</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
           Gestiona tus bases de datos MySQL, PostgreSQL y Redis
         </p>
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div></div>
         
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 sm:flex gap-2 w-full sm:w-auto">
           <Button
             onClick={() => deployDatabase('mysql')}
             disabled={deploying === 'mysql'}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
           >
             {deploying === 'mysql' ? (
               <>
@@ -306,7 +306,7 @@ const DatabaseServices = () => {
             onClick={() => deployDatabase('postgresql')}
             disabled={deploying === 'postgresql'}
             variant="outline"
-            className="border-green-600 text-green-600 hover:bg-green-50"
+            className="border-green-600 text-green-600 hover:bg-green-50 w-full sm:w-auto"
           >
             {deploying === 'postgresql' ? (
               <>
@@ -325,7 +325,7 @@ const DatabaseServices = () => {
             onClick={() => deployDatabase('redis')}
             disabled={deploying === 'redis'}
             variant="outline"
-            className="border-red-600 text-red-600 hover:bg-red-50"
+            className="border-red-600 text-red-600 hover:bg-red-50 w-full sm:w-auto"
           >
             {deploying === 'redis' ? (
               <>
@@ -353,26 +353,26 @@ const DatabaseServices = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => (
             <Card key={service.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{getTypeIcon(service.type)}</span>
                     <div>
-                      <CardTitle className="text-lg">{service.name}</CardTitle>
-                      <CardDescription className="capitalize">{service.type}</CardDescription>
+                      <CardTitle className="text-base sm:text-lg">{service.name}</CardTitle>
+                      <CardDescription className="capitalize text-xs sm:text-sm">{service.type}</CardDescription>
                     </div>
                   </div>
-                  <Badge className={`${getStatusColor(service.status)} text-white`}>
+                  <Badge className={`${getStatusColor(service.status)} text-white text-xs sm:text-sm`}>
                     {getStatusText(service.status)}
                   </Badge>
                 </div>
               </CardHeader>
               
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 text-sm">
+              <CardContent className="space-y-3 sm:space-y-4">
+                <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                   <div>
                     <span className="text-muted-foreground">Puerto:</span>
                     <div className="font-mono">{service.port}</div>
@@ -383,29 +383,30 @@ const DatabaseServices = () => {
                   </div>
                 </div>
                 
-                <div className="text-sm">
+                <div className="text-xs sm:text-sm">
                   <span className="text-muted-foreground">Creado:</span>
                   <div>{new Date(service.created_at).toLocaleDateString()}</div>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => window.open(getAdminUrl(service), '_blank')}
-                    className="flex-1"
+                    className="flex-1 text-xs sm:text-sm"
                   >
                     <ExternalLink className="h-3 w-3 mr-1" />
-                    Admin
+                    Panel Admin
                   </Button>
                   
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-red-600 hover:bg-red-50"
+                    className="text-red-600 hover:bg-red-50 w-full sm:w-auto"
                     onClick={() => deleteService(service.id)}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-3 w-3 mr-1" />
+                    Eliminar
                   </Button>
                 </div>
               </CardContent>
