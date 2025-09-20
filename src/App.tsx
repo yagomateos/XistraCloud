@@ -20,6 +20,7 @@ import Profile from "@/pages/Profile";
 import Domains from "@/pages/Domains";
 import Pricing from "@/pages/Pricing";
 import Webhooks from "@/pages/Webhooks";
+import EnvironmentVariables from "@/pages/EnvironmentVariables";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import LoginSimple from "@/pages/LoginSimple";
@@ -59,6 +60,7 @@ const App = () => (
                 <Route path="logs" element={<Logs />} />
                 <Route path="domains" element={<Domains />} />
                 <Route path="webhooks" element={<Webhooks />} />
+                <Route path="environment" element={<EnvironmentVariables />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="pricing" element={<Pricing />} />
