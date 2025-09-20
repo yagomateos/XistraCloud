@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ export const PlanLimitCard: React.FC<PlanLimitProps> = ({
   currentProjects = 0,
   currentDomains = 0
 }) => {
+  const navigate = useNavigate();
   const projectLimit = checkProjectLimit(userPlan, currentProjects);
   const domainLimit = checkDomainLimit(userPlan, currentDomains);
   const features = PLAN_FEATURES[userPlan];
@@ -113,7 +115,11 @@ export const PlanLimitCard: React.FC<PlanLimitProps> = ({
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               Has alcanzado el límite de proyectos de tu plan. 
-              <Button variant="link" className="p-0 ml-1">
+              <Button 
+                variant="link" 
+                className="p-0 ml-1"
+                onClick={() => navigate('/dashboard/pricing')}
+              >
                 Actualiza tu plan
               </Button> para crear más proyectos.
             </AlertDescription>
@@ -122,7 +128,11 @@ export const PlanLimitCard: React.FC<PlanLimitProps> = ({
 
         {userPlan === 'free' && (
           <div className="pt-2 border-t">
-            <Button className="w-full" variant="outline">
+            <Button 
+              className="w-full" 
+              variant="outline"
+              onClick={() => navigate('/dashboard/pricing')}
+            >
               Actualizar a Plan Pro
             </Button>
           </div>

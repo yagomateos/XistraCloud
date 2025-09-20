@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { CheckoutButton } from '@/components/CheckoutButton';
 import { useUserData } from '@/hooks/useUserData';
 import { 
   PLAN_FEATURES, 
@@ -33,39 +34,42 @@ const PricingPage: React.FC = () => {
         'Despliegues desde Git',
         'Dominio .xistra.app',
         'SSL automático',
-        '100 GB de ancho de banda',
-        '1 GB de almacenamiento'
+        '10 GB de ancho de banda',
+        '1 GB de almacenamiento',
+        'Backups básicos'
       ]
     },
     {
       type: 'pro',
       name: 'Pro',
-      price: 20,
+      price: 15,
       description: 'Para startups y aplicaciones con más potencia',
       features: [
-        'Proyectos ilimitados',
-        'Dominios personalizados ilimitados',
+        '5 Proyectos',
+        'Dominios personalizados',
         'Soporte prioritario',
         'Análisis avanzado',
-        '1 TB de ancho de banda',
-        '100 GB de almacenamiento',
-        'Hasta 5 colaboradores'
+        '100 GB de ancho de banda',
+        '10 GB de almacenamiento',
+        'Hasta 3 colaboradores',
+        'Backups automáticos'
       ],
       popular: true
     },
     {
       type: 'enterprise',
       name: 'Enterprise',
-      price: 99,
+      price: 50,
       description: 'Para grandes empresas con necesidades avanzadas',
       features: [
-        'Todo lo del plan Pro',
+        '20 Proyectos',
+        'Dominios personalizados ilimitados',
         'Seguridad avanzada',
         'Soporte 24/7 dedicado',
-        'SLA de disponibilidad',
+        '500 GB de ancho de banda',
+        '50 GB de almacenamiento',
         'Colaboradores ilimitados',
-        '1 TB de almacenamiento',
-        'Compliance y auditorías'
+        'SLA 99.9%'
       ]
     }
   ];
@@ -120,7 +124,7 @@ const PricingPage: React.FC = () => {
         {plans.map((plan) => (
           <Card 
             key={plan.type} 
-            className={`relative ${plan.popular ? 'ring-2 ring-blue-500 shadow-lg' : ''} ${isPlanActive(plan.type) ? 'bg-blue-50 border-blue-200' : ''}`}
+            className={`relative h-full flex flex-col ${plan.popular ? 'ring-2 ring-blue-500 shadow-lg' : ''} ${isPlanActive(plan.type) ? 'bg-blue-50 border-blue-200' : ''}`}
           >
             {plan.popular && (
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -150,8 +154,8 @@ const PricingPage: React.FC = () => {
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-4">
-              <ul className="space-y-3">
+            <CardContent className="flex-1 flex flex-col space-y-4">
+              <ul className="flex-1 space-y-3">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
@@ -160,18 +164,27 @@ const PricingPage: React.FC = () => {
                 ))}
               </ul>
 
-              <div className="pt-4">
+              <div className="pt-4 mt-auto">
                 {isPlanActive(plan.type) ? (
                   <Button className="w-full" disabled>
                     Plan Actual
                   </Button>
                 ) : canUpgrade(plan.type) ? (
-                  <Button 
-                    className="w-full"
-                    onClick={() => handleUpgrade(plan.type)}
-                  >
-                    Actualizar a {plan.name}
-                  </Button>
+                  plan.type === 'free' ? (
+                    <Button 
+                      className="w-full"
+                      onClick={() => handleUpgrade(plan.type)}
+                    >
+                      Plan Actual
+                    </Button>
+                  ) : (
+                    <CheckoutButton
+                      planType={plan.type as 'pro' | 'enterprise'}
+                      className="w-full"
+                    >
+                      Actualizar a {plan.name}
+                    </CheckoutButton>
+                  )
                 ) : canDowngrade(plan.type) ? (
                   <Button 
                     variant="outline"
@@ -214,8 +227,8 @@ const PricingPage: React.FC = () => {
                 <tr className="border-b">
                   <td className="py-3 px-4 font-medium">Proyectos máximos</td>
                   <td className="text-center py-3 px-4">1</td>
-                  <td className="text-center py-3 px-4">Ilimitado</td>
-                  <td className="text-center py-3 px-4">Ilimitado</td>
+                  <td className="text-center py-3 px-4">5</td>
+                  <td className="text-center py-3 px-4">20</td>
                 </tr>
                 <tr className="border-b">
                   <td className="py-3 px-4 font-medium">Dominios personalizados</td>
@@ -253,8 +266,54 @@ const PricingPage: React.FC = () => {
                     <Check className="h-4 w-4 text-green-500 mx-auto" />
                   </td>
                 </tr>
-                <tr>
+                <tr className="border-b">
+                  <td className="py-3 px-4 font-medium">Ancho de banda</td>
+                  <td className="text-center py-3 px-4">10 GB</td>
+                  <td className="text-center py-3 px-4">100 GB</td>
+                  <td className="text-center py-3 px-4">500 GB</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-3 px-4 font-medium">Almacenamiento</td>
+                  <td className="text-center py-3 px-4">1 GB</td>
+                  <td className="text-center py-3 px-4">10 GB</td>
+                  <td className="text-center py-3 px-4">50 GB</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-3 px-4 font-medium">Colaboradores</td>
+                  <td className="text-center py-3 px-4">0</td>
+                  <td className="text-center py-3 px-4">3</td>
+                  <td className="text-center py-3 px-4">Ilimitado</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-3 px-4 font-medium">Backups</td>
+                  <td className="text-center py-3 px-4">Básicos</td>
+                  <td className="text-center py-3 px-4">Automáticos</td>
+                  <td className="text-center py-3 px-4">Automáticos</td>
+                </tr>
+                <tr className="border-b">
                   <td className="py-3 px-4 font-medium">Seguridad avanzada</td>
+                  <td className="text-center py-3 px-4">
+                    <X className="h-4 w-4 text-red-500 mx-auto" />
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    <X className="h-4 w-4 text-red-500 mx-auto" />
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    <Check className="h-4 w-4 text-green-500 mx-auto" />
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-3 px-4 font-medium">SLA de disponibilidad</td>
+                  <td className="text-center py-3 px-4">
+                    <X className="h-4 w-4 text-red-500 mx-auto" />
+                  </td>
+                  <td className="text-center py-3 px-4">
+                    <X className="h-4 w-4 text-red-500 mx-auto" />
+                  </td>
+                  <td className="text-center py-3 px-4">99.9%</td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-medium">Soporte 24/7</td>
                   <td className="text-center py-3 px-4">
                     <X className="h-4 w-4 text-red-500 mx-auto" />
                   </td>

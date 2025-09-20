@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { NotificationPreferences } from '@/components/settings/notification-preferences';
 import { PlanLimitCard } from '@/components/limits/plan-limits';
+import { PaymentSuccess } from '@/components/PaymentSuccess';
 import { useUserData } from '@/hooks/useUserData';
 import {
   User,
@@ -27,6 +28,7 @@ import {
   Eye,
   EyeOff,
   KeyIcon,
+  FileText,
 } from 'lucide-react';
 
 interface UserData {
@@ -48,10 +50,18 @@ const Settings: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const tabFromUrl = searchParams.get('tab') || 'profile';
+  const success = searchParams.get('success');
+  const sessionId = searchParams.get('session_id');
+  const purchasedPlan = searchParams.get('plan');
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   
   // Use the new user data hook
   const { userData, userPlan, updateProfile, updateAvatar, loading } = useUserData();
+
+  // Mostrar componente de éxito si viene de un pago exitoso
+  if (success === 'true') {
+    return <PaymentSuccess planType={purchasedPlan || 'pro'} sessionId={sessionId || undefined} />;
+  }
 
   // Estado del usuario desde el hook con valores por defecto seguros
   const [localUserData, setLocalUserData] = useState<UserData>(() => ({
@@ -243,8 +253,8 @@ const Settings: React.FC = () => {
     joinedAt: new Date().toISOString()
   };
 
-  // Mostrar loading solo si está realmente cargando y no hay datos
-  if (loading && !userData) {
+  // Mostrar loading solo si está realmente cargando
+  if (loading) {
     return (
       <div className="space-y-4 md:space-y-6 pt-6 px-4 pb-4 lg:p-6">
         <div>
@@ -733,24 +743,73 @@ const Settings: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
+              {/* Plan actual */}
+              <div className="flex items-center justify-between p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
                 <div>
-                  <h3 className="font-semibold">Próxima facturación</h3>
-                  <p className="text-sm text-muted-foreground">
-                    15 Oct 2025 • Plan {safeUserData.plan}
+                  <h3 className="font-semibold text-lg">Plan Actual</h3>
+                  <p className="text-sm text-muted-foreground capitalize">
+                    {safeUserData.plan} • {safeUserData.plan === 'free' ? 'Gratuito' : safeUserData.plan === 'pro' ? '€9.99/mes' : '€29.99/mes'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Miembro desde {safeUserData.joinedAt ? new Date(safeUserData.joinedAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long' }) : 'Fecha no disponible'}
                   </p>
                 </div>
-                <Badge variant="default">Al día</Badge>
+                <Badge variant={safeUserData.plan === 'free' ? 'secondary' : 'default'} className="text-sm">
+                  {safeUserData.plan === 'free' ? 'Gratuito' : 'Activo'}
+                </Badge>
               </div>
+
+              {/* Información de facturación */}
+              {safeUserData.plan !== 'free' && (
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h3 className="font-semibold">Próxima facturación</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES', { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric' 
+                      })} • Plan {safeUserData.plan}
+                    </p>
+                  </div>
+                  <Badge variant="default">Al día</Badge>
+                </div>
+              )}
               
+              {/* Botones de acción */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button variant="outline" onClick={() => navigate('/dashboard/pricing')}>
-                  Actualizar Plan
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/dashboard/pricing')}
+                  className="flex items-center gap-2"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  {safeUserData.plan === 'free' ? 'Actualizar Plan' : 'Cambiar Plan'}
                 </Button>
-                <Button variant="outline">
-                  Ver Historial de Pagos
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    // TODO: Implementar historial de pagos
+                    alert('Historial de pagos próximamente disponible');
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  Ver Historial
                 </Button>
               </div>
+
+              {/* Información adicional para planes de pago */}
+              {safeUserData.plan !== 'free' && (
+                <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                  <h4 className="font-medium mb-2">Información de facturación</h4>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>• Facturación automática mensual</p>
+                    <p>• Puedes cancelar en cualquier momento</p>
+                    <p>• Acceso inmediato a todas las funciones del plan</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
