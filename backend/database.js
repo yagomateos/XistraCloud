@@ -2,9 +2,9 @@ const { Pool } = require('pg');
 
 // Database configuration
 const dbConfig = {
-  user: 'xistracloud',
+  user: 'xistracloud_user',
   host: 'localhost',
-  database: 'xistracloud',
+  database: 'xistracloud_db',
   password: 'xistracloud2025',
   port: 5432,
   max: 20,
