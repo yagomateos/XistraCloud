@@ -18,7 +18,9 @@ export default function LoginSimple() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/login`, {
+      const apiUrl = 'http://localhost:3001';
+      console.log('🔗 API URL:', apiUrl);
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

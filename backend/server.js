@@ -1,4 +1,5 @@
 // Railway Force Update: Detailed Logs Implementation v3.0 - MUST DEPLOY NOW!
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
@@ -3077,6 +3078,133 @@ app.delete('/team/invitations/:id', async (req, res) => {
 });
 
 const port = process.env.PORT || 3001;
+// ======================================
+// STRIPE INTEGRATION
+// ======================================
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// POST /api/create-checkout-session - Create Stripe checkout session
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const { planType, priceId } = req.body;
+
+    console.log(`💳 Creating checkout session for plan: ${planType}`);
+    console.log(`💳 Using price ID: ${priceId}`);
+    console.log(`💳 Stripe Key exists: ${!!process.env.STRIPE_SECRET_KEY}`);
+
+    // Verificar que Stripe esté inicializado
+    if (!stripe) {
+      throw new Error('Stripe no está inicializado');
+    }
+
+    // Usar Stripe real con los Price IDs correctos
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${req.headers.origin || 'http://localhost:3002'}/dashboard/settings?success=true&session_id={CHECKOUT_SESSION_ID}&plan=${planType}`,
+      cancel_url: `${req.headers.origin || 'http://localhost:3002'}/dashboard/pricing?canceled=true`,
+      metadata: {
+        planType: planType,
+      },
+    });
+
+    console.log(`✅ Stripe checkout session created: ${session.id}`);
+    console.log(`💳 Using Price ID: ${priceId}`);
+    console.log(`💳 Plan: ${planType}`);
+    res.json({ sessionId: session.id });
+
+  } catch (error) {
+    console.error('❌ Error creating checkout session:', error);
+    res.status(500).json({ error: 'Error al crear sesión de checkout' });
+  }
+});
+
+// POST /api/stripe-webhook - Handle Stripe webhooks
+app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.log(`❌ Webhook signature verification failed.`, err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      console.log(`✅ Payment successful for session: ${session.id}`);
+      
+      // Enviar email de confirmación
+      try {
+        await sendPaymentConfirmationEmail(session);
+        console.log(`📧 Confirmation email sent for session: ${session.id}`);
+      } catch (emailError) {
+        console.error(`❌ Failed to send confirmation email:`, emailError);
+      }
+      
+      // TODO: Update user plan in database
+      break;
+    case 'customer.subscription.created':
+      const subscription = event.data.object;
+      console.log(`✅ Subscription created: ${subscription.id}`);
+      // TODO: Update user plan in database
+      break;
+    case 'customer.subscription.updated':
+      const updatedSubscription = event.data.object;
+      console.log(`✅ Subscription updated: ${updatedSubscription.id}`);
+      // TODO: Update user plan in database
+      break;
+    case 'customer.subscription.deleted':
+      const deletedSubscription = event.data.object;
+      console.log(`✅ Subscription deleted: ${deletedSubscription.id}`);
+      // TODO: Downgrade user plan in database
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({received: true});
+});
+
+// Función para enviar email de confirmación de pago
+async function sendPaymentConfirmationEmail(session) {
+  // Para desarrollo local, usar Mailtrap o similar
+  const emailData = {
+    to: session.customer_email || 'test@example.com',
+    subject: '✅ Confirmación de Pago - XistraCloud',
+    plan: session.metadata?.planType || 'Unknown',
+    amount: session.amount_total ? (session.amount_total / 100) : 0,
+    currency: session.currency?.toUpperCase() || 'EUR',
+    sessionId: session.id
+  };
+
+  console.log(`📧 ===== EMAIL DE CONFIRMACIÓN =====`);
+  console.log(`📧 Para: ${emailData.to}`);
+  console.log(`📧 Asunto: ${emailData.subject}`);
+  console.log(`📧 Plan: ${emailData.plan}`);
+  console.log(`📧 Monto: ${emailData.amount} ${emailData.currency}`);
+  console.log(`📧 ID de Sesión: ${emailData.sessionId}`);
+  console.log(`📧 ======================================`);
+
+  // En producción, aquí usarías SendGrid, Resend, etc.
+  // Para desarrollo, puedes usar Mailtrap (gratis para pruebas)
+  // await sendWithMailtrap(emailData);
+  
+  return true;
+}
+
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);
   console.log(`🔗 Access: yo no veo http://localhost:${port}`);   

@@ -25,25 +25,25 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     advancedSecurity: false,
     analytics: false,
     collaborators: 0,
-    bandwidth: '100 GB',
+    bandwidth: '10 GB',
     storage: '1 GB',
     buildMinutes: 100
   },
   pro: {
-    maxProjects: -1, // ilimitado
+    maxProjects: 5,
     maxDeployments: -1, // ilimitado
     customDomains: true,
     customDomainsLimit: -1, // ilimitado
     prioritySupport: true,
     advancedSecurity: false,
     analytics: true,
-    collaborators: 5,
-    bandwidth: '1 TB',
-    storage: '100 GB',
+    collaborators: 3,
+    bandwidth: '100 GB',
+    storage: '10 GB',
     buildMinutes: 1000
   },
   enterprise: {
-    maxProjects: -1, // ilimitado
+    maxProjects: 20,
     maxDeployments: -1, // ilimitado
     customDomains: true,
     customDomainsLimit: -1, // ilimitado
@@ -51,16 +51,16 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     advancedSecurity: true,
     analytics: true,
     collaborators: -1, // ilimitado
-    bandwidth: 'Ilimitado',
-    storage: '1 TB',
+    bandwidth: '500 GB',
+    storage: '50 GB',
     buildMinutes: 5000
   }
 };
 
 export const PLAN_PRICES = {
   free: { monthly: 0, yearly: 0 },
-  pro: { monthly: 20, yearly: 200 },
-  enterprise: { monthly: 99, yearly: 990 }
+  pro: { monthly: 15, yearly: 150 },
+  enterprise: { monthly: 50, yearly: 500 }
 };
 
 export const PLAN_NAMES = {

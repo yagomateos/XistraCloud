@@ -192,7 +192,7 @@ class UserStore {
   public getUserData(): UserData | null {
     // Si no hay datos, devolver datos por defecto para que la interfaz funcione
     if (!this.userData) {
-      return {
+      const defaultData = {
         name: 'Usuario',
         email: 'usuario@ejemplo.com',
         avatar: '',
@@ -204,6 +204,10 @@ class UserStore {
         joinedAt: new Date().toISOString(),
         userId: 'mock-user-id'
       };
+      
+      // Establecer los datos por defecto para evitar futuras llamadas
+      this.userData = defaultData;
+      return { ...defaultData };
     }
     return { ...this.userData };
   }

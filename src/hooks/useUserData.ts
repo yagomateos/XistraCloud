@@ -3,8 +3,12 @@ import { userStore, UserData } from '@/lib/user-store';
 import { PlanType } from '@/lib/plans';
 
 export const useUserData = () => {
-  const [userData, setUserData] = useState<UserData | null>(userStore.getUserData());
-  const [loading, setLoading] = useState(false); // Cambiar a false por defecto
+  const [userData, setUserData] = useState<UserData | null>(() => {
+    // Inicializar con datos del store inmediatamente
+    const initialData = userStore.getUserData();
+    return initialData;
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const handleUserDataUpdate = (event: CustomEvent) => {

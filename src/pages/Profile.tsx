@@ -5,12 +5,23 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, Mail, MapPin, Building, Link as LinkIcon, Edit } from 'lucide-react';
+import { Calendar, Mail, MapPin, Building, Link as LinkIcon, Edit, Rocket, ExternalLink, AlertTriangle, Activity } from 'lucide-react';
 import { userStore, UserData } from '@/lib/user-store';
+import { useQuery } from '@tanstack/react-query';
+import { getDashboardStats } from '@/lib/api';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserData | null>(userStore.getUserData());
+
+  // ✅ Obtener datos reales del dashboard
+  const { data: dashboardData, isLoading, error } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: getDashboardStats,
+    refetchInterval: 30000 // Actualizar cada 30 segundos
+  });
 
   // Escuchar cambios en los datos del usuario
   useEffect(() => {
@@ -42,12 +53,63 @@ const Profile = () => {
     navigate('/dashboard/settings?tab=profile');
   };
 
+  // ✅ Usar datos reales del dashboard
   const stats = [
-    { label: 'Proyectos', value: '12' },
-    { label: 'Despliegues', value: '156' },
-    { label: 'Uptime promedio', value: '99.8%' },
-    { label: 'Tiempo activo', value: '8 meses' }
+    { 
+      label: 'Proyectos Activos', 
+      value: dashboardData?.projectStats?.active?.toString() || '0' 
+    },
+    { 
+      label: 'En Construcción', 
+      value: dashboardData?.projectStats?.building?.toString() || '0' 
+    },
+    { 
+      label: 'Con Errores', 
+      value: dashboardData?.projectStats?.error?.toString() || '0' 
+    },
+    { 
+      label: 'Total Despliegues', 
+      value: dashboardData?.deploymentTrend?.reduce((sum: number, day: any) => sum + (day.deployments || 0), 0).toString() || '0' 
+    }
   ];
+
+  // ✅ Actividad reciente real
+  const recentActivity = (dashboardData?.recentActivity || []).map(activity => ({
+    id: activity.id,
+    type: activity.type,
+    project: activity.project,
+    message: activity.message,
+    status: activity.status,
+    time: activity.created_at 
+      ? formatDistanceToNow(new Date(activity.created_at), { locale: es, addSuffix: true })
+      : 'hace unos momentos'
+  }));
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'deployment':
+        return <Rocket className="h-4 w-4" />;
+      case 'domain':
+        return <ExternalLink className="h-4 w-4" />;
+      case 'error':
+        return <AlertTriangle className="h-4 w-4" />;
+      default:
+        return <Activity className="h-4 w-4" />;
+    }
+  };
+
+  const getActivityColor = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'text-green-500';
+      case 'error':
+        return 'text-red-500';
+      case 'warning':
+        return 'text-yellow-500';
+      default:
+        return 'text-blue-500';
+    }
+  };
 
   const formatJoinDate = (date: string) => {
     return new Date(date).toLocaleDateString('es-ES', {
@@ -173,37 +235,36 @@ const Profile = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3 md:space-y-4">
-                <div className="flex items-start space-x-3 pb-3 border-b border-border last:border-b-0 last:pb-0">
-                  <div className="w-2 h-2 bg-success rounded-full mt-2 flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm md:text-base font-medium truncate">Despliegue exitoso de mi-app-web</p>
-                    <p className="text-xs md:text-sm text-muted-foreground">hace 2 horas</p>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span className="ml-2 text-sm text-muted-foreground">Cargando actividad...</span>
                   </div>
-                </div>
-                
-                <div className="flex items-start space-x-3 pb-3 border-b border-border last:border-b-0 last:pb-0">
-                  <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm md:text-base font-medium truncate">Nuevo proyecto creado: dashboard-analytics</p>
-                    <p className="text-xs md:text-sm text-muted-foreground">hace 1 día</p>
+                ) : recentActivity.length > 0 ? (
+                  recentActivity.slice(0, 4).map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3 pb-3 border-b border-border last:border-b-0 last:pb-0">
+                      <div className={`mt-1 flex-shrink-0 ${getActivityColor(activity.status)}`}>
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm md:text-base font-medium truncate">
+                          {activity.project}
+                        </p>
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+                          {activity.message}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {activity.time}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Activity className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">No hay actividad reciente</p>
                   </div>
-                </div>
-                
-                <div className="flex items-start space-x-3 pb-3 border-b border-border last:border-b-0 last:pb-0">
-                  <div className="w-2 h-2 bg-warning rounded-full mt-2 flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm md:text-base font-medium truncate">Configuración de dominio actualizada</p>
-                    <p className="text-xs md:text-sm text-muted-foreground">hace 3 días</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-success rounded-full mt-2 flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm md:text-base font-medium truncate">Plan actualizado a Pro</p>
-                    <p className="text-xs md:text-sm text-muted-foreground">hace 1 semana</p>
-                  </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
