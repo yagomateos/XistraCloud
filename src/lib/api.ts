@@ -83,7 +83,7 @@ if (typeof window !== 'undefined' && window.location.hostname === 'xistracloud.c
 }
 
 // Get the updated API URL after potentially setting it
-const getApiUrl = () => {
+export const getApiUrl = () => {
   if (typeof window !== 'undefined' && window.location.hostname === 'xistracloud.com') {
     return 'https://xistracloud.com/api';
   }
