@@ -272,14 +272,16 @@ const DatabaseServices = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Servicios de Base de Datos</h1>
-          <p className="text-muted-foreground mt-2">
-            Gestiona tus bases de datos MySQL, PostgreSQL y Redis
-          </p>
-        </div>
+    <div className="pt-6 px-4 pb-4 lg:p-6">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Servicios de Base de Datos</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
+          Gestiona tus bases de datos MySQL, PostgreSQL y Redis
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between mb-6">
+        <div></div>
         
         <div className="flex gap-2">
           <Button

@@ -237,14 +237,16 @@ export default function Backups() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Backups</h1>
-          <p className="text-muted-foreground">
-            Gestiona backups automáticos y manuales de tus aplicaciones y bases de datos.
-          </p>
-        </div>
+    <div className="pt-6 px-4 pb-4 lg:p-6">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Backups</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
+          Gestiona backups automáticos y manuales de tus aplicaciones y bases de datos
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between mb-6">
+        <div></div>
         
         <div className="flex gap-2">
           <Button variant="outline" onClick={loadData}>

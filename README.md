@@ -1,27 +1,31 @@
 # 🌩️ XistraCloud
 
-> **Plataforma Moderna de Gestión en la Nube** - Despliega, administra y escala tus proyectos sin esfuerzo
+> **Plataforma Moderna de Despliegue en la Nube** - Despliega, administra y escala tus aplicaciones sin esfuerzo
 
-[![Demo en Vivo](https://img.shields.io/badge/Demo%20en%20Vivo-xistracloud.vercel.app-brightgreen)](https://xistracloud.vercel.app)
-[![API Backend](https://img.shields.io/badge/API-xistracloud--production.up.railway.app-blue)](https://xistracloud-production.up.railway.app)
+[![Demo en Vivo](https://img.shields.io/badge/Demo%20en%20Vivo-xistracloud.com-brightgreen)](https://xistracloud.com)
+[![API Backend](https://img.shields.io/badge/API-xistracloud.com/api-blue)](https://xistracloud.com/api)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.3-61dafb)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-green)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)](https://postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Containers-blue)](https://docker.com/)
 
 ## 🚀 Descripción General
 
-XistraCloud es una plataforma integral de gestión en la nube que proporciona una interfaz intuitiva para desplegar, monitorizar y administrar tus proyectos en múltiples entornos. Construida con tecnologías modernas y diseñada para escalabilidad.
+XistraCloud es una plataforma integral de despliegue en la nube que proporciona una interfaz intuitiva para desplegar aplicaciones, gestionar bases de datos y administrar proyectos en múltiples entornos. Construida con tecnologías modernas y diseñada para escalabilidad empresarial.
 
 ### ✨ Características Principales
 
-- **📊 Panel en Tiempo Real** - Monitoriza proyectos, despliegues y métricas del sistema
-- **🔄 Gestión de Proyectos** - Operaciones CRUD completas para tus proyectos en la nube
-- **🌐 Gestión de Dominios** - Registra y administra dominios personalizados
-- **📈 Registros de Actividad** - Rastrea todas las actividades del sistema y despliegues
-- **🎨 Interfaz Moderna** - Interfaz limpia construida con React + shadcn/ui
-- **⚡ API Rápida** - Backend de alto rendimiento con Express.js
-- **🔐 Seguro** - Construido con mejores prácticas de seguridad
-- **📱 Responsivo** - Funciona perfectamente en todos los dispositivos
+- **🚀 Despliegue Instantáneo** - Despliega aplicaciones con un solo clic desde nuestro catálogo
+- **🗄️ Bases de Datos** - MySQL, PostgreSQL y Redis con paneles de administración
+- **🌐 Subdominios Automáticos** - Cada app recibe un subdominio único automáticamente
+- **🔧 Variables de Entorno** - Gestión completa de configuración por proyecto
+- **👥 Colaboración en Equipo** - Sistema de permisos y gestión de miembros
+- **💾 Backups Automáticos** - Sistema de respaldos programados y manuales
+- **📊 Monitoreo en Tiempo Real** - Métricas del sistema y logs detallados
+- **🔗 Webhooks de GitHub** - Despliegues automáticos desde repositorios Git
+- **🎨 Interfaz Moderna** - UI limpia construida con React + shadcn/ui
+- **📱 Totalmente Responsivo** - Funciona perfectamente en todos los dispositivos
 
 ## 🛠️ Stack Tecnológico
 
@@ -38,21 +42,23 @@ XistraCloud es una plataforma integral de gestión en la nube que proporciona un
 - **Node.js** - Entorno de ejecución JavaScript
 - **Express.js** - Framework web rápido
 - **TypeScript** - Backend con seguridad de tipos
-- **Supabase** - Solución de base de datos moderna
-- **Railway** - Plataforma de despliegue en la nube
+- **PostgreSQL** - Base de datos relacional robusta
+- **Docker** - Containerización de aplicaciones
+- **PM2** - Gestión de procesos en producción
 
-### Despliegue e Infraestructura
-- **Frontend**: Vercel (Auto-despliegue desde la rama main)
-- **Backend**: Railway (Entorno de producción)
-- **Base de Datos**: Supabase (PostgreSQL)
-- **Dominio**: Gestión de dominios personalizados
+### Infraestructura
+- **VPS Ubuntu** - Servidor dedicado de alto rendimiento
+- **Nginx** - Proxy reverso y servidor web
+- **Let's Encrypt** - Certificados SSL automáticos
+- **Docker Compose** - Orquestación de contenedores
+- **PostgreSQL** - Base de datos principal
 
 ## 📦 Inicio Rápido
 
 ### Requisitos Previos
 - Node.js 18+ instalado
 - Git instalado
-- Cuenta de Supabase (para la base de datos)
+- Docker instalado (para desarrollo local)
 
 ### 1. Clonar el Repositorio
 ```bash
@@ -76,9 +82,9 @@ npm install
 VITE_API_URL=http://localhost:3001
 
 # Backend (.env)
-SUPABASE_URL=tu_url_de_supabase
-SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
+DATABASE_URL=postgresql://xistracloud_user:xistracloud2025@localhost:5432/xistracloud_db
 PORT=3001
+GITHUB_WEBHOOK_SECRET=tu_secreto_webhook
 ```
 
 ### 4. Iniciar Servidores de Desarrollo
@@ -95,9 +101,9 @@ npm start
 
 ## 🌐 Demo en Vivo
 
-- **Frontend**: [https://xistracloud.vercel.app](https://xistracloud.vercel.app)
-- **API Backend**: [https://xistracloud-production.up.railway.app](https://xistracloud-production.up.railway.app)
-- **Salud de la API**: [https://xistracloud-production.up.railway.app/health](https://xistracloud-production.up.railway.app/health)
+- **Frontend**: [https://xistracloud.com](https://xistracloud.com)
+- **API Backend**: [https://xistracloud.com/api](https://xistracloud.com/api)
+- **Salud de la API**: [https://xistracloud.com/api/health](https://xistracloud.com/api/health)
 
 ## 📚 Documentación de la API
 
@@ -110,23 +116,29 @@ npm start
 | `POST` | `/projects` | Crear nuevo proyecto |
 | `PUT` | `/projects/:id` | Actualizar proyecto |
 | `DELETE` | `/projects/:id` | Eliminar proyecto |
-| `GET` | `/domains` | Listar todos los dominios |
-| `POST` | `/domains` | Registrar dominio |
-| `GET` | `/logs` | Registros de actividad del sistema |
+| `GET` | `/deployments` | Listar todos los despliegues |
+| `POST` | `/apps/deploy` | Desplegar aplicación |
+| `GET` | `/database/services` | Listar servicios de base de datos |
+| `POST` | `/database/services` | Crear servicio de base de datos |
+| `GET` | `/backups` | Listar backups |
+| `GET` | `/team/members` | Listar miembros del equipo |
+| `GET` | `/system/metrics` | Métricas del sistema |
 
 ### Ejemplo de Uso de la API
 
 ```bash
 # Obtener todos los proyectos
-curl https://xistracloud-production.up.railway.app/projects
+curl https://xistracloud.com/api/projects
 
-# Crear nuevo proyecto
-curl -X POST https://xistracloud-production.up.railway.app/projects \
+# Desplegar aplicación WordPress
+curl -X POST https://xistracloud.com/api/apps/deploy \
   -H "Content-Type: application/json" \
-  -d '{"name":"mi-app","status":"deployed"}'
+  -d '{"templateId":"wordpress-mysql","name":"mi-blog"}'
 
-# Eliminar proyecto
-curl -X DELETE https://xistracloud-production.up.railway.app/projects/id-del-proyecto
+# Crear servicio MySQL
+curl -X POST https://xistracloud.com/api/database/services \
+  -H "Content-Type: application/json" \
+  -d '{"type":"mysql","name":"mi-mysql"}'
 ```
 
 ## 🏗️ Estructura del Proyecto
@@ -136,13 +148,29 @@ XistraCloud/
 ├── 📁 src/                    # Código fuente del frontend
 │   ├── 📁 components/         # Componentes UI reutilizables
 │   ├── 📁 pages/             # Páginas de la aplicación
+│   │   ├── 📄 Apps.tsx       # Catálogo de aplicaciones
+│   │   ├── 📄 Deployments.tsx # Gestión de despliegues
+│   │   ├── 📄 DatabaseServices.tsx # Servicios de BD
+│   │   ├── 📄 EnvironmentVariables.tsx # Variables de entorno
+│   │   ├── 📄 Backups.tsx    # Sistema de backups
+│   │   ├── 📄 Team.tsx       # Colaboración en equipo
+│   │   ├── 📄 Logs.tsx       # Monitoreo y logs
+│   │   └── 📄 Domains.tsx    # Gestión de dominios
 │   ├── 📁 hooks/             # Hooks personalizados de React
 │   ├── 📁 lib/               # Utilidades y cliente API
 │   └── 📁 layouts/           # Layouts de páginas
 ├── 📁 backend/               # Servidor API del backend
-│   ├── 📄 server.js          # Servidor Express
+│   ├── 📄 server.js          # Servidor Express principal
+│   ├── 📄 database.js        # Cliente PostgreSQL
 │   ├── 📄 package.json       # Dependencias del backend
 │   └── 📁 migrations/        # Migraciones de base de datos
+├── 📁 database/              # Esquemas y migraciones
+│   └── 📄 schema.sql         # Esquema de PostgreSQL
+├── 📁 awesome-compose/       # Templates de Docker Compose
+│   ├── 📁 wordpress-mysql/   # WordPress + MySQL
+│   ├── 📁 mysql-standalone/  # MySQL standalone
+│   ├── 📁 postgresql-standalone/ # PostgreSQL standalone
+│   └── 📁 redis-standalone/  # Redis standalone
 ├── 📁 public/                # Recursos estáticos
 ├── 📄 package.json           # Dependencias del frontend
 ├── 📄 tailwind.config.ts     # Configuración de Tailwind
@@ -150,24 +178,68 @@ XistraCloud/
 └── 📄 README.md              # Este archivo
 ```
 
+## 🚀 Catálogo de Aplicaciones
+
+### Aplicaciones Disponibles
+- **WordPress** - CMS más popular del mundo
+- **Nextcloud** - Plataforma de colaboración
+- **Gitea** - Servicio Git auto-hospedado
+- **Portainer** - Gestión de contenedores Docker
+- **Prometheus + Grafana** - Monitoreo y métricas
+- **Minecraft Server** - Servidor de Minecraft
+- **Plex Media Server** - Servidor multimedia
+- **WireGuard VPN** - Servidor VPN seguro
+- **Pi-hole** - Bloqueador de anuncios
+
+### Servicios de Base de Datos
+- **MySQL** - Base de datos relacional con phpMyAdmin
+- **PostgreSQL** - Base de datos avanzada con pgAdmin
+- **Redis** - Base de datos en memoria con Redis Commander
+
 ## 🧪 Estadísticas Actuales (Datos en Vivo)
 
-- **Proyectos**: 6 totales (3 desplegados, 1 construyendo, 2 pendientes)
-- **Dominios**: 1 dominio registrado
-- **Registros de Actividad**: 40+ eventos rastreados
-- **Versión de la API**: 2025-09-13-DELETE-READY-FINAL
+- **Proyectos**: 8+ proyectos desplegados
+- **Servicios de BD**: MySQL, PostgreSQL, Redis disponibles
+- **Dominios**: Sistema de subdominios automáticos activo
+- **Registros de Actividad**: 100+ eventos rastreados
+- **Versión de la API**: v3.0 con PostgreSQL
 
 ## 🚢 Despliegue
 
-### Frontend (Vercel)
-- Despliegue automático al hacer push a `main`
-- Despliegues de vista previa para pull requests
-- Soporte para dominios personalizados
+### Infraestructura de Producción
+- **VPS Ubuntu 22.04** - Servidor dedicado de alto rendimiento
+- **Nginx** - Proxy reverso con SSL automático
+- **PostgreSQL** - Base de datos principal
+- **PM2** - Gestión de procesos Node.js
+- **Docker** - Containerización de aplicaciones
+- **Let's Encrypt** - Certificados SSL automáticos
 
-### Backend (Railway)
-- Despliegue de producción con auto-escalado
-- Gestión de variables de entorno
-- Integración de base de datos con Supabase
+### Características de Producción
+- **SSL/TLS** - Certificados automáticos para todos los dominios
+- **Subdominios Wildcard** - `*.xistracloud.com` configurado
+- **Backups Automáticos** - Respaldos programados diarios
+- **Monitoreo 24/7** - Métricas en tiempo real
+- **Escalabilidad** - Preparado para crecimiento empresarial
+
+## 🔧 Funcionalidades Avanzadas
+
+### Webhooks de GitHub
+- Despliegues automáticos en push a main
+- Despliegues de preview en pull requests
+- Verificación de firmas de seguridad
+- Gestión de ramas y commits
+
+### Sistema de Equipos
+- Roles y permisos granulares
+- Invitaciones por email
+- Gestión de acceso por proyecto
+- Auditoría de actividades
+
+### Variables de Entorno
+- Gestión por proyecto
+- Variables secretas enmascaradas
+- Validación de formato
+- Historial de cambios
 
 ## 🤝 Contribuciones
 
@@ -188,18 +260,20 @@ Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo [LICEN
 **Yago Mateos**
 - GitHub: [@yagomateos](https://github.com/yagomateos)
 - Proyecto: [XistraCloud](https://github.com/yagomateos/XistraCloud)
+- Demo: [xistracloud.com](https://xistracloud.com)
 
 ## 🙏 Agradecimientos
 
 - [shadcn/ui](https://ui.shadcn.com/) por la hermosa librería de componentes
-- [Vercel](https://vercel.com) por el hosting del frontend
-- [Railway](https://railway.app) por el despliegue del backend
-- [Supabase](https://supabase.com) por la base de datos
+- [Docker](https://docker.com) por la containerización
+- [PostgreSQL](https://postgresql.org) por la base de datos robusta
+- [Nginx](https://nginx.org) por el servidor web de alto rendimiento
+- [Let's Encrypt](https://letsencrypt.org) por los certificados SSL gratuitos
 
 ---
 
 <div align="center">
   <strong>Construido con ❤️ usando tecnologías web modernas</strong>
   <br>
-  <sub>XistraCloud - El futuro de la gestión en la nube</sub>
+  <sub>XistraCloud - El futuro del despliegue en la nube</sub>
 </div>
