@@ -140,11 +140,11 @@ export default function EnvironmentVariables() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Variables de Entorno</h1>
-        <p className="text-muted-foreground">
-          Gestiona las variables de entorno para cada uno de tus proyectos desplegados.
+    <div className="pt-6 px-4 pb-4 lg:p-6">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Variables de Entorno</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
+          Gestiona las variables de entorno para cada uno de tus proyectos desplegados
         </p>
       </div>
 

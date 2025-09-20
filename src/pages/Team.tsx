@@ -261,14 +261,16 @@ export default function Team() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Equipo</h1>
-          <p className="text-muted-foreground">
-            Gestiona miembros del equipo, permisos y colaboración en proyectos.
-          </p>
-        </div>
+    <div className="pt-6 px-4 pb-4 lg:p-6">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Equipo</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
+          Gestiona miembros del equipo, permisos y colaboración en proyectos
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between mb-6">
+        <div></div>
         
         <div className="flex gap-2">
           <Button variant="outline" onClick={loadData}>
