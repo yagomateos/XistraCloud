@@ -2165,9 +2165,9 @@ app.post('/apps/deploy', async (req, res) => {
       .join('\n');
     await fs.writeFile(path.join(deployPath, '.env'), envContent);
     
-    // Deploy with docker-compose
+    // Deploy with docker compose (new version)
     const { stdout, stderr } = await execAsync(
-      `cd ${deployPath} && docker-compose -p ${projectId} up -d`,
+      `cd ${deployPath} && docker compose -p ${projectId} up -d`,
       { timeout: 300000 } // 5 minutos timeout
     );
     
@@ -2403,7 +2403,7 @@ app.delete('/apps/deployments/:id', async (req, res) => {
     }
 
     // Stop and remove containers
-    await execAsync(`docker-compose -p ${id} down -v`);
+    await execAsync(`docker compose -p ${id} down -v`);
     console.log(`✅ Stopped containers for ${id}`);
 
     // Clean up deployment directory
