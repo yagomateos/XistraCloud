@@ -254,7 +254,7 @@ const Domains = () => {
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Dominios</h1>
           <p className="text-muted-foreground text-sm lg:text-base">
-            Gestiona los dominios personalizados de tus proyectos
+            Gestiona dominios del sistema y dominios personalizados de tus proyectos
           </p>
         </div>
         
@@ -343,6 +343,49 @@ const Domains = () => {
 
       <Separator className="mb-6 lg:mb-8" />
 
+      {/* System Domains Section */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Dominios del Sistema</h2>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Subdominios Automáticos</CardTitle>
+            <CardDescription>
+              Cada aplicación desplegada recibe automáticamente un subdominio único
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium text-green-800">*.xistracloud.com</p>
+                    <p className="text-sm text-green-600">Subdominios automáticos activos</p>
+                  </div>
+                </div>
+                <Badge className="bg-green-100 text-green-800 border-green-200">
+                  Activo
+                </Badge>
+              </div>
+              
+              <div className="text-sm text-muted-foreground">
+                <p className="mb-2"><strong>Ejemplos de subdominios generados:</strong></p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li>mi-app-abc123.xistracloud.com</li>
+                  <li>wordpress-xyz789.xistracloud.com</li>
+                  <li>react-portfolio-def456.xistracloud.com</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Custom Domains Section */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Dominios Personalizados</h2>
+      </div>
+
       {domains.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8 lg:py-12 px-4">
@@ -350,11 +393,20 @@ const Domains = () => {
               <Globe className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
-              No tienes dominios configurados
+              No tienes dominios personalizados configurados
             </h3>
-            <p className="text-muted-foreground mb-6 text-sm lg:text-base">
-              Agrega tu primer dominio personalizado para mejorar tu presencia online
+            <p className="text-muted-foreground mb-4 text-sm lg:text-base">
+              Conecta tu propio dominio (ej: mi-app.com) a tus aplicaciones desplegadas
             </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+              <h4 className="font-medium text-blue-800 mb-2">¿Cómo funciona?</h4>
+              <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+                <li>Añade tu dominio personalizado</li>
+                <li>Configura el registro DNS en tu proveedor</li>
+                <li>Verifica la propiedad del dominio</li>
+                <li>SSL automático con Let's Encrypt</li>
+              </ol>
+            </div>
             <Button 
               onClick={() => setIsAddModalOpen(true)}
               className="w-full sm:w-auto"

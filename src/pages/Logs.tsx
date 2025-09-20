@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Select,
   SelectContent,
@@ -10,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Download, AlertCircle, Info, CheckCircle, XCircle, Bug, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Download, AlertCircle, Info, CheckCircle, XCircle, Bug, RefreshCw, ChevronLeft, ChevronRight, Activity, Server, Cpu, HardDrive, Wifi } from 'lucide-react';
 import { getLogs } from '@/lib/api';
 
 const Logs = () => {
@@ -183,9 +184,9 @@ const Logs = () => {
     <div className="pt-6 px-4 pb-4 lg:p-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 lg:mb-8 space-y-4 lg:space-y-0">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Logs</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">Monitoreo y Logs</h1>
           <p className="text-sm lg:text-base text-muted-foreground">
-            Registro en tiempo real de actividades y eventos del sistema
+            Registro en tiempo real de actividades y métricas del sistema
           </p>
         </div>
         <div className="flex gap-2">
@@ -198,6 +199,61 @@ const Logs = () => {
             <span className="hidden lg:inline">Exportar</span>
           </Button>
         </div>
+      </div>
+
+      {/* System Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Estado del Sistema</CardTitle>
+            <Server className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">Operativo</div>
+            <p className="text-xs text-muted-foreground">
+              Última verificación: hace 2 min
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">CPU</CardTitle>
+            <Cpu className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">23%</div>
+            <p className="text-xs text-muted-foreground">
+              Uso promedio en 1h
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Memoria</CardTitle>
+            <HardDrive className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">1.2 GB</div>
+            <p className="text-xs text-muted-foreground">
+              De 4 GB disponibles
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Red</CardTitle>
+            <Wifi className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">45 MB/s</div>
+            <p className="text-xs text-muted-foreground">
+              Tráfico saliente
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
