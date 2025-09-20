@@ -2168,7 +2168,7 @@ app.post('/apps/deploy', async (req, res) => {
     // Deploy with docker-compose
     const { stdout, stderr } = await execAsync(
       `cd ${deployPath} && docker-compose -p ${projectId} up -d`,
-      { timeout: 120000 } // 2 minutos timeout
+      { timeout: 300000 } // 5 minutos timeout
     );
     
     console.log('✅ Despliegue exitoso:', stdout);
