@@ -17,9 +17,10 @@ interface EnvironmentVariable {
 interface Project {
   id: string;
   name: string;
-  template: string;
+  template?: string;
+  framework?: string;
   status: string;
-  environment: EnvironmentVariable[];
+  environment?: EnvironmentVariable[];
 }
 
 export default function EnvironmentVariables() {
@@ -41,7 +42,9 @@ export default function EnvironmentVariables() {
       if (!response.ok) throw new Error('Error al cargar proyectos');
       
       const data = await response.json();
-      setProjects(data.deployments || []);
+      // Handle both formats: { deployments: [...] } and direct array
+      const deployments = Array.isArray(data) ? data : (data.deployments || []);
+      setProjects(deployments);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -169,7 +172,7 @@ export default function EnvironmentVariables() {
                   <div>
                     <CardTitle className="text-lg">{project.name}</CardTitle>
                     <CardDescription>
-                      {project.template} • {project.environment?.length || 0} variables configuradas
+                      {project.template || project.framework || 'Sin template'} • {project.environment?.length || 0} variables configuradas
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
