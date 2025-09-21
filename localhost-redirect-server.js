@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PRODUCTION_URL = 'https://xistracloud-4vkcfi4fn-yagomateos-projects.vercel.app';
+const PRODUCTION_URL = 'http://localhost:3002';
 
 const server = http.createServer((req, res) => {
   console.log(`📥 Request: ${req.url}`);
