@@ -1507,6 +1507,50 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
+// Simple register endpoint for testing
+app.post('/auth/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    
+    // Simple validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email and password required' });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    
+    // Mock user data
+    const user = {
+      id: 'new-user-' + Date.now(),
+      email: email,
+      name: name,
+      plan_type: 'free'
+    };
+    
+    console.log(`📝 Registration attempt: ${email} (${name})`);
+    
+    // Simular envío de email de confirmación
+    console.log(`📧 ===== EMAIL DE CONFIRMACIÓN =====`);
+    console.log(`📧 Para: ${email}`);
+    console.log(`📧 Asunto: ✅ Bienvenido a XistraCloud - Confirma tu cuenta`);
+    console.log(`📧 Mensaje: Hola ${name}, gracias por registrarte en XistraCloud.`);
+    console.log(`📧 Tu cuenta está lista para usar. ¡Bienvenido!`);
+    console.log(`📧 ======================================`);
+    
+    res.json({
+      user,
+      token: 'mock-token-' + Date.now(),
+      message: 'Registration successful'
+    });
+    
+  } catch (error) {
+    console.error('❌ Registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
 // ======================================
 // 🔗 GITHUB WEBHOOKS SYSTEM (Vercel/Zeabur-style)
 // ======================================
