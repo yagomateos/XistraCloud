@@ -12,17 +12,20 @@ const EmailConfirmedSimple = () => {
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       try {
-        // Get URL parameters from hash
+        // Get URL parameters from both hash and query string
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const queryParams = new URLSearchParams(window.location.search);
         
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
+        const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token');
+        const type = hashParams.get('type') || queryParams.get('type');
 
         console.log('Email confirmation params:', { 
           accessToken: !!accessToken, 
           refreshToken: !!refreshToken, 
-          type 
+          type,
+          hash: window.location.hash,
+          search: window.location.search
         });
 
         if (type === 'signup' && accessToken && refreshToken) {
