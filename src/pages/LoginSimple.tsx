@@ -47,8 +47,8 @@ export default function LoginSimple() {
           description: "Has iniciado sesión correctamente",
         });
         
-        // Forzar recarga para actualizar el estado
-        window.location.href = '/dashboard';
+        // Redirigir al dashboard local
+        window.location.href = 'http://localhost:3002/dashboard';
       } else {
         const error = await response.json();
         toast({
@@ -106,7 +106,7 @@ export default function LoginSimple() {
             </Button>
           </form>
           <div className="mt-4 text-center text-sm text-gray-600">
-            <p>¿No tienes cuenta? <a href="/register" className="text-blue-600 hover:underline">Regístrate aquí</a></p>
+            <p>¿No tienes cuenta? <button onClick={() => navigate('/register')} className="text-blue-600 hover:underline bg-transparent border-none cursor-pointer">Regístrate aquí</button></p>
           </div>
         </CardContent>
       </Card>

@@ -10,16 +10,16 @@ Para que los usuarios sean redirigidos correctamente después de confirmar su em
 
 ### 2. **Configurar Site URL**
 ```
-https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app
+https://xistracloud.com
 ```
 
 ### 3. **Configurar Redirect URLs**
 Agregar estas líneas en "Redirect URLs" (una por línea):
 ```
-https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app/email-confirmed
-https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app/dashboard  
-https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app/login
-https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app/**
+https://xistracloud.com/email-confirmed
+https://xistracloud.com/dashboard  
+https://xistracloud.com/login
+https://xistracloud.com/**
 http://localhost:3000/redirect.html
 ```
 
@@ -60,5 +60,5 @@ Después de esta configuración:
 
 **DEBES configurar las URLs en Supabase AHORA:**
 1. Ve a: https://supabase.com/dashboard/project/metzjfocvkelucinstul/auth/url-configuration
-2. Cambiar Site URL a: `https://xistracloud-pwdwe1vtw-yagomateos-projects.vercel.app`
+2. Cambiar Site URL a: `https://xistracloud.com`
 3. Agregar las Redirect URLs listadas arriba

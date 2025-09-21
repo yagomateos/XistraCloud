@@ -62,8 +62,8 @@
         const refreshToken = urlParams.get('refresh_token');
         const type = urlParams.get('type');
         
-        // Production URL - ACTUALIZAR ESTA URL cuando cambie el deployment
-        const productionUrl = 'https://xistracloud-4vkcfi4fn-yagomateos-projects.vercel.app';
+        // Local development URL
+        const productionUrl = 'http://localhost:3002';
         
         if (accessToken && refreshToken && type) {
             // Redirect to production with the same parameters
