@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContextSimple';
 
 export default function LoginSimple() {
   const [email, setEmail] = useState('');
@@ -12,6 +13,7 @@ export default function LoginSimple() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,17 +32,11 @@ export default function LoginSimple() {
 
       if (response.ok) {
         const data = await response.json();
-        const user = {
-          name: data.user.name,
-          email: data.user.email,
-        };
         
-        // Guardar en localStorage
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('authToken', data.token);
+        // Use the login function from context
+        login(data.user);
         
-        console.log('✅ Login successful:', user);
+        console.log('✅ Login successful:', data.user);
         
         toast({
           title: "¡Bienvenido!",

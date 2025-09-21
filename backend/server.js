@@ -1472,6 +1472,84 @@ app.post('/projects/force-complete-building', async (req, res) => {
 });
 
 // ======================================
+// 🔐 USER MANAGEMENT SYSTEM
+// ======================================
+
+// In-memory user storage (for development)
+let users = new Map();
+let userData = new Map(); // Store user-specific data
+
+// Load users from file on startup
+const usersFile = path.join(__dirname, 'users.json');
+const userDataFile = path.join(__dirname, 'user-data.json');
+
+try {
+  const fsSync = require('fs');
+  if (fsSync.existsSync(usersFile)) {
+    const usersData = JSON.parse(fsSync.readFileSync(usersFile, 'utf8'));
+    users = new Map(Object.entries(usersData));
+    console.log(`📁 Loaded ${users.size} users from file`);
+  }
+  
+  if (fsSync.existsSync(userDataFile)) {
+    const data = JSON.parse(fsSync.readFileSync(userDataFile, 'utf8'));
+    userData = new Map(Object.entries(data));
+    console.log(`📁 Loaded user data for ${userData.size} users`);
+  }
+} catch (error) {
+  console.log('📁 No existing user files found, starting fresh');
+}
+
+// Save users to file
+function saveUsers() {
+  try {
+    const fsSync = require('fs');
+    const usersObj = Object.fromEntries(users);
+    const userDataObj = Object.fromEntries(userData);
+    
+    fsSync.writeFileSync(usersFile, JSON.stringify(usersObj, null, 2));
+    fsSync.writeFileSync(userDataFile, JSON.stringify(userDataObj, null, 2));
+    console.log(`💾 Saved ${users.size} users and their data`);
+  } catch (error) {
+    console.error('❌ Error saving users:', error);
+  }
+}
+
+// Initialize default user data
+function initializeUserData(userId) {
+  if (!userData.has(userId)) {
+    userData.set(userId, {
+      projects: [],
+      deployments: [],
+      domains: [],
+      backups: [],
+      teamMembers: [],
+      environmentVariables: [],
+      webhooks: []
+    });
+    saveUsers();
+  }
+}
+
+// Middleware to get current user
+function getCurrentUser(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const email = req.headers['x-user-email']; // We'll send this from frontend
+  
+  if (!email) {
+    return res.status(401).json({ error: 'User email required' });
+  }
+  
+  const user = users.get(email);
+  if (!user) {
+    return res.status(401).json({ error: 'User not found' });
+  }
+  
+  req.user = user;
+  req.userData = userData.get(user.id);
+  next();
+}
+
 // 🔐 AUTH ENDPOINTS (Simple login for testing)
 // ======================================
 
@@ -1480,20 +1558,34 @@ app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Simple validation - accept any email/password for testing
+    // Simple validation
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
     }
     
-    // Mock user data
-    const user = {
-      id: 'test-user-123',
-      email: email,
-      name: email.split('@')[0],
-      plan_type: 'free'
-    };
+    // Check if user exists
+    let user = users.get(email);
     
-    console.log(`🔐 Login attempt: ${email}`);
+    if (!user) {
+      // Create new user if doesn't exist (for testing)
+      const userId = 'user-' + Date.now();
+      user = {
+        id: userId,
+        email: email,
+        name: email.split('@')[0],
+        plan_type: 'free',
+        created_at: new Date().toISOString()
+      };
+      users.set(email, user);
+      initializeUserData(userId);
+      saveUsers();
+      console.log(`👤 Created new user: ${email}`);
+    }
+    
+    // Initialize user data if not exists
+    initializeUserData(user.id);
+    
+    console.log(`🔐 Login successful: ${email}`);
     
     res.json({
       user,
@@ -1521,15 +1613,26 @@ app.post('/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
     
-    // Mock user data
+    // Check if user already exists
+    if (users.has(email)) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+    
+    // Create new user
+    const userId = 'user-' + Date.now();
     const user = {
-      id: 'new-user-' + Date.now(),
+      id: userId,
       email: email,
       name: name,
-      plan_type: 'free'
+      plan_type: 'free',
+      created_at: new Date().toISOString()
     };
     
-    console.log(`📝 Registration attempt: ${email} (${name})`);
+    users.set(email, user);
+    initializeUserData(userId);
+    saveUsers();
+    
+    console.log(`📝 Registration successful: ${email} (${name})`);
     
     // Simular envío de email de confirmación
     console.log(`📧 ===== EMAIL DE CONFIRMACIÓN =====`);
@@ -2405,9 +2508,32 @@ app.get('/apps/deployments', async (req, res) => {
 });
 
 // GET /deployments - Get all deployments (projects + preview deployments)
-app.get('/deployments', async (req, res) => {
+app.get('/deployments', getCurrentUser, async (req, res) => {
   try {
-    console.log('📊 Fetching deployments');
+    console.log(`📊 Fetching deployments for user: ${req.user.email}`);
+    
+    // Get user-specific deployments
+    const userDeployments = req.userData.deployments || [];
+    
+    // If user has no deployments, return empty array
+    if (userDeployments.length === 0) {
+      console.log(`📊 No deployments found for user: ${req.user.email}`);
+      return res.json([]);
+    }
+    
+    console.log(`📊 Found ${userDeployments.length} deployments for user: ${req.user.email}`);
+    res.json(userDeployments);
+    
+  } catch (error) {
+    console.error('❌ Error fetching deployments:', error);
+    res.status(500).json({ error: 'Failed to fetch deployments' });
+  }
+});
+
+// GET /deployments - Get all deployments (projects + preview deployments) - FALLBACK
+app.get('/deployments-fallback', async (req, res) => {
+  try {
+    console.log('📊 Fetching deployments (fallback)');
     
     // Use mock data for development
     const mockDeployments = [
