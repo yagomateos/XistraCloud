@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,20 @@ export default function RegisterSimple() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check for email confirmation parameters
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    const type = hashParams.get('type');
+
+    if (type === 'signup' && accessToken && refreshToken) {
+      // Redirect to email-confirmed page with the same parameters
+      const redirectUrl = `/email-confirmed#access_token=${accessToken}&refresh_token=${refreshToken}&type=${type}&expires_at=${hashParams.get('expires_at')}&expires_in=${hashParams.get('expires_in')}&token_type=${hashParams.get('token_type')}`;
+      navigate(redirectUrl);
+    }
+  }, [navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
