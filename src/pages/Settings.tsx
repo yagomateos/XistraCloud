@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { NotificationPreferences } from '@/components/settings/notification-preferences';
 import { PlanLimitCard } from '@/components/limits/plan-limits';
 import { PaymentSuccess } from '@/components/PaymentSuccess';
-import { useUserData } from '@/hooks/useUserData';
+import { useUserDataSimple } from '@/hooks/useUserDataSimple';
 import {
   User,
   Mail,
@@ -56,7 +56,7 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   
   // Use the new user data hook
-  const { userData, userPlan, updateProfile, updateAvatar, loading } = useUserData();
+  const { userData, userPlan, updateProfile, updateAvatar, loading } = useUserDataSimple();
 
   // Mostrar componente de éxito si viene de un pago exitoso
   if (success === 'true') {
