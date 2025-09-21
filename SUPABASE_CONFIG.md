@@ -23,11 +23,8 @@ https://xistracloud.com/**
 http://localhost:3000/redirect.html
 ```
 
-### 4. **Email Templates (Opcional)**
-Si quieres personalizar el email de confirmación, ve a:
-`Authentication` → `Email Templates` → `Confirm signup`
-
-Cambia la URL de confirmación a:
+### 4. **Configurar Email Templates**
+En `Authentication` → `Email Templates` → `Confirm signup`, cambiar la URL de confirmación a:
 ```
 {{ .SiteURL }}/email-confirmed#access_token={{ .Token }}&type=signup&redirect_to={{ .RedirectTo }}
 ```
