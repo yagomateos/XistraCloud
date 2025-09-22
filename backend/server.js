@@ -7,7 +7,21 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-app.use(cors());
+// CORS: permitir x-user-email para auth por usuario desde el frontend
+app.use(cors({
+  origin: true,
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-email']
+}));
+// Asegurar cabeceras también manualmente (por si algún proxy las limpia)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-user-email');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 app.use(express.json());
 
 const supabaseUrl = 'https://metzjfocvkelucinstul.supabase.co';
@@ -58,8 +72,8 @@ try {
   deployedDatabaseServices = [];
 }
 
-// Test endpoint for database deployment (without Docker)
-app.post('/test/database-deploy', (req, res) => {
+// Test endpoint for database deployment (without Docker) - per-user
+app.post('/test/database-deploy', getCurrentUser, (req, res) => {
   const { templateId, name, environment } = req.body;
   
   console.log('🧪 Test database deployment:', { templateId, name, environment });
@@ -75,16 +89,11 @@ app.post('/test/database-deploy', (req, res) => {
     connection_string: `${templateId.replace('-standalone', '')}://${environment.MYSQL_USER || environment.POSTGRES_USER || 'user'}:${environment.MYSQL_PASSWORD || environment.POSTGRES_PASSWORD || environment.REDIS_PASSWORD}@localhost:${environment.MYSQL_PORT || environment.POSTGRES_PORT || environment.REDIS_PORT || 8080}`
   };
   
-  deployedDatabaseServices.push(service);
-  
-  // Save to file
-  try {
-    const fsSync = require('fs');
-    fsSync.writeFileSync(servicesFile, JSON.stringify(deployedDatabaseServices, null, 2));
-    console.log(`💾 Saved ${deployedDatabaseServices.length} database services to file`);
-  } catch (error) {
-    console.error('Error saving database services:', error);
-  }
+  // Persist per-user
+  if (!req.userData.databaseServices) req.userData.databaseServices = [];
+  req.userData.databaseServices.push(service);
+  saveUsers();
+  console.log(`💾 Saved database service for user: ${req.user.email}`);
   
   res.json({
     success: true,
@@ -93,32 +102,26 @@ app.post('/test/database-deploy', (req, res) => {
   });
 });
 
-// Get deployed database services
-app.get('/database/services', (req, res) => {
-  res.json({
-    services: deployedDatabaseServices
-  });
+// Get deployed database services (per-user)
+app.get('/database/services', getCurrentUser, (req, res) => {
+  const services = (req.userData && req.userData.databaseServices) || [];
+  res.json({ services });
 });
 
 // Delete database service
-app.delete('/database/services/:id', (req, res) => {
+app.delete('/database/services/:id', getCurrentUser, (req, res) => {
   const { id } = req.params;
+  console.log(`🗑️ Deleting database service ${id} for user: ${req.user.email}`);
   
-  const serviceIndex = deployedDatabaseServices.findIndex(service => service.id === id);
+  if (!req.userData.databaseServices) req.userData.databaseServices = [];
+  const serviceIndex = req.userData.databaseServices.findIndex(service => service.id === id);
   if (serviceIndex === -1) {
     return res.status(404).json({ error: 'Service not found' });
   }
   
-  const deletedService = deployedDatabaseServices.splice(serviceIndex, 1)[0];
-  
-  // Save to file
-  try {
-    const fsSync = require('fs');
-    fsSync.writeFileSync(servicesFile, JSON.stringify(deployedDatabaseServices, null, 2));
-    console.log(`🗑️ Deleted database service: ${deletedService.name}`);
-  } catch (error) {
-    console.error('Error saving database services:', error);
-  }
+  const deletedService = req.userData.databaseServices.splice(serviceIndex, 1)[0];
+  saveUsers();
+  console.log(`🗑️ Deleted database service: ${deletedService.name}`);
   
   res.json({
     success: true,
@@ -827,10 +830,10 @@ app.delete('/domains/:id', async (req, res) => {
 });
 
 // Delete project endpoint
-app.delete('/projects/:id', async (req, res) => {
+app.delete('/projects/:id', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('🗑️ Deleting project with ID:', id);
+    console.log(`🗑️ Deleting project ${id} for user: ${req.user.email}`);
 
     if (!id) {
       return res.status(400).json({ error: 'Project ID is required' });
@@ -2254,9 +2257,10 @@ app.get('/apps/templates', (req, res) => {
 });
 
 // POST /apps/deploy - Deploy an app template
-app.post('/apps/deploy', async (req, res) => {
+app.post('/apps/deploy', getCurrentUser, async (req, res) => {
   try {
     const { templateId, name, environment = {}, domain } = req.body;
+    console.log(`🚀 Deploying app ${name} for user: ${req.user.email}`);
     
     if (!templateId || !name) {
       return res.status(400).json({ error: 'Template ID y nombre son requeridos' });
@@ -2276,6 +2280,54 @@ app.post('/apps/deploy', async (req, res) => {
     const subdomainUrl = `https://${subdomain}.xistracloud.com`;
     
     console.log(`🚀 Iniciando despliegue de ${template.name} como ${name}...`);
+
+  // Instant local path for database templates (skip Docker)
+  if (templateId.includes('-standalone') && process.env.LOCAL_INSTANT !== 'false') {
+    const urls = template.ports.map((_, index) => `http://localhost:${basePort + index}`);
+
+    // Register DB service per user
+    const dbType = templateId.replace('-standalone', '');
+    const adminPort = environment.PHPMYADMIN_PORT || environment.PGADMIN_PORT || environment.REDIS_COMMANDER_PORT || 8080;
+    const dbService = {
+      id: projectId,
+      name: name,
+      type: dbType,
+      status: 'running',
+      port: template.ports[0] ? basePort : 3306,
+      admin_port: adminPort,
+      created_at: new Date().toISOString(),
+      connection_string: `${dbType}://${environment.MYSQL_USER || environment.POSTGRES_USER || 'user'}:${environment.MYSQL_PASSWORD || environment.POSTGRES_PASSWORD || environment.REDIS_PASSWORD || 'pass'}@localhost:${template.ports[0] ? basePort : 3306}`
+    };
+    if (!req.userData.databaseServices) req.userData.databaseServices = [];
+    req.userData.databaseServices.push(dbService);
+
+    // Save deployment to user data
+    const userDeploymentData = {
+      id: projectId,
+      name: name,
+      template: template.name,
+      status: 'running',
+      urls: urls,
+      ports: template.ports.map((_, index) => basePort + index),
+      accessUrl: urls[0],
+      subdomain: subdomain,
+      subdomainUrl: subdomainUrl,
+      created_at: new Date().toISOString(),
+      type: 'database_service',
+      instructions: {
+        general: 'Despliegue instantáneo en local (simulado).'
+      }
+    };
+    if (!req.userData.deployments) req.userData.deployments = [];
+    req.userData.deployments.push(userDeploymentData);
+    saveUsers();
+
+    return res.json({
+      success: true,
+      message: `${template.name} desplegado instantáneamente como ${name}`,
+      deployment: userDeploymentData
+    });
+  }
     
     // Create deployment directory (use absolute path relative to this file)
     const deployPath = path.resolve(__dirname, 'deployed-apps', projectId);
@@ -2383,15 +2435,18 @@ app.post('/apps/deploy', async (req, res) => {
       })
     };
     
-    const { data, error } = await supabase
-      .from('deployments')
-      .insert([deploymentData])
-      .select()
-      .single();
+    // Skip storing DB services in shared table when in instant/local mode
+    if (!(process.env.LOCAL_INSTANT && templateId.includes('-standalone'))) {
+      const { data, error } = await supabase
+        .from('deployments')
+        .insert([deploymentData])
+        .select()
+        .single();
 
-    if (error) {
-      console.error('❌ Error storing deployment:', error);
-      // Continue anyway, deployment was successful
+      if (error) {
+        console.error('❌ Error storing deployment:', error);
+        // Continue anyway
+      }
     }
 
     // Generate logs
@@ -2425,24 +2480,35 @@ app.post('/apps/deploy', async (req, res) => {
       }
     }
     
+    // Save deployment to user data
+    const userDeploymentData = {
+      id: projectId,
+      name: name,
+      template: template.name,
+      status: 'running',
+      urls: urls,
+      ports: template.ports.map((_, index) => basePort + index),
+      accessUrl: urls[0],
+      subdomain: subdomain,
+      subdomainUrl: subdomainUrl,
+      created_at: new Date().toISOString(),
+      instructions: {
+        wordpress: "WordPress está listo. Si ves 'aplicación no encontrada', espera unos segundos y recarga la página. WordPress puede tardar un momento en inicializarse completamente.",
+        general: "La aplicación puede tardar unos segundos en estar completamente disponible. Si no funciona inmediatamente, espera y recarga la página."
+      }
+    };
+    
+    // Add to user's deployments
+    if (req.userData && req.userData.deployments) {
+      req.userData.deployments.push(userDeploymentData);
+      saveUsers();
+      console.log(`💾 Saved deployment to user data: ${req.user.email}`);
+    }
+    
     res.json({
       success: true,
       message: `${template.name} desplegado exitosamente como ${name}`,
-      deployment: {
-        id: projectId,
-        name: name,
-        template: template.name,
-        status: 'running',
-        urls: urls,
-        ports: template.ports.map((_, index) => basePort + index),
-        accessUrl: urls[0],
-        subdomain: subdomain,
-        subdomainUrl: subdomainUrl,
-        instructions: {
-          wordpress: "WordPress está listo. Si ves 'aplicación no encontrada', espera unos segundos y recarga la página. WordPress puede tardar un momento en inicializarse completamente.",
-          general: "La aplicación puede tardar unos segundos en estar completamente disponible. Si no funciona inmediatamente, espera y recarga la página."
-        }
-      }
+      deployment: userDeploymentData
     });
     
   } catch (error) {
@@ -2603,9 +2669,10 @@ app.get('/deployments-fallback', async (req, res) => {
 });
 
 // DELETE /apps/deployments/:id - Stop and remove app deployment
-app.delete('/apps/deployments/:id', async (req, res) => {
+app.delete('/apps/deployments/:id', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`🗑️ Deleting deployment ${id} for user: ${req.user.email}`);
     
     // Get deployment info
     const { data: deployment, error } = await supabase
@@ -2764,9 +2831,10 @@ app.get('/projects', async (req, res) => {
 });
 
 // GET /projects/:id/environment - Get environment variables for a project
-app.get('/projects/:id/environment', async (req, res) => {
+app.get('/projects/:id/environment', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`🔧 Fetching environment variables for project ${id}, user: ${req.user.email}`);
     
     // For now, return mock data based on deployment
     // In production, this would fetch from database
@@ -2789,9 +2857,10 @@ app.get('/projects/:id/environment', async (req, res) => {
 });
 
 // POST /projects/:id/environment - Add new environment variable
-app.post('/projects/:id/environment', async (req, res) => {
+app.post('/projects/:id/environment', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`🔧 Adding environment variable for project ${id}, user: ${req.user.email}`);
     const { key, value } = req.body;
     
     if (!key || !value) {
@@ -2815,9 +2884,10 @@ app.post('/projects/:id/environment', async (req, res) => {
 });
 
 // PUT /projects/:id/environment/:key - Update environment variable
-app.put('/projects/:id/environment/:key', async (req, res) => {
+app.put('/projects/:id/environment/:key', getCurrentUser, async (req, res) => {
   try {
     const { id, key } = req.params;
+    console.log(`🔧 Updating environment variable ${key} for project ${id}, user: ${req.user.email}`);
     const { key: newKey, value } = req.body;
     
     if (!newKey || !value) {
@@ -2841,9 +2911,10 @@ app.put('/projects/:id/environment/:key', async (req, res) => {
 });
 
 // DELETE /projects/:id/environment/:key - Delete environment variable
-app.delete('/projects/:id/environment/:key', async (req, res) => {
+app.delete('/projects/:id/environment/:key', getCurrentUser, async (req, res) => {
   try {
     const { id, key } = req.params;
+    console.log(`🔧 Deleting environment variable ${key} for project ${id}, user: ${req.user.email}`);
     
     console.log(`🔧 Deleting environment variable: ${key} for project ${id}`);
     
@@ -3079,9 +3150,9 @@ app.get('/system/health', async (req, res) => {
 // ======================================
 
 // GET /backups - Get all backups
-app.get('/backups', async (req, res) => {
+app.get('/backups', getCurrentUser, async (req, res) => {
   try {
-    console.log('💾 Fetching backups');
+    console.log(`💾 Fetching backups for user: ${req.user.email}`);
     
     // Use mock data for development
     const mockBackups = [
@@ -3140,9 +3211,10 @@ app.get('/backups', async (req, res) => {
 });
 
 // POST /backups - Create new backup
-app.post('/backups', async (req, res) => {
+app.post('/backups', getCurrentUser, async (req, res) => {
   try {
     const { name, projectId, type, schedule } = req.body;
+    console.log(`💾 Creating backup for user: ${req.user.email}`);
     
     if (!name || !projectId) {
       return res.status(400).json({ error: 'Nombre y proyecto son requeridos' });
@@ -3178,9 +3250,10 @@ app.post('/backups', async (req, res) => {
 });
 
 // POST /backups/:id/restore - Restore backup
-app.post('/backups/:id/restore', async (req, res) => {
+app.post('/backups/:id/restore', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`🔄 Restoring backup ${id} for user: ${req.user.email}`);
     
     console.log(`💾 Restoring backup: ${id}`);
     
@@ -3198,9 +3271,10 @@ app.post('/backups/:id/restore', async (req, res) => {
 });
 
 // DELETE /backups/:id - Delete backup
-app.delete('/backups/:id', async (req, res) => {
+app.delete('/backups/:id', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`🗑️ Deleting backup ${id} for user: ${req.user.email}`);
     
     console.log(`💾 Deleting backup: ${id}`);
     
@@ -3222,9 +3296,9 @@ app.delete('/backups/:id', async (req, res) => {
 // ======================================
 
 // GET /team/members - Get team members
-app.get('/team/members', async (req, res) => {
+app.get('/team/members', getCurrentUser, async (req, res) => {
   try {
-    console.log('👥 Fetching team members');
+    console.log(`👥 Fetching team members for user: ${req.user.email}`);
     
     // Use mock data for development
     const mockMembers = [
@@ -3277,8 +3351,9 @@ app.get('/team/members', async (req, res) => {
 });
 
 // GET /team/invitations - Get pending invitations
-app.get('/team/invitations', async (req, res) => {
+app.get('/team/invitations', getCurrentUser, async (req, res) => {
   try {
+    console.log(`📧 Fetching team invitations for user: ${req.user.email}`);
     // For now, return mock data
     const mockInvitations = [
       {
@@ -3311,9 +3386,10 @@ app.get('/team/invitations', async (req, res) => {
 });
 
 // POST /team/invitations - Send invitation
-app.post('/team/invitations', async (req, res) => {
+app.post('/team/invitations', getCurrentUser, async (req, res) => {
   try {
     const { email, role, projectAccess } = req.body;
+    console.log(`📧 Creating team invitation for user: ${req.user.email}`);
     
     if (!email || !role) {
       return res.status(400).json({ error: 'Email y rol son requeridos' });
@@ -3345,9 +3421,10 @@ app.post('/team/invitations', async (req, res) => {
 });
 
 // DELETE /team/members/:id - Remove team member
-app.delete('/team/members/:id', async (req, res) => {
+app.delete('/team/members/:id', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`🗑️ Deleting team member ${id} for user: ${req.user.email}`);
     
     console.log(`👥 Removing team member: ${id}`);
     
@@ -3364,9 +3441,10 @@ app.delete('/team/members/:id', async (req, res) => {
 });
 
 // DELETE /team/invitations/:id - Cancel invitation
-app.delete('/team/invitations/:id', async (req, res) => {
+app.delete('/team/invitations/:id', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`🗑️ Canceling team invitation ${id} for user: ${req.user.email}`);
     
     console.log(`👥 Canceling invitation: ${id}`);
     

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Save, X, Eye, EyeOff } from 'lucide-react';
-import { getApiUrl } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 
 interface EnvironmentVariable {
   key: string;
@@ -24,6 +24,7 @@ interface Project {
 }
 
 export default function EnvironmentVariables() {
+  const { apiCall } = useApi();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export default function EnvironmentVariables() {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${getApiUrl()}/deployments`);
+      const response = await apiCall(`http://localhost:3001/deployments`);
       if (!response.ok) throw new Error('Error al cargar proyectos');
       
       const data = await response.json();
@@ -63,9 +64,8 @@ export default function EnvironmentVariables() {
     if (!newVariable.key.trim() || !newVariable.value.trim()) return;
 
     try {
-      const response = await fetch(`${getApiUrl()}/projects/${projectId}/environment`, {
+      const response = await apiCall(`http://localhost:3001/projects/${projectId}/environment`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newVariable)
       });
 
@@ -80,9 +80,8 @@ export default function EnvironmentVariables() {
 
   const updateVariable = async (projectId: string, oldKey: string, newKey: string, newValue: string) => {
     try {
-      const response = await fetch(`${getApiUrl()}/projects/${projectId}/environment/${oldKey}`, {
+      const response = await apiCall(`http://localhost:3001/projects/${projectId}/environment/${oldKey}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: newKey, value: newValue })
       });
 
@@ -98,7 +97,7 @@ export default function EnvironmentVariables() {
     if (!window.confirm('¿Estás seguro de que quieres eliminar esta variable de entorno?')) return;
 
     try {
-      const response = await fetch(`${getApiUrl()}/projects/${projectId}/environment/${variableKey}`, {
+      const response = await apiCall(`http://localhost:3001/projects/${projectId}/environment/${variableKey}`, {
         method: 'DELETE'
       });
 

@@ -104,6 +104,25 @@ console.log('  VITE_USE_MOCK_DATA:', import.meta.env.VITE_USE_MOCK_DATA);
 console.log('  USE_MOCK_DATA:', USE_MOCK_DATA);
 console.log('🔥 FORCE RELOAD - Cache busting:', Date.now());
 
+// Helper: build auth headers with user email for multi-user isolation
+const buildAuthHeaders = (extra: Record<string, string> = {}) => {
+  let userEmail = '';
+  try {
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        userEmail = parsed?.email || '';
+      }
+    }
+  } catch {}
+  return {
+    'Content-Type': 'application/json',
+    ...(userEmail ? { 'x-user-email': userEmail } : {}),
+    ...extra
+  } as Record<string, string>;
+};
+
 // Mock data for fallback (mutable para permitir eliminaciones)
 let MOCK_PROJECTS: Project[] = [
   {
@@ -484,7 +503,7 @@ export const getProjects = async (): Promise<Project[]> => {
 
   try {
     console.log('🌐 Fetching projects from API:', `${API_URL}/projects`);
-    const response = await fetch(`${API_URL}/projects`);
+    const response = await fetch(`${API_URL}/projects`, { headers: buildAuthHeaders() });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -560,7 +579,7 @@ export const getAllDeployments = async (): Promise<any[]> => {
 
   try {
     console.log('🌐 Fetching all deployments from API:', `${API_URL}/deployments`);
-    const response = await fetch(`${API_URL}/deployments`);
+    const response = await fetch(`${API_URL}/deployments`, { headers: buildAuthHeaders() });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -622,7 +641,8 @@ export const deleteProject = async (projectId: string): Promise<void> => {
   try {
     console.log('🌐 Deleting project via API:', `${API_URL}/projects/${projectId}`);
     const response = await fetch(`${API_URL}/projects/${projectId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: buildAuthHeaders()
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -643,7 +663,7 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
 
   try {
     console.log('🌐 Fetching dashboard stats from API:', `${API_URL}/dashboard/stats`);
-    const response = await fetch(`${API_URL}/dashboard/stats`);
+    const response = await fetch(`${API_URL}/dashboard/stats`, { headers: buildAuthHeaders() });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -667,7 +687,7 @@ export const getDomains = async (): Promise<Domain[]> => {
 
   try {
     console.log('🌐 Fetching domains from API:', `${API_URL}/domains`);
-    const response = await fetch(`${API_URL}/domains`);
+    const response = await fetch(`${API_URL}/domains`, { headers: buildAuthHeaders() });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -706,7 +726,7 @@ export const getLogs = async (params?: { level?: string; limit?: number; source?
     }
 
     console.log('🌐 Fetching logs from API:', url);
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: buildAuthHeaders() });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -752,7 +772,7 @@ export const createDomain = async (domainData: { domain: string; project_id: str
     
     const response = await fetch(`${API_URL}/domains`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildAuthHeaders(),
       body: JSON.stringify(requestBody)
     });
     
@@ -783,7 +803,8 @@ export const deleteDomain = async (domainId: string): Promise<void> => {
   try {
     console.log('🌐 Deleting domain via API:', `${API_URL}/domains/${domainId}`);
     const response = await fetch(`${API_URL}/domains/${domainId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: buildAuthHeaders()
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -813,7 +834,8 @@ export const verifyDomain = async (domainId: string): Promise<Domain> => {
   try {
     console.log('🌐 Verifying domain via API:', `${API_URL}/domains/${domainId}/verify`);
     const response = await fetch(`${API_URL}/domains/${domainId}/verify`, {
-      method: 'POST'
+      method: 'POST',
+      headers: buildAuthHeaders()
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -883,7 +905,8 @@ export const redeployProject = async (projectId: string): Promise<void> => {
   try {
     console.log('🌐 Redeploying project via API:', `${API_URL}/projects/${projectId}/redeploy`);
     const response = await fetch(`${API_URL}/projects/${projectId}/redeploy`, {
-      method: 'POST'
+      method: 'POST',
+      headers: buildAuthHeaders()
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -900,7 +923,7 @@ export const getAppTemplates = async () => {
   // Use local backend for development
   try {
     console.log('📦 Fetching templates from local backend:', `${API_URL}/apps/templates`);
-    const response = await fetch(`${API_URL}/apps/templates`);
+    const response = await fetch(`${API_URL}/apps/templates`, { headers: buildAuthHeaders() });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -937,13 +960,22 @@ export const deployApp = async (deploymentData: { templateId: string; name: stri
     const deployUrl = typeof window !== 'undefined' && window.location.hostname === 'xistracloud.com' 
       ? 'https://xistracloud.com/api/apps/deploy'
       : `${API_URL}/apps/deploy`;
+    // Read current user email for multi-user header
+    let userEmail = '';
+    try {
+      if (typeof window !== 'undefined') {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          userEmail = parsed?.email || '';
+        }
+      }
+    } catch {}
     
     console.log('🚀 Deploying app via API:', deployUrl);
     const response = await fetch(deployUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: buildAuthHeaders(),
       body: JSON.stringify(deploymentData)
     });
     

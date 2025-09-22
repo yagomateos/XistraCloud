@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Database, Plus, ExternalLink, Trash2, Play, Square } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { API_URL, deployApp } from '@/lib/api';
+import { API_URL } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 
 interface DatabaseService {
   id: string;
@@ -22,6 +23,7 @@ const DatabaseServices = () => {
   const [loading, setLoading] = useState(true);
   const [deploying, setDeploying] = useState<string | null>(null);
   const { toast } = useToast();
+  const { apiCall } = useApi();
 
   // Mock data para desarrollo local
   const mockServices: DatabaseService[] = [
@@ -65,8 +67,8 @@ const DatabaseServices = () => {
     try {
       setLoading(true);
       
-      const response = await fetch(`${API_URL}/database/services`);
-      if (response.ok) {
+      const response = await apiCall(`${API_URL}/database/services`);
+      if (response) {
         const data = await response.json();
         setServices(data.services || []);
         console.log('📊 Loaded database services:', data.services);
@@ -94,25 +96,16 @@ const DatabaseServices = () => {
       
       console.log('🚀 Deploying database via:', deployUrl);
       
-      const response = await fetch(deployUrl, {
+      const deployResponse = await apiCall(deployUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           templateId,
           name: serviceName,
           environment: generateEnvVars(type)
-        }),
+        })
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
+      const result = await deployResponse.json();
+      if (deployResponse.ok && result && result.success) {
         toast({
           title: "✅ Base de datos desplegada",
           description: `${type.toUpperCase()} se está iniciando...`,
@@ -214,11 +207,11 @@ const DatabaseServices = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/database/services/${serviceId}`, {
-        method: 'DELETE',
+      const response = await apiCall(`${API_URL}/database/services/${serviceId}`, {
+        method: 'DELETE'
       });
-
-      if (response.ok) {
+      const data = await response.json();
+      if (response.ok && (data.success || data.deleted)) {
         toast({
           title: "✅ Servicio eliminado",
           description: "El servicio de base de datos ha sido eliminado",
@@ -227,8 +220,7 @@ const DatabaseServices = () => {
         // Recargar servicios
         loadServices();
       } else {
-        const error = await response.json();
-        throw new Error(error.error || 'Error al eliminar');
+        throw new Error((data && data.error) || 'Error al eliminar');
       }
     } catch (error: any) {
       toast({

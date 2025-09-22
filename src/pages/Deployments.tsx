@@ -136,7 +136,10 @@ const Deployments = () => {
     });
   };
 
-  const filteredDeployments = deployments.filter(deployment => {
+  // Excluir servicios de base de datos de la vista de Deployments
+  const filteredDeployments = deployments
+    .filter(d => d.type !== 'database_service')
+    .filter(deployment => {
     const matchesSearch = deployment.name.toLowerCase().includes(searchTerm.toLowerCase());
     
     let matchesStatus = false;
