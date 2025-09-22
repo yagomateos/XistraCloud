@@ -1,0 +1,310 @@
+{
+  "user-1758526873069": {
+    "projects": [],
+    "deployments": [
+      {
+        "id": "app-mysql-standalone-a9d2cb5a",
+        "name": "mysql-1758527697943",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8457",
+          "http://localhost:8458"
+        ],
+        "ports": [
+          8457,
+          8458
+        ],
+        "accessUrl": "http://localhost:8457",
+        "subdomain": "mysql-1758527697943-0541ff",
+        "subdomainUrl": "https://mysql-1758527697943-0541ff.xistracloud.com",
+        "created_at": "2025-09-22T07:54:57.956Z",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-e4d04652",
+        "name": "mysql-1758527796445",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8161",
+          "http://localhost:8162"
+        ],
+        "ports": [
+          8161,
+          8162
+        ],
+        "accessUrl": "http://localhost:8161",
+        "subdomain": "mysql-1758527796445-ceb961",
+        "subdomainUrl": "https://mysql-1758527796445-ceb961.xistracloud.com",
+        "created_at": "2025-09-22T07:56:36.475Z",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-50e1963e",
+        "name": "mysql-1758528358786",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8224",
+          "http://localhost:8225"
+        ],
+        "ports": [
+          8224,
+          8225
+        ],
+        "accessUrl": "http://localhost:8224",
+        "subdomain": "mysql-1758528358786-52001d",
+        "subdomainUrl": "https://mysql-1758528358786-52001d.xistracloud.com",
+        "created_at": "2025-09-22T08:05:58.811Z",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-9827e103",
+        "name": "mysql-1758528480274",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8465",
+          "http://localhost:8466"
+        ],
+        "ports": [
+          8465,
+          8466
+        ],
+        "accessUrl": "http://localhost:8465",
+        "subdomain": "mysql-1758528480274-f2de12",
+        "subdomainUrl": "https://mysql-1758528480274-f2de12.xistracloud.com",
+        "created_at": "2025-09-22T08:08:00.675Z",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-bee212ce",
+        "name": "mysql-1758528502051",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8975",
+          "http://localhost:8976"
+        ],
+        "ports": [
+          8975,
+          8976
+        ],
+        "accessUrl": "http://localhost:8975",
+        "subdomain": "mysql-1758528502051-0e9ec7",
+        "subdomainUrl": "https://mysql-1758528502051-0e9ec7.xistracloud.com",
+        "created_at": "2025-09-22T08:08:22.087Z",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-6f26c20d",
+        "name": "mysql-1758528503535",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8938",
+          "http://localhost:8939"
+        ],
+        "ports": [
+          8938,
+          8939
+        ],
+        "accessUrl": "http://localhost:8938",
+        "subdomain": "mysql-1758528503535-0bc63d",
+        "subdomainUrl": "https://mysql-1758528503535-0bc63d.xistracloud.com",
+        "created_at": "2025-09-22T08:08:23.551Z",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-3b8a5cbd",
+        "name": "mysql-1758528838783",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8397",
+          "http://localhost:8398"
+        ],
+        "ports": [
+          8397,
+          8398
+        ],
+        "accessUrl": "http://localhost:8397",
+        "subdomain": "mysql-1758528838783-c9b38d",
+        "subdomainUrl": "https://mysql-1758528838783-c9b38d.xistracloud.com",
+        "created_at": "2025-09-22T08:13:58.796Z",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-912a3ab3",
+        "name": "mysql-1758528868999",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8877",
+          "http://localhost:8878"
+        ],
+        "ports": [
+          8877,
+          8878
+        ],
+        "accessUrl": "http://localhost:8877",
+        "subdomain": "mysql-1758528868999-ff8b71",
+        "subdomainUrl": "https://mysql-1758528868999-ff8b71.xistracloud.com",
+        "created_at": "2025-09-22T08:14:29.004Z",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-96113745",
+        "name": "mysql-1758528973416",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8938",
+          "http://localhost:8939"
+        ],
+        "ports": [
+          8938,
+          8939
+        ],
+        "accessUrl": "http://localhost:8938",
+        "subdomain": "mysql-1758528973416-08695e",
+        "subdomainUrl": "https://mysql-1758528973416-08695e.xistracloud.com",
+        "created_at": "2025-09-22T08:16:13.469Z",
+        "type": "database_service",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      },
+      {
+        "id": "app-mysql-standalone-db0ab337",
+        "name": "mysql-1758529124150",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8814",
+          "http://localhost:8815"
+        ],
+        "ports": [
+          8814,
+          8815
+        ],
+        "accessUrl": "http://localhost:8814",
+        "subdomain": "mysql-1758529124150-3cd92a",
+        "subdomainUrl": "https://mysql-1758529124150-3cd92a.xistracloud.com",
+        "created_at": "2025-09-22T08:18:44.161Z",
+        "type": "database_service",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      }
+    ],
+    "domains": [],
+    "backups": [],
+    "teamMembers": [],
+    "environmentVariables": [],
+    "webhooks": [],
+    "databaseServices": [
+      {
+        "id": "app-mysql-standalone-3b8a5cbd",
+        "name": "mysql-1758528838783",
+        "type": "mysql",
+        "status": "running",
+        "port": 8397,
+        "admin_port": 8080,
+        "created_at": "2025-09-22T08:13:58.796Z",
+        "connection_string": "mysql://app_user:xistra_1758528838783@localhost:8397"
+      },
+      {
+        "id": "app-mysql-standalone-912a3ab3",
+        "name": "mysql-1758528868999",
+        "type": "mysql",
+        "status": "running",
+        "port": 8877,
+        "admin_port": 8080,
+        "created_at": "2025-09-22T08:14:29.004Z",
+        "connection_string": "mysql://app_user:xistra_1758528868999@localhost:8877"
+      },
+      {
+        "id": "app-mysql-standalone-96113745",
+        "name": "mysql-1758528973416",
+        "type": "mysql",
+        "status": "running",
+        "port": 8938,
+        "admin_port": 8080,
+        "created_at": "2025-09-22T08:16:13.469Z",
+        "connection_string": "mysql://app_user:xistra_1758528973417@localhost:8938"
+      },
+      {
+        "id": "app-mysql-standalone-db0ab337",
+        "name": "mysql-1758529124150",
+        "type": "mysql",
+        "status": "running",
+        "port": 8814,
+        "admin_port": 8080,
+        "created_at": "2025-09-22T08:18:44.161Z",
+        "connection_string": "mysql://app_user:xistra_1758529124150@localhost:8814"
+      }
+    ]
+  },
+  "user-1758526890612": {
+    "projects": [],
+    "deployments": [
+      {
+        "id": "app-mysql-standalone-a2e31e4c",
+        "name": "mysql-1758529153067",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8403",
+          "http://localhost:8404"
+        ],
+        "ports": [
+          8403,
+          8404
+        ],
+        "accessUrl": "http://localhost:8403",
+        "subdomain": "mysql-1758529153067-320baa",
+        "subdomainUrl": "https://mysql-1758529153067-320baa.xistracloud.com",
+        "created_at": "2025-09-22T08:19:13.080Z",
+        "type": "database_service",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
+      }
+    ],
+    "domains": [],
+    "backups": [],
+    "teamMembers": [],
+    "environmentVariables": [],
+    "webhooks": [],
+    "databaseServices": [
+      {
+        "id": "app-mysql-standalone-a2e31e4c",
+        "name": "mysql-1758529153067",
+        "type": "mysql",
+        "status": "running",
+        "port": 8403,
+        "admin_port": 8080,
+        "created_at": "2025-09-22T08:19:13.080Z",
+        "connection_string": "mysql://app_user:xistra_1758529153067@localhost:8403"
+      }
+    ]
+  }
+}

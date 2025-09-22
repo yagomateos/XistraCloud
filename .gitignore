@@ -25,4 +25,7 @@ dist-ssr
 .vercel
 
 # Temporary backend folders
-backend/getting-started-*
+backend/getting-started-*env.production
+env.production
+env.staging
+env.development

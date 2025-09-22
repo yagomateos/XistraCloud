@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useApi } from '@/hooks/useApi';
 import { 
   Select,
   SelectContent,
@@ -28,7 +29,7 @@ import {
   User,
   MoreHorizontal
 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api';
+// Removed getApiUrl import - using useApi hook instead
 
 interface TeamMember {
   id: string;
@@ -57,6 +58,7 @@ interface Project {
 }
 
 export default function Team() {
+  const { apiCall } = useApi();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -77,9 +79,9 @@ export default function Team() {
     try {
       setLoading(true);
       const [membersResponse, invitationsResponse, projectsResponse] = await Promise.all([
-        fetch(`${getApiUrl()}/team/members`),
-        fetch(`${getApiUrl()}/team/invitations`),
-        fetch(`${getApiUrl()}/deployments`)
+        apiCall(`http://localhost:3001/team/members`),
+        apiCall(`http://localhost:3001/team/invitations`),
+        apiCall(`http://localhost:3001/deployments`)
       ]);
 
       if (!membersResponse.ok) throw new Error('Error al cargar miembros');
@@ -104,9 +106,8 @@ export default function Team() {
     if (!newInvitation.email.trim()) return;
 
     try {
-      const response = await fetch(`${getApiUrl()}/team/invitations`, {
+      const response = await apiCall(`http://localhost:3001/team/invitations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newInvitation)
       });
 
@@ -124,7 +125,7 @@ export default function Team() {
     if (!window.confirm('¿Estás seguro de que quieres eliminar este miembro del equipo?')) return;
 
     try {
-      const response = await fetch(`${getApiUrl()}/team/members/${memberId}`, {
+      const response = await apiCall(`http://localhost:3001/team/members/${memberId}`, {
         method: 'DELETE'
       });
 
@@ -140,7 +141,7 @@ export default function Team() {
     if (!window.confirm('¿Estás seguro de que quieres cancelar esta invitación?')) return;
 
     try {
-      const response = await fetch(`${getApiUrl()}/team/invitations/${invitationId}`, {
+      const response = await apiCall(`http://localhost:3001/team/invitations/${invitationId}`, {
         method: 'DELETE'
       });
 

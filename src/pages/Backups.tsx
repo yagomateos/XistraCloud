@@ -27,7 +27,7 @@ import {
   RefreshCw,
   Settings
 } from 'lucide-react';
-import { getApiUrl } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 
 interface Backup {
   id: string;
@@ -50,6 +50,7 @@ interface Project {
 }
 
 export default function Backups() {
+  const { apiCall } = useApi();
   const [backups, setBackups] = useState<Backup[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,8 +71,8 @@ export default function Backups() {
     try {
       setLoading(true);
       const [backupsResponse, projectsResponse] = await Promise.all([
-        fetch(`${getApiUrl()}/backups`),
-        fetch(`${getApiUrl()}/deployments`)
+        apiCall(`http://localhost:3001/backups`),
+        apiCall(`http://localhost:3001/deployments`)
       ]);
 
       if (!backupsResponse.ok) throw new Error('Error al cargar backups');
@@ -93,9 +94,8 @@ export default function Backups() {
     if (!newBackup.name.trim() || !newBackup.projectId) return;
 
     try {
-      const response = await fetch(`${getApiUrl()}/backups`, {
+      const response = await apiCall(`http://localhost:3001/backups`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newBackup)
       });
 
@@ -113,7 +113,7 @@ export default function Backups() {
     if (!window.confirm('¿Estás seguro de que quieres eliminar este backup?')) return;
 
     try {
-      const response = await fetch(`${getApiUrl()}/backups/${backupId}`, {
+      const response = await apiCall(`http://localhost:3001/backups/${backupId}`, {
         method: 'DELETE'
       });
 
@@ -129,7 +129,7 @@ export default function Backups() {
     if (!window.confirm('¿Estás seguro de que quieres restaurar este backup? Esto sobrescribirá los datos actuales.')) return;
 
     try {
-      const response = await fetch(`${getApiUrl()}/backups/${backupId}/restore`, {
+      const response = await apiCall(`http://localhost:3001/backups/${backupId}/restore`, {
         method: 'POST'
       });
 

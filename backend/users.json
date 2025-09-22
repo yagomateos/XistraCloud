@@ -1,0 +1,16 @@
+{
+  "yagomateos@hotmail.com": {
+    "id": "user-1758526873069",
+    "email": "yagomateos@hotmail.com",
+    "name": "yagomateos",
+    "plan_type": "free",
+    "created_at": "2025-09-22T07:41:13.069Z"
+  },
+  "yagomateoslerma@gmail.com": {
+    "id": "user-1758526890612",
+    "email": "yagomateoslerma@gmail.com",
+    "name": "yagomateoslerma",
+    "plan_type": "free",
+    "created_at": "2025-09-22T07:41:30.612Z"
+  }
+}
