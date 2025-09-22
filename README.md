@@ -241,6 +241,10 @@ XistraCloud/
 - Validación de formato
 - Historial de cambios
 
+
+## DIAGRAMA
+![Diagrama](https://github.com/user-attachments/assets/2c9dbff5-ec31-48ea-8dec-7ed0b5eae067)
+
 ## 🤝 Contribuciones
 
 ¡Damos la bienvenida a las contribuciones! Por favor, consulta nuestras pautas de contribución:
