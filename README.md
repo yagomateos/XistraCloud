@@ -245,7 +245,7 @@ XistraCloud/
 ## DIAGRAMA
 
 <div align="left">
-  <img src="https://github.com/user-attachments/assets/2c9dbff5-ec31-48ea-8dec-7ed0b5eae067" width="50%" alt="Diagrama">
+  <img src="https://github.com/user-attachments/assets/2c9dbff5-ec31-48ea-8dec-7ed0b5eae067" width="65%" alt="Diagrama">
 </div>
 
 ## 🤝 Contribuciones
