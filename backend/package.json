@@ -27,6 +27,8 @@
     "dockerode": "^4.0.8",
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.6",
     "pg": "^8.16.3",
     "simple-git": "^3.24.0",
     "stripe": "^18.5.0"

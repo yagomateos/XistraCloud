@@ -66,32 +66,44 @@ export interface DashboardStats {
   }>;
 }
 
-// Resolve API base URL: localStorage > env > production domain > localhost
-let LS_API = '';
+// Resolve API base URL: robust strategy with safe fallbacks
+const isBrowser = typeof window !== 'undefined';
+const host = isBrowser ? window.location.hostname : '';
+
+// Normalize dev hosts
+const isDevHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
+
 try {
-  if (typeof window !== 'undefined') {
-    // If running on localhost, force a sensible default for local dev
-    if (window.location.hostname === 'localhost') {
-      localStorage.setItem('VITE_API_URL', 'http://localhost:3001');
+  if (isBrowser) {
+    // Force production URL on prod domain
+    if (host === 'xistracloud.com') {
+      localStorage.setItem('VITE_API_URL', 'https://xistracloud.com/api');
     }
-    LS_API = localStorage.getItem('VITE_API_URL') || '';
+    // Ensure a sensible default during local dev
+    if (isDevHost) {
+      const current = localStorage.getItem('VITE_API_URL');
+      if (!current || !/^https?:\/\//.test(current)) {
+        localStorage.setItem('VITE_API_URL', 'http://localhost:3001');
+      }
+    }
   }
 } catch {}
-// Force production API URL if we're on xistracloud.com
-if (typeof window !== 'undefined' && window.location.hostname === 'xistracloud.com') {
-  localStorage.setItem('VITE_API_URL', 'https://xistracloud.com/api');
-}
 
-// Get the updated API URL after potentially setting it
+// Compute API URL with precedence and validation
 export const getApiUrl = () => {
-  if (typeof window !== 'undefined' && window.location.hostname === 'xistracloud.com') {
-    return 'https://xistracloud.com/api';
-  }
-  return localStorage.getItem('VITE_API_URL') ||
-    ((typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) ||
-      (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost'
-        ? 'https://xistracloud.com/api'
-        : 'http://localhost:3001'));
+  const candidates = [
+    // Explicit per-browser override
+    isBrowser ? localStorage.getItem('VITE_API_URL') : '',
+    // Vite env at build time
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || '',
+    // Domain-based default
+    isBrowser && host === 'xistracloud.com' ? 'https://xistracloud.com/api' : '',
+    // Local dev default
+    isBrowser && isDevHost ? 'http://localhost:3001' : ''
+  ];
+  const pick = candidates.find(v => typeof v === 'string' && /^https?:\/\//.test(v))
+    || (isBrowser && isDevHost ? 'http://localhost:3001' : 'https://xistracloud.com/api');
+  return pick;
 };
 
 export const API_URL = getApiUrl();

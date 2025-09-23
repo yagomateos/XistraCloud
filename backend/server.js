@@ -5,6 +5,8 @@ const cors = require('cors');
 const crypto = require('crypto');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const multer = require('multer');
 
 const app = express();
 // CORS: permitir x-user-email para auth por usuario desde el frontend
@@ -23,6 +25,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const supabaseUrl = 'https://metzjfocvkelucinstul.supabase.co';
 const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ldHpqZm9jdmtlbHVjaW5zdHVsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzQxMzAxOSwiZXhwIjoyMDcyOTg5MDE5fQ.oLmAm48uUpwKjH_LhJtNaNrvo5nE9cEkAyfjQtkwCKg';
@@ -31,6 +34,22 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Import database module
 const Database = require('./database');
+
+// Static uploads dir for avatars
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+try { if (!fs.existsSync(UPLOADS_DIR)) { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } } catch {}
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+// Multer storage for avatars (filename per user)
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) { cb(null, UPLOADS_DIR); },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname || '');
+    const safeEmail = (req.user?.email || 'anonymous').replace(/[^a-zA-Z0-9_.-]/g, '_');
+    cb(null, `avatar_${safeEmail}_${Date.now()}${ext}`);
+  }
+});
+const upload = multer({ storage });
 
 // Test endpoint
 app.get('/', (req, res) => {
@@ -829,7 +848,7 @@ app.delete('/domains/:id', async (req, res) => {
   }
 });
 
-// Delete project endpoint
+// Delete project endpoint (per-user with cascade)
 app.delete('/projects/:id', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
@@ -839,39 +858,31 @@ app.delete('/projects/:id', getCurrentUser, async (req, res) => {
       return res.status(400).json({ error: 'Project ID is required' });
     }
 
-    // Check if project exists
-    const { data: project, error: checkError } = await supabase
-      .from('projects')
-      .select('id, name')
-      .eq('id', id)
-      .single();
-
-    if (checkError || !project) {
-      return res.status(404).json({ 
-        error: 'Project not found',
-        projectId: id 
-      });
+    if (!req.userData.projects) req.userData.projects = [];
+    const projectIndex = req.userData.projects.findIndex(p => p.id === id);
+    if (projectIndex === -1) {
+      return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Delete project
-    const { error: deleteError } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', id);
+    const [deletedProject] = req.userData.projects.splice(projectIndex, 1);
 
-    if (deleteError) {
-      console.error('❌ Supabase error deleting project:', deleteError);
-      return res.status(500).json({ 
-        error: 'Failed to delete project',
-        supabaseError: deleteError.message 
-      });
+    // Cascade: remove env vars for this project
+    if (!req.userData.environmentVariables) req.userData.environmentVariables = {};
+    if (req.userData.environmentVariables[id]) {
+      delete req.userData.environmentVariables[id];
     }
 
-    console.log('✅ Project deleted successfully:', project.name);
+    // Cascade (best-effort): remove deployments tied to this project if they carry project_id
+    if (!req.userData.deployments) req.userData.deployments = [];
+    req.userData.deployments = req.userData.deployments.filter(d => d.project_id !== id);
+
+    saveUsers();
+
+    console.log('✅ Project deleted successfully (per-user):', deletedProject.name);
     res.json({
       success: true,
       message: 'Project deleted successfully',
-      deletedProject: project
+      deletedProject
     });
 
   } catch (error) {
@@ -961,23 +972,18 @@ app.post('/domains/:id/verify', async (req, res) => {
   }
 });
 
-// Get projects endpoint
-app.get('/projects', async (req, res) => {
+// Get projects endpoint (per-user)
+app.get('/projects', getCurrentUser, async (req, res) => {
   try {
-    const { data, error } = await supabase.from('projects').select('*');
-    
-    if (error) {
-      return res.status(500).json({ error: error.message });
-    }
-    
-    res.json(data);
+    if (!req.userData.projects) req.userData.projects = [];
+    res.json(req.userData.projects);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Create project endpoint
-app.post('/projects', async (req, res) => {
+// Create project endpoint (per-user)
+app.post('/projects', getCurrentUser, async (req, res) => {
   try {
     const { name, repository, framework } = req.body;
     
@@ -987,76 +993,18 @@ app.post('/projects', async (req, res) => {
       });
     }
 
-    // Generate realistic deployment URL based on framework and repository
-    let deploymentUrl;
-    
-    // Extract repo name from GitHub URL
-    const repoMatch = repository.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-    const repoName = repoMatch ? repoMatch[2].replace('.git', '') : name.toLowerCase();
-    const username = repoMatch ? repoMatch[1] : 'demo';
-    
-    // Use real, working demo URLs based on framework
-    const realDemoUrls = {
-      react: [
-        'https://react.dev',
-        'https://reactjs.org',
-        'https://create-react-app.dev',
-        'https://codesandbox.io/s/new'
-      ],
-      nextjs: [
-        'https://nextjs.org',
-        'https://vercel.com/templates/next.js',
-        'https://next-learn-starter.vercel.app'
-      ],
-      vue: [
-        'https://vuejs.org',
-        'https://vue-next-template-explorer.netlify.app',
-        'https://sfc.vuejs.org'
-      ],
-      angular: [
-        'https://angular.io',
-        'https://material.angular.io',
-        'https://angular.io/tutorial'
-      ],
-      svelte: [
-        'https://svelte.dev',
-        'https://kit.svelte.dev',
-        'https://svelte.dev/repl'
-      ],
-      nodejs: [
-        'https://nodejs.org',
-        'https://expressjs.com',
-        'https://fastify.io'
-      ],
-      python: [
-        'https://flask.palletsprojects.com',
-        'https://www.djangoproject.com',
-        'https://python.org'
-      ],
-      unknown: [
-        'https://github.com',
-        'https://gitlab.com',
-        'https://vercel.com'
-      ]
-    };
-    
-    // Select a random working demo URL based on framework
-    const frameworkUrls = realDemoUrls[framework?.toLowerCase()] || realDemoUrls.unknown;
-    deploymentUrl = frameworkUrls[Math.floor(Math.random() * frameworkUrls.length)];
-    
-    // For some special cases, use GitHub Pages format (less often now since we use official sites)
-    if (repository.includes('github.com') && Math.random() > 0.8) {
-      deploymentUrl = `https://${username}.github.io/${repoName}`;
-    }
-    
+    // Generate a simple demo URL based on name
+    const projectSlug = String(name).toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    const deploymentUrl = `https://${projectSlug}.${process.env.DEV_DOMAIN || 'xistracloud.com'}`;
+
     const newProject = {
       id: crypto.randomUUID(),
       name: name,
       repository: repository,
       framework: framework || 'unknown',
-      status: 'deployed', // ✅ Directamente como deployed - funciona siempre
-      url: deploymentUrl, // ✅ URL desde el inicio
-      user_id: null,
+      status: 'deployed',
+      url: deploymentUrl,
+      user_id: req.user.email,
       created_at: new Date().toISOString(),
       container_id: null,
       deploy_type: 'auto',
@@ -1064,33 +1012,12 @@ app.post('/projects', async (req, res) => {
       organization_id: null
     };
 
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([newProject])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('❌ Error creating project:', error);
-      return res.status(500).json({ error: error.message });
-    }
+    if (!req.userData.projects) req.userData.projects = [];
+    req.userData.projects.push(newProject);
+    saveUsers();
 
-    // Add creation and deployment log
-    const logEntry = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      level: 'info',
-      message: `✅ Proyecto "${name}" creado y desplegado exitosamente`,
-      details: `Repositorio: ${repository}, Framework: ${framework || 'unknown'}, URL: ${deploymentUrl}`,
-      source: 'deployments',
-      project_id: newProject.id,
-      project_name: name
-    };
-
-    await supabase.from('logs').insert([logEntry]);
-    
-    console.log(`🚀 Project "${name}" created and deployed successfully at ${deploymentUrl}`);
-    res.status(201).json(data);
+    console.log(`🚀 Project "${name}" created for user ${req.user.email}`);
+    res.status(201).json(newProject);
   } catch (error) {
     console.error('❌ Error in POST /projects:', error);
     res.status(500).json({ error: error.message });
@@ -1657,6 +1584,62 @@ app.post('/auth/register', async (req, res) => {
   }
 });
 
+// ================================
+// 👤 USER PROFILE (per-user)
+// ================================
+
+// Get current user profile
+app.get('/user/profile', getCurrentUser, (req, res) => {
+  try {
+    if (!req.userData.profile) {
+      req.userData.profile = {
+        fullName: req.user.name || req.user.email.split('@')[0],
+        bio: '',
+        plan_type: req.user.plan_type || 'free',
+        avatarUrl: req.userData.avatarUrl || null,
+        updated_at: new Date().toISOString()
+      };
+      saveUsers();
+    }
+    res.json({ profile: req.userData.profile });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get profile' });
+  }
+});
+
+// Update current user profile
+app.put('/user/profile', getCurrentUser, (req, res) => {
+  try {
+    const { fullName, bio } = req.body || {};
+    if (!req.userData.profile) req.userData.profile = {};
+    if (typeof fullName === 'string') req.userData.profile.fullName = fullName;
+    if (typeof bio === 'string') req.userData.profile.bio = bio;
+    req.userData.profile.plan_type = req.user.plan_type || req.userData.profile.plan_type || 'free';
+    if (req.userData.avatarUrl) req.userData.profile.avatarUrl = req.userData.avatarUrl;
+    req.userData.profile.updated_at = new Date().toISOString();
+    saveUsers();
+    res.json({ success: true, profile: req.userData.profile });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Upload avatar (multipart/form-data, field: avatar)
+app.post('/user/avatar', getCurrentUser, upload.single('avatar'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const publicUrl = `/uploads/${req.file.filename}`;
+    req.userData.avatarUrl = publicUrl;
+    if (!req.userData.profile) req.userData.profile = {};
+    req.userData.profile.avatarUrl = publicUrl;
+    req.userData.profile.updated_at = new Date().toISOString();
+    saveUsers();
+    res.json({ success: true, avatarUrl: publicUrl });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to upload avatar' });
+  }
+});
+
 // ======================================
 // 🔗 GITHUB WEBHOOKS SYSTEM (Vercel/Zeabur-style)
 // ======================================
@@ -1958,7 +1941,7 @@ async function deployRepository(repoUrl, name, framework) {
 
 const Docker = require('dockerode');
 const docker = new Docker();
-const fs = require('fs').promises;
+const fsp = require('fs').promises;
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const execAsync = promisify(exec);
@@ -2338,7 +2321,7 @@ app.post('/apps/deploy', getCurrentUser, async (req, res) => {
     const targetComposePath = path.join(deployPath, 'compose.yaml');
     
     // Read and modify compose file with dynamic ports
-    let composeContent = await fs.readFile(composePath, 'utf8');
+    let composeContent = await fsp.readFile(composePath, 'utf8');
     
     // Replace static ports with dynamic ones without corrupting target port
     // Special-case minecraft which uses 25565
@@ -2364,13 +2347,13 @@ app.post('/apps/deploy', getCurrentUser, async (req, res) => {
     // Add project name prefix to container names
     composeContent = composeContent.replace(/container_name: ([\\w-]+)/g, `container_name: ${projectId}-$1`);
     
-    await fs.writeFile(targetComposePath, composeContent);
+    await fsp.writeFile(targetComposePath, composeContent);
     
     // Create .env file
     const envContent = Object.entries(environment)
       .map(([key, value]) => `${key}=${value}`)
       .join('\n');
-    await fs.writeFile(path.join(deployPath, '.env'), envContent);
+    await fsp.writeFile(path.join(deployPath, '.env'), envContent);
     
     // Deploy with Docker Compose
     console.log('🚀 Desplegando con Docker Compose...');
@@ -2811,22 +2794,14 @@ app.get('/subdomain/:subdomain/*', async (req, res) => {
 // 🔧 ENVIRONMENT VARIABLES MANAGEMENT
 // ======================================
 
-// GET /projects - Get all projects
-app.get('/projects', async (req, res) => {
+// GET /projects - Get all projects (per-user)
+app.get('/projects', getCurrentUser, async (req, res) => {
   try {
-    console.log('📊 Fetching projects from PostgreSQL database');
-    
-    const projects = await Database.getProjects();
-    console.log(`📊 Found ${projects.length} projects from database`);
-    
-    res.json({
-      success: true,
-      projects: projects
-    });
-    
+    if (!req.userData.projects) req.userData.projects = [];
+    res.json(req.userData.projects);
   } catch (error) {
     console.error('❌ Error fetching projects:', error);
-    res.status(500).json({ error: 'Error al obtener proyectos' });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -3299,51 +3274,8 @@ app.delete('/backups/:id', getCurrentUser, async (req, res) => {
 app.get('/team/members', getCurrentUser, async (req, res) => {
   try {
     console.log(`👥 Fetching team members for user: ${req.user.email}`);
-    
-    // Use mock data for development
-    const mockMembers = [
-      {
-        id: 'member-1',
-        name: 'Yago Mateos',
-        email: 'yago@xistracloud.com',
-        role: 'admin',
-        avatar: '',
-        status: 'active',
-        joinedAt: new Date(Date.now() - 86400000 * 30).toISOString(), // 30 days ago
-        lastActive: new Date().toISOString(),
-        projectAccess: ['all']
-      },
-      {
-        id: 'member-2',
-        name: 'María García',
-        email: 'maria@empresa.com',
-        role: 'developer',
-        avatar: '',
-        status: 'active',
-        joinedAt: new Date(Date.now() - 86400000 * 15).toISOString(), // 15 days ago
-        lastActive: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-        projectAccess: ['project-1', 'project-2']
-      },
-      {
-        id: 'member-3',
-        name: 'Carlos López',
-        email: 'carlos@freelance.com',
-        role: 'viewer',
-        avatar: '',
-        status: 'inactive',
-        joinedAt: new Date(Date.now() - 86400000 * 7).toISOString(), // 7 days ago
-        lastActive: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
-        projectAccess: ['project-1']
-      }
-    ];
-    
-    console.log(`👥 Found ${mockMembers.length} team members`);
-    
-    res.json({
-      success: true,
-      members: mockMembers
-    });
-    
+    if (!req.userData.team) req.userData.team = { members: [], invitations: [] };
+    res.json({ success: true, members: req.userData.team.members });
   } catch (error) {
     console.error('❌ Error fetching team members:', error);
     res.status(500).json({ error: 'Error al obtener miembros del equipo' });
@@ -3354,31 +3286,8 @@ app.get('/team/members', getCurrentUser, async (req, res) => {
 app.get('/team/invitations', getCurrentUser, async (req, res) => {
   try {
     console.log(`📧 Fetching team invitations for user: ${req.user.email}`);
-    // For now, return mock data
-    const mockInvitations = [
-      {
-        id: 'invitation-1',
-        email: 'nuevo@ejemplo.com',
-        role: 'developer',
-        status: 'pending',
-        invitedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-        invitedBy: 'Yago Mateos'
-      },
-      {
-        id: 'invitation-2',
-        email: 'colaborador@empresa.com',
-        role: 'viewer',
-        status: 'pending',
-        invitedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        invitedBy: 'María García'
-      }
-    ];
-    
-    res.json({
-      success: true,
-      invitations: mockInvitations
-    });
-    
+    if (!req.userData.team) req.userData.team = { members: [], invitations: [] };
+    res.json({ success: true, invitations: req.userData.team.invitations });
   } catch (error) {
     console.error('❌ Error fetching invitations:', error);
     res.status(500).json({ error: 'Error al obtener invitaciones' });
@@ -3396,8 +3305,35 @@ app.post('/team/invitations', getCurrentUser, async (req, res) => {
     }
     
     console.log(`👥 Sending invitation to ${email} with role ${role}`);
-    
-    // For now, return success with mock data
+
+    // Send email (Ethereal) in local/dev
+    try {
+      const nodemailer = require('nodemailer');
+      const testAccount = await nodemailer.createTestAccount();
+      const transporter = nodemailer.createTransport({
+        host: testAccount.smtp.host,
+        port: testAccount.smtp.port,
+        secure: testAccount.smtp.secure,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass
+        }
+      });
+
+      const inviteLink = `${process.env.APP_URL || 'http://localhost:3002'}/invite/accept?email=${encodeURIComponent(email)}`;
+      const info = await transporter.sendMail({
+        from: 'XistraCloud <no-reply@xistracloud.dev>',
+        to: email,
+        subject: 'Invitación a tu equipo en XistraCloud',
+        html: `<p>Has sido invitado como <b>${role}</b> al equipo de ${req.user.email}.</p>
+               <p>Accede aquí para aceptar: <a href="${inviteLink}">${inviteLink}</a></p>`
+      });
+      console.log('📧 Invitation email sent (preview URL):', nodemailer.getTestMessageUrl(info));
+    } catch (mailErr) {
+      console.warn('⚠️ Email invitation skipped:', mailErr?.message || mailErr);
+    }
+
+    if (!req.userData.team) req.userData.team = { members: [], invitations: [] };
     const invitation = {
       id: `invitation-${crypto.randomUUID().substring(0, 8)}`,
       email: email,
@@ -3405,8 +3341,11 @@ app.post('/team/invitations', getCurrentUser, async (req, res) => {
       status: 'pending',
       invitedAt: new Date().toISOString(),
       invitedBy: 'Usuario Actual',
-      projectAccess: projectAccess || []
+      projectAccess: projectAccess || [],
+      previewUrl: (typeof info !== 'undefined' && info) ? require('nodemailer').getTestMessageUrl(info) : null
     };
+    req.userData.team.invitations.push(invitation);
+    saveUsers();
     
     res.json({
       success: true,
@@ -3425,15 +3364,12 @@ app.delete('/team/members/:id', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
     console.log(`🗑️ Deleting team member ${id} for user: ${req.user.email}`);
-    
-    console.log(`👥 Removing team member: ${id}`);
-    
-    // For now, return success
-    res.json({
-      success: true,
-      message: 'Miembro eliminado exitosamente'
-    });
-    
+    if (!req.userData.team) req.userData.team = { members: [], invitations: [] };
+    const idx = req.userData.team.members.findIndex(m => m.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Miembro no encontrado' });
+    const deleted = req.userData.team.members.splice(idx, 1)[0];
+    saveUsers();
+    res.json({ success: true, message: 'Miembro eliminado exitosamente', deleted });
   } catch (error) {
     console.error('❌ Error removing team member:', error);
     res.status(500).json({ error: 'Error al eliminar miembro' });
@@ -3445,18 +3381,52 @@ app.delete('/team/invitations/:id', getCurrentUser, async (req, res) => {
   try {
     const { id } = req.params;
     console.log(`🗑️ Canceling team invitation ${id} for user: ${req.user.email}`);
-    
-    console.log(`👥 Canceling invitation: ${id}`);
-    
-    // For now, return success
-    res.json({
-      success: true,
-      message: 'Invitación cancelada exitosamente'
-    });
-    
+    if (!req.userData.team) req.userData.team = { members: [], invitations: [] };
+    const idx = req.userData.team.invitations.findIndex(i => i.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Invitación no encontrada' });
+    const deleted = req.userData.team.invitations.splice(idx, 1)[0];
+    saveUsers();
+    res.json({ success: true, message: 'Invitación cancelada exitosamente', deleted });
   } catch (error) {
     console.error('❌ Error canceling invitation:', error);
     res.status(500).json({ error: 'Error al cancelar invitación' });
+  }
+});
+
+// POST /team/invitations/accept - Accept invitation by email
+app.post('/team/invitations/accept', getCurrentUser, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email requerido' });
+    if (!req.userData.team) req.userData.team = { members: [], invitations: [] };
+
+    // Find invitation by email (pending)
+    const invIndex = req.userData.team.invitations.findIndex(
+      i => i.email?.toLowerCase() === String(email).toLowerCase() && i.status === 'pending'
+    );
+    if (invIndex === -1) return res.status(404).json({ error: 'Invitación no encontrada' });
+
+    const invitation = req.userData.team.invitations.splice(invIndex, 1)[0];
+
+    // Create member
+    const member = {
+      id: `member-${crypto.randomUUID().substring(0, 8)}`,
+      name: email.split('@')[0],
+      email: email,
+      role: invitation.role || 'viewer',
+      avatar: '',
+      status: 'active',
+      joinedAt: new Date().toISOString(),
+      lastActive: new Date().toISOString(),
+      projectAccess: invitation.projectAccess || []
+    };
+    req.userData.team.members.push(member);
+    saveUsers();
+
+    res.json({ success: true, message: 'Invitación aceptada', member });
+  } catch (error) {
+    console.error('❌ Error accepting invitation:', error);
+    res.status(500).json({ error: 'Error al aceptar invitación' });
   }
 });
 

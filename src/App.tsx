@@ -24,10 +24,10 @@ import EnvironmentVariables from "@/pages/EnvironmentVariables";
 import Backups from "@/pages/Backups";
 import Team from "@/pages/Team";
 import Landing from "@/pages/Landing";
-import Login from "@/pages/Login";
-import LoginSimple from "@/pages/LoginSimple";
-import RegisterSimple from "@/pages/RegisterSimple";
-import EmailConfirmedSimple from "@/pages/EmailConfirmedSimple";
+import LoginSimple from "./pages/LoginSimple";
+import RegisterSimple from "./pages/RegisterSimple";
+import EmailConfirmedSimple from "./pages/EmailConfirmedSimple";
+import InviteAccept from "./pages/InviteAccept";
 import NotFound from "@/pages/NotFound";
 // import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -51,6 +51,7 @@ const App = () => (
               <Route path="/login" element={<LoginSimple />} />
               <Route path="/register" element={<RegisterSimple />} />
               <Route path="/email-confirmed" element={<EmailConfirmedSimple />} />
+              <Route path="/invite/accept" element={<InviteAccept />} />
               <Route path="/dashboard" element={<DashboardLayoutSimple />}>
                 <Route index element={<Dashboard />} />
                 <Route path="projects" element={<Projects />} />

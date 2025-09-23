@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { GitBranch, Loader2 } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
+import { API_URL } from '@/lib/api';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -50,6 +52,7 @@ type ProjectFormData = z.infer<typeof projectSchema>;
 
 const CreateProjectModal = ({ open, onOpenChange, onCreateProject, selectedTemplate }: CreateProjectModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { apiCall } = useApi();
 
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
@@ -73,12 +76,8 @@ const CreateProjectModal = ({ open, onOpenChange, onCreateProject, selectedTempl
     setIsLoading(true);
     
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '/api';
-      const response = await fetch(`${API_URL}/projects`, {
+      const response = await apiCall(`${API_URL}/projects`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ 
           repository: data.repository,
           name: data.name,
