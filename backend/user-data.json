@@ -1,6 +1,35 @@
 {
   "user-1758526873069": {
-    "projects": [],
+    "projects": [
+      {
+        "id": "d058e2c2-84af-4eda-be60-d30ea05bfca4",
+        "name": "getting-started",
+        "repository": "https://github.com/docker/getting-started",
+        "framework": "nextjs",
+        "status": "deployed",
+        "url": "https://getting-started.xistracloud.com",
+        "user_id": "yagomateos@hotmail.com",
+        "created_at": "2025-09-22T09:00:43.798Z",
+        "container_id": null,
+        "deploy_type": "auto",
+        "compose_path": null,
+        "organization_id": null
+      },
+      {
+        "id": "7c9be208-c043-47bf-8a2e-16d99d51cc36",
+        "name": "getting-started",
+        "repository": "https://github.com/docker/getting-started",
+        "framework": "nextjs",
+        "status": "deployed",
+        "url": "https://getting-started.xistracloud.com",
+        "user_id": "yagomateos@hotmail.com",
+        "created_at": "2025-09-22T09:03:00.612Z",
+        "container_id": null,
+        "deploy_type": "auto",
+        "compose_path": null,
+        "organization_id": null
+      }
+    ],
     "deployments": [
       {
         "id": "app-mysql-standalone-a9d2cb5a",
@@ -261,7 +290,51 @@
         "created_at": "2025-09-22T08:18:44.161Z",
         "connection_string": "mysql://app_user:xistra_1758529124150@localhost:8814"
       }
-    ]
+    ],
+    "team": {
+      "members": [
+        {
+          "id": "member-55aee5ed",
+          "name": "yagomateos",
+          "email": "yagomateos@hotmail.com",
+          "role": "developer",
+          "avatar": "",
+          "status": "active",
+          "joinedAt": "2025-09-23T07:47:07.197Z",
+          "lastActive": "2025-09-23T07:47:07.197Z",
+          "projectAccess": [
+            "app-mysql-standalone-a9d2cb5a"
+          ]
+        },
+        {
+          "id": "member-df206f1e",
+          "name": "yagomateoslerma",
+          "email": "yagomateoslerma@gmail.com",
+          "role": "developer",
+          "avatar": "",
+          "status": "active",
+          "joinedAt": "2025-09-23T07:48:19.136Z",
+          "lastActive": "2025-09-23T07:48:19.136Z",
+          "projectAccess": [
+            "app-mysql-standalone-bee212ce"
+          ]
+        }
+      ],
+      "invitations": [
+        {
+          "id": "invitation-a89bb42a",
+          "email": "yagomateoslerma@gmail.com",
+          "role": "admin",
+          "status": "pending",
+          "invitedAt": "2025-09-23T07:48:08.531Z",
+          "invitedBy": "Usuario Actual",
+          "projectAccess": [
+            "app-mysql-standalone-50e1963e"
+          ],
+          "previewUrl": null
+        }
+      ]
+    }
   },
   "user-1758526890612": {
     "projects": [],
@@ -306,5 +379,14 @@
         "connection_string": "mysql://app_user:xistra_1758529153067@localhost:8403"
       }
     ]
+  },
+  "user-1758530820866": {
+    "projects": [],
+    "deployments": [],
+    "domains": [],
+    "backups": [],
+    "teamMembers": [],
+    "environmentVariables": [],
+    "webhooks": []
   }
 }

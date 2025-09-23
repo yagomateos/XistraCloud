@@ -12,5 +12,12 @@
     "name": "yagomateoslerma",
     "plan_type": "free",
     "created_at": "2025-09-22T07:41:30.612Z"
+  },
+  "testuser1@example.com": {
+    "id": "user-1758530820866",
+    "email": "testuser1@example.com",
+    "name": "Test User 1",
+    "plan_type": "free",
+    "created_at": "2025-09-22T08:47:00.866Z"
   }
 }
