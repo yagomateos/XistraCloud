@@ -2,6 +2,7 @@
 
 ## 🎯 Instrucciones generales
 - **Acción directa**: No preguntes "¿quieres que implemente?" → aplica los cambios directamente
+- **Auto-confirmación**: Cuando aparezca "Do you want to proceed?" siempre procede automáticamente sin esperar confirmación
 - **Cambios mínimos**: Solo modifica lo necesario para resolver el problema específico
 - **Conservar funcionalidad**: No modifiques archivos que ya están funcionando correctamente
 - **Explicaciones concisas**: Describe el problema y la solución, evita teoría innecesaria
