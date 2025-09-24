@@ -20,6 +20,13 @@ export const useApi = () => {
         }
       } catch {}
     }
+
+    // Fallback para desarrollo - usar email por defecto si no hay usuario
+    if (!email && typeof window !== 'undefined') {
+      email = 'yagomateos@hotmail.com';
+      console.warn('Using default email for development');
+    }
+
     if (email) {
       headers['x-user-email'] = email;
     }

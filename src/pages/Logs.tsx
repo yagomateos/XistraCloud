@@ -31,16 +31,16 @@ const Logs = () => {
     refetchInterval: 5000, // Refetch every 5 seconds for real-time logs
   });
 
-  // Get unique project names for filter
-  const projects = Array.from(new Set(logs.map(log => log.project_name).filter(Boolean)));
+  // Get unique project names for filter (backend returns projectName)
+  const projects = Array.from(new Set(logs.map((log: any) => (log.project_name || log.projectName)).filter(Boolean)));
 
   // Filter logs based on search and project filter
-  const filteredLogs = logs.filter(log => {
+  const filteredLogs = logs.filter((log: any) => {
     const matchesSearch = searchTerm === '' || 
-      log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      log.message?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (log.project_name || log.projectName)?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesProject = projectFilter === 'all' || log.project_name === projectFilter;
+    const matchesProject = projectFilter === 'all' || (log.project_name || log.projectName) === projectFilter;
     
     return matchesSearch && matchesProject;
   });
@@ -323,7 +323,7 @@ const Logs = () => {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {paginatedLogs.map((log) => (
+            {paginatedLogs.map((log: any) => (
               <div key={log.id} className="p-3 lg:p-4 hover:bg-accent/50 transition-colors">
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">
@@ -337,15 +337,15 @@ const Logs = () => {
                           {getLevelText(log.level)}
                         </Badge>
                         
-                        {log.project_name && (
+                        {(log.project_name || log.projectName) && (
                           <Badge variant="outline" className="text-xs">
-                            📦 {log.project_name}
+                            📦 {log.project_name || log.projectName}
                           </Badge>
                         )}
                         
-                        {log.domain_name && (
+                        {(log.domain_name || log.domainName) && (
                           <Badge variant="outline" className="text-xs">
-                            🌐 {log.domain_name}
+                            🌐 {log.domain_name || log.domainName}
                           </Badge>
                         )}
                         

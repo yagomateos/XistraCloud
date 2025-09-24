@@ -109,28 +109,45 @@ export const getApiUrl = () => {
 export const API_URL = getApiUrl();
 const USE_MOCK_DATA = false;
 
-// Debug logs
-console.log('🔧 DEBUG - API Configuration:');
-console.log('  API_URL:', API_URL);
-console.log('  VITE_USE_MOCK_DATA:', import.meta.env.VITE_USE_MOCK_DATA);
-console.log('  USE_MOCK_DATA:', USE_MOCK_DATA);
-console.log('🔥 FORCE RELOAD - Cache busting:', Date.now());
+// Debug logs (only when VITE_DEBUG === 'true')
+const SHOULD_DEBUG = (import.meta as any)?.env?.VITE_DEBUG === 'true';
+if (SHOULD_DEBUG) {
+  console.log('🔧 DEBUG - API Configuration:');
+  console.log('  API_URL:', API_URL);
+  console.log('  VITE_USE_MOCK_DATA:', (import.meta as any).env?.VITE_USE_MOCK_DATA);
+  console.log('  USE_MOCK_DATA:', USE_MOCK_DATA);
+  console.log('🔥 FORCE RELOAD - Cache busting:', Date.now());
+}
 
 // Helper: build auth headers with user email for multi-user isolation
 const buildAuthHeaders = (extra: Record<string, string> = {}) => {
   let userEmail = '';
+  let bearerToken = '';
   try {
     if (typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         const parsed = JSON.parse(storedUser);
-        userEmail = parsed?.email || '';
+        userEmail = parsed?.email || 'yagomateos@hotmail.com';
+      }
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      if (token && typeof token === 'string') {
+        bearerToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
       }
     }
-  } catch {}
+  } catch {
+    // Fallback para desarrollo
+    userEmail = 'yagomateos@hotmail.com';
+  }
+
+  // En desarrollo, siempre incluir x-user-email
+  const isDevelopment = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
   return {
     'Content-Type': 'application/json',
-    ...(userEmail ? { 'x-user-email': userEmail } : {}),
+    ...(isDevelopment || userEmail ? { 'x-user-email': userEmail } : {}),
+    ...(bearerToken ? { 'Authorization': bearerToken } : {}),
     ...extra
   } as Record<string, string>;
 };

@@ -1,262 +1,152 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { API_URL } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useApi } from '@/hooks/useApi';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { 
-  Plus, 
-  UserPlus, 
-  Users, 
-  Crown, 
-  Shield, 
-  Eye, 
-  Trash2, 
-  Mail, 
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  Settings,
-  User,
-  MoreHorizontal
-} from 'lucide-react';
-// Removed getApiUrl import - using useApi hook instead
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Users, Mail, UserPlus, Trash2, Clock, AlertCircle } from 'lucide-react';
 
 interface TeamMember {
   id: string;
   name: string;
   email: string;
-  role: 'owner' | 'admin' | 'developer' | 'viewer';
-  status: 'active' | 'pending' | 'suspended';
-  joinedAt: string;
-  lastActive?: string;
+  role: string;
+  status: string;
   avatar?: string;
 }
 
-interface Invitation {
+interface TeamInvitation {
   id: string;
   email: string;
-  role: 'admin' | 'developer' | 'viewer';
-  status: 'pending' | 'accepted' | 'expired';
-  invitedAt: string;
-  invitedBy: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
+  role: string;
   status: string;
+  invitedAt: string;
 }
 
 export default function Team() {
+  const navigate = useNavigate();
   const { apiCall } = useApi();
   const [members, setMembers] = useState<TeamMember[]>([]);
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
+  const [newInviteEmail, setNewInviteEmail] = useState('');
+  const [newInviteRole, setNewInviteRole] = useState('viewer');
   const [error, setError] = useState<string | null>(null);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [newInvitation, setNewInvitation] = useState({
-    email: '',
-    role: 'developer' as 'admin' | 'developer' | 'viewer',
-    projectAccess: [] as string[]
-  });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
+    async function fetchTeamData() {
+      try {
+        const [membersResponse, invitationsResponse] = await Promise.all([
+          apiCall(`${API_URL}/team/members`),
+          apiCall(`${API_URL}/team/invitations`)
+        ]);
+
+        if (membersResponse.ok) {
+          const membersData = await membersResponse.json();
+          setMembers(Array.isArray(membersData) ? membersData : []);
+        } else {
+          setMembers([]);
+        }
+
+        if (invitationsResponse.ok) {
+          const invitationsData = await invitationsResponse.json();
+          setInvitations(Array.isArray(invitationsData) ? invitationsData : []);
+        } else {
+          setInvitations([]);
+        }
+      } catch (err) {
+        console.error('Error fetching team data:', err);
+        setError('No se pudieron cargar los datos del equipo');
+        setMembers([]);
+        setInvitations([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchTeamData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [membersResponse, invitationsResponse, projectsResponse] = await Promise.all([
-        apiCall(`http://localhost:3001/team/members`),
-        apiCall(`http://localhost:3001/team/invitations`),
-        apiCall(`http://localhost:3001/deployments`)
-      ]);
-
-      if (!membersResponse.ok) throw new Error('Error al cargar miembros');
-      if (!invitationsResponse.ok) throw new Error('Error al cargar invitaciones');
-      if (!projectsResponse.ok) throw new Error('Error al cargar proyectos');
-
-      const membersData = await membersResponse.json();
-      const invitationsData = await invitationsResponse.json();
-      const projectsData = await projectsResponse.json();
-      
-      setMembers(membersData.members || []);
-      setInvitations(invitationsData.invitations || []);
-      setProjects(Array.isArray(projectsData) ? projectsData : (projectsData.deployments || []));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendInvitation = async () => {
-    if (!newInvitation.email.trim()) return;
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
 
     try {
-      const response = await apiCall(`http://localhost:3001/team/invitations`, {
+      const response = await apiCall(`${API_URL}/team/invitations`, {
         method: 'POST',
-        body: JSON.stringify(newInvitation)
+        body: JSON.stringify({ 
+          email: newInviteEmail, 
+          role: newInviteRole 
+        })
       });
 
-      if (!response.ok) throw new Error('Error al enviar invitación');
+      const data = await response.json();
 
-      await loadData();
-      setNewInvitation({ email: '', role: 'developer', projectAccess: [] });
-      setIsInviteModalOpen(false);
+      if (response.ok) {
+        // Añadir la nueva invitación a la lista
+        setInvitations(prev => [...prev, data.invitation]);
+        setNewInviteEmail('');
+        setNewInviteRole('viewer');
+      } else {
+        setError(data.error || 'No se pudo enviar la invitación');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('Error inviting team member:', err);
+      setError('Hubo un problema al invitar al miembro');
     }
   };
 
-  const removeMember = async (memberId: string) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar este miembro del equipo?')) return;
-
+  const handleRemoveMember = async (memberId: string) => {
     try {
-      const response = await apiCall(`http://localhost:3001/team/members/${memberId}`, {
+      const response = await apiCall(`${API_URL}/team/members/${memberId}`, {
         method: 'DELETE'
       });
 
-      if (!response.ok) throw new Error('Error al eliminar miembro');
-
-      await loadData();
+      if (response.ok) {
+        // Eliminar miembro de la lista
+        setMembers(prev => prev.filter(m => m.id !== memberId));
+      } else {
+        const data = await response.json();
+        setError(data.error || 'No se pudo eliminar el miembro');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('Error removing team member:', err);
+      setError('Hubo un problema al eliminar el miembro');
     }
   };
 
-  const cancelInvitation = async (invitationId: string) => {
-    if (!window.confirm('¿Estás seguro de que quieres cancelar esta invitación?')) return;
-
+  const handleCancelInvitation = async (invitationId: string) => {
     try {
-      const response = await apiCall(`http://localhost:3001/team/invitations/${invitationId}`, {
+      const response = await apiCall(`${API_URL}/team/invitations/${invitationId}`, {
         method: 'DELETE'
       });
 
-      if (!response.ok) throw new Error('Error al cancelar invitación');
-
-      await loadData();
+      if (response.ok) {
+        // Eliminar invitación de la lista
+        setInvitations(prev => prev.filter(i => i.id !== invitationId));
+      } else {
+        const data = await response.json();
+        setError(data.error || 'No se pudo cancelar la invitación');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('Error canceling invitation:', err);
+      setError('Hubo un problema al cancelar la invitación');
     }
   };
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'owner':
-        return <Crown className="h-4 w-4 text-yellow-500" />;
-      case 'admin':
-        return <Shield className="h-4 w-4 text-blue-500" />;
-      case 'developer':
-        return <User className="h-4 w-4 text-green-500" />;
-      case 'viewer':
-        return <Eye className="h-4 w-4 text-gray-500" />;
-      default:
-        return <User className="h-4 w-4" />;
-    }
-  };
-
-  const getRoleText = (role: string) => {
-    switch (role) {
-      case 'owner':
-        return 'Propietario';
-      case 'admin':
-        return 'Administrador';
-      case 'developer':
-        return 'Desarrollador';
-      case 'viewer':
-        return 'Visualizador';
-      default:
-        return role;
-    }
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'owner':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'admin':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'developer':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'viewer':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'suspended':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Activo';
-      case 'pending':
-        return 'Pendiente';
-      case 'suspended':
-        return 'Suspendido';
-      default:
-        return status;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'suspended':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando equipo...</p>
+          <p className="text-muted-foreground">Cargando datos del equipo...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 bg-error rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="h-6 w-6 text-error-foreground" />
-        </div>
-        <h3 className="text-lg font-medium text-foreground mb-2">Error al cargar equipo</h3>
-        <p className="text-muted-foreground mb-4">{error}</p>
-        <Button onClick={loadData}>Reintentar</Button>
       </div>
     );
   }
@@ -264,326 +154,168 @@ export default function Team() {
   return (
     <div className="pt-8 px-4 pb-4 lg:p-6">
       <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Equipo</h1>
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Gestión de Equipo</h1>
         <p className="text-sm lg:text-base text-muted-foreground">
-          Gestiona miembros del equipo, permisos y colaboración en proyectos
+          Invita y gestiona los miembros de tu equipo con diferentes roles y permisos
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div></div>
-        
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button variant="outline" onClick={loadData} className="w-full sm:w-auto">
-            <Users className="h-4 w-4 mr-2" />
-            Actualizar
-          </Button>
-          
-          <Dialog open={isInviteModalOpen} onOpenChange={setIsInviteModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Invitar Miembro
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md mx-auto">
-              <DialogHeader>
-                <DialogTitle>Invitar Miembro al Equipo</DialogTitle>
-                <DialogDescription>
-                  Envía una invitación por email para unirse al equipo.
-                </DialogDescription>
-              </DialogHeader>
-              
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Miembros del Equipo */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Miembros del Equipo
+            </CardTitle>
+            <CardDescription>
+              {members.length} miembro{members.length !== 1 ? 's' : ''} en total
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!Array.isArray(members) || members.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">No hay miembros en el equipo</p>
+              </div>
+            ) : (
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email</Label>
+                {members.map(member => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src={member.avatar} alt={member.name} />
+                        <AvatarFallback>{member.name[0]?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-foreground">{member.name}</p>
+                        <p className="text-sm text-muted-foreground">{member.email}</p>
+                        <Badge variant="secondary" className="mt-1">
+                          {member.role}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Invitaciones y Formulario */}
+        <div className="space-y-6">
+          {/* Formulario de Invitación */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="h-5 w-5" />
+                Invitar Miembro
+              </CardTitle>
+              <CardDescription>
+                Añade nuevos miembros a tu equipo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleInvite} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Correo Electrónico</Label>
                   <Input
-                    id="email"
                     type="email"
-                    placeholder="usuario@ejemplo.com"
-                    value={newInvitation.email}
-                    onChange={(e) => setNewInvitation(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full"
+                    id="email"
+                    value={newInviteEmail}
+                    onChange={(e) => setNewInviteEmail(e.target.value)}
+                    required
+                    placeholder="ejemplo@dominio.com"
                   />
                 </div>
-                
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="role">Rol</Label>
-                  <Select
-                    value={newInvitation.role}
-                    onValueChange={(value: 'admin' | 'developer' | 'viewer') => 
-                      setNewInvitation(prev => ({ ...prev, role: value }))
-                    }
-                  >
-                    <SelectTrigger className="w-full">
+                  <Select value={newInviteRole} onValueChange={setNewInviteRole}>
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-blue-500" />
-                          Administrador
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="developer">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-green-500" />
-                          Desarrollador
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="viewer">
-                        <div className="flex items-center gap-2">
-                          <Eye className="h-4 w-4 text-gray-500" />
-                          Visualizador
-                        </div>
-                      </SelectItem>
+                      <SelectItem value="viewer">Visor - Solo lectura</SelectItem>
+                      <SelectItem value="developer">Desarrollador - Puede desplegar</SelectItem>
+                      <SelectItem value="admin">Administrador - Acceso completo</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                
-                <div>
-                  <Label>Acceso a Proyectos</Label>
-                  <div className="space-y-2 mt-2">
-                    {projects.map((project) => (
-                      <label key={project.id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={newInvitation.projectAccess.includes(project.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setNewInvitation(prev => ({
-                                ...prev,
-                                projectAccess: [...prev.projectAccess, project.id]
-                              }));
-                            } else {
-                              setNewInvitation(prev => ({
-                                ...prev,
-                                projectAccess: prev.projectAccess.filter(id => id !== project.id)
-                              }));
-                            }
-                          }}
-                          className="rounded border-gray-300"
-                        />
-                        <span className="text-sm">{project.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsInviteModalOpen(false)}
-                  className="w-full sm:w-auto"
-                >
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={sendInvitation}
-                  disabled={!newInvitation.email.trim()}
-                  className="w-full sm:w-auto"
-                >
+                <Button type="submit" className="w-full">
                   <Mail className="h-4 w-4 mr-2" />
                   Enviar Invitación
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+              </form>
+            </CardContent>
+          </Card>
 
-      {/* Team Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Miembros Activos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{members.filter(m => m.status === 'active').length}</div>
-            <p className="text-xs text-muted-foreground">
-              {members.length} total en el equipo
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Invitaciones Pendientes</CardTitle>
-            <Mail className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{invitations.filter(i => i.status === 'pending').length}</div>
-            <p className="text-xs text-muted-foreground">
-              Esperando respuesta
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Proyectos Compartidos</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{projects.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Disponibles para colaboración
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Team Members */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Miembros del Equipo</h2>
-        <div className="space-y-4">
-          {members.map((member) => (
-            <Card key={member.id}>
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base sm:text-lg">{member.name}</CardTitle>
-                      <CardDescription className="text-xs sm:text-sm">{member.email}</CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge className={`${getRoleColor(member.role)} text-xs`}>
-                      {getRoleIcon(member.role)}
-                      <span className="ml-1">{getRoleText(member.role)}</span>
-                    </Badge>
-                    <Badge className={`${getStatusColor(member.status)} text-xs`}>
-                      {getStatusIcon(member.status)}
-                      <span className="ml-1">{getStatusText(member.status)}</span>
-                    </Badge>
-                    {member.role !== 'owner' && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeMember(member.id)}
-                        className="w-full sm:w-auto"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Eliminar
-                      </Button>
-                    )}
-                  </div>
+          {/* Invitaciones Pendientes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Invitaciones Pendientes
+              </CardTitle>
+              <CardDescription>
+                {invitations.length} invitación{invitations.length !== 1 ? 'es' : ''} pendiente{invitations.length !== 1 ? 's' : ''}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!Array.isArray(invitations) || invitations.length === 0 ? (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">No hay invitaciones pendientes</p>
                 </div>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs sm:text-sm text-muted-foreground">
-                  <span>Se unió: {new Date(member.joinedAt).toLocaleDateString('es-ES')}</span>
-                  {member.lastActive && (
-                    <span>Última actividad: {new Date(member.lastActive).toLocaleDateString('es-ES')}</span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Pending Invitations */}
-      {invitations.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">Invitaciones Pendientes</h2>
-          <div className="space-y-4">
-            {invitations.map((invitation) => (
-              <Card key={invitation.id}>
-                <CardHeader>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                        <Mail className="h-5 w-5 text-muted-foreground" />
-                      </div>
+              ) : (
+                <div className="space-y-4">
+                  {invitations.map(invitation => (
+                    <div
+                      key={invitation.id}
+                      className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                    >
                       <div>
-                        <CardTitle className="text-base sm:text-lg">{invitation.email}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">
-                          Invitado por {invitation.invitedBy} • {new Date(invitation.invitedAt).toLocaleDateString('es-ES')}
-                        </CardDescription>
+                        <p className="font-medium text-foreground">{invitation.email}</p>
+                        <Badge variant="outline" className="mt-1">
+                          {invitation.role}
+                        </Badge>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Invitado el {new Date(invitation.invitedAt).toLocaleDateString()}
+                        </p>
                       </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge className={`${getRoleColor(invitation.role)} text-xs`}>
-                        {getRoleIcon(invitation.role)}
-                        <span className="ml-1">{getRoleText(invitation.role)}</span>
-                      </Badge>
-                      <Badge className={`${getStatusColor(invitation.status)} text-xs`}>
-                        {getStatusIcon(invitation.status)}
-                        <span className="ml-1">{getStatusText(invitation.status)}</span>
-                      </Badge>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => cancelInvitation(invitation.id)}
-                        className="w-full sm:w-auto"
+                        onClick={() => handleCancelInvitation(invitation.id)}
+                        className="text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Cancelar
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      )}
-
-      {/* Role Permissions Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Permisos por Rol</CardTitle>
-          <CardDescription>
-            Descripción de los permisos disponibles para cada rol
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-yellow-500" />
-                <span className="font-medium">Propietario</span>
-              </div>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Acceso completo a todo</li>
-                <li>• Gestionar equipo y facturación</li>
-                <li>• Eliminar proyectos</li>
-              </ul>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-blue-500" />
-                <span className="font-medium">Administrador</span>
-              </div>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Desplegar y gestionar apps</li>
-                <li>• Invitar miembros</li>
-                <li>• Configurar dominios</li>
-              </ul>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-green-500" />
-                <span className="font-medium">Desarrollador</span>
-              </div>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Desplegar aplicaciones</li>
-                <li>• Ver logs y métricas</li>
-                <li>• Gestionar variables de entorno</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }
