@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2025-09-23T10:30:00Z",
+    "category": "infrastructure",
+    "title": "Silenciados logs DEBUG del frontend por defecto",
+    "details": "Los logs de configuración en src/lib/api.ts ahora solo aparecen si VITE_DEBUG='true'.",
+    "files": ["src/lib/api.ts"],
+    "severity": "info"
+  },
+  {
+    "timestamp": "2025-09-23T10:38:00Z",
+    "category": "security",
+    "title": "Checklist de seguridad añadido",
+    "details": "Se creó SECURITY_CHECKLIST.md con los controles aplicados y pendientes.",
+    "files": ["SECURITY_CHECKLIST.md"],
+    "severity": "info"
+  },
+  {
+    "timestamp": "2025-09-23T10:41:00Z",
+    "category": "performance",
+    "title": "Checklist de rendimiento añadido",
+    "details": "Se creó PERFORMANCE_CHECKLIST.md con items de backend, frontend e infra.",
+    "files": ["PERFORMANCE_CHECKLIST.md"],
+    "severity": "info"
+  }
+]

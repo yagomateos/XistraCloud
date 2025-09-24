@@ -39,6 +39,9 @@ interface Backup {
   size: string;
   createdAt: string;
   scheduledAt?: string;
+  nextBackup?: string | null;
+  completedAt?: string;
+  downloadUrl?: string | null;
   retentionDays: number;
 }
 
@@ -67,12 +70,23 @@ export default function Backups() {
     loadData();
   }, []);
 
+  // POLLING DESACTIVADO COMPLETAMENTE - problemas con backend scheduling
+  // useEffect(() => {
+  //   const hasInProgress = backups.some(b => b.status === 'in_progress');
+  //   if (!hasInProgress) return;
+  //   console.log('🔄 Polling habilitado - backups en progreso:', backups.filter(b => b.status === 'in_progress').map(b => b.name));
+  //   const t = setInterval(() => {
+  //     loadData();
+  //   }, 2000);
+  //   return () => clearInterval(t);
+  // }, [backups]);
+
   const loadData = async () => {
     try {
       setLoading(true);
       const [backupsResponse, projectsResponse] = await Promise.all([
         apiCall(`http://localhost:3001/backups`),
-        apiCall(`http://localhost:3001/deployments`)
+        apiCall(`http://localhost:3001/projects`)
       ]);
 
       if (!backupsResponse.ok) throw new Error('Error al cargar backups');
@@ -82,7 +96,7 @@ export default function Backups() {
       const projectsData = await projectsResponse.json();
       
       setBackups(backupsData.backups || []);
-      setProjects(Array.isArray(projectsData) ? projectsData : (projectsData.deployments || []));
+      setProjects(Array.isArray(projectsData) ? projectsData : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
@@ -136,6 +150,24 @@ export default function Backups() {
       if (!response.ok) throw new Error('Error al restaurar backup');
 
       await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    }
+  };
+
+  const downloadBackup = async (backupId: string) => {
+    try {
+      const resp = await apiCall(`http://localhost:3001/backups/${backupId}/download`);
+      if (!resp.ok) throw new Error('Error al descargar backup');
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${backupId}.tar.gz`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
     }
@@ -430,10 +462,10 @@ export default function Backups() {
                       {getStatusIcon(backup.status)}
                       <span className="ml-1">{getStatusText(backup.status)}</span>
                     </Badge>
-                    {backup.scheduledAt && (
+                    {backup.nextBackup && (
                       <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
                         <Calendar className="h-3 w-3 mr-1" />
-                        Programado
+                        Próximo: {new Date(backup.nextBackup).toLocaleTimeString('es-ES')}
                       </Badge>
                     )}
                   </div>
@@ -453,6 +485,14 @@ export default function Backups() {
                       {new Date(backup.createdAt).toLocaleString('es-ES')}
                     </span>
                   </div>
+                  {backup.completedAt && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Completado:</span>
+                      <span className="font-medium">
+                        {new Date(backup.completedAt).toLocaleString('es-ES')}
+                      </span>
+                    </div>
+                  )}
                   
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Retención:</span>
@@ -475,10 +515,7 @@ export default function Backups() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          // Download backup logic
-                          console.log('Download backup:', backup.id);
-                        }}
+                        onClick={() => downloadBackup(backup.id)}
                         className="w-full sm:w-auto"
                       >
                         <Download className="h-3 w-3 mr-2" />
