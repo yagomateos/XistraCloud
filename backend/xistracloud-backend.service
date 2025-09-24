@@ -1,0 +1,32 @@
+[Unit]
+Description=XistraCloud Backend API Server
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/xistracloud/backend
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=xistracloud-backend
+
+# Environment variables
+Environment=NODE_ENV=production
+Environment=PORT=3001
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/www/xistracloud/backend/backups
+ReadWritePaths=/var/www/xistracloud/backend/uploads
+ReadWritePaths=/var/www/xistracloud/backend/user-data.json
+ReadWritePaths=/var/www/xistracloud/backend/users.json
+
+[Install]
+WantedBy=multi-user.target

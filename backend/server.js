@@ -1571,6 +1571,31 @@ function initializeLoadedUserDataMap(userDataMap) {
   }
 }
 
+// Initialize user data for new users
+function initializeUserData(userId) {
+  if (!userData.has(userId)) {
+    userData.set(userId, {
+      projects: [],
+      deployments: [],
+      domains: [],
+      backups: [],
+      team: {
+        members: [],
+        invitations: []
+      },
+      environmentVariables: [],
+      logs: [],
+      profile: {
+        email: "",
+        fullName: "",
+        avatar: "",
+        plan: "free"
+      },
+      databaseServices: []
+    });
+  }
+}
+
 // Normalizar estructura tras la carga
 initializeLoadedUserDataMap(userData);
 

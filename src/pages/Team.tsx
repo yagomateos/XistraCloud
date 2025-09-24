@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Mail, UserPlus, Trash2, Clock, AlertCircle } from 'lucide-react';
+import { Users, Mail, UserPlus, Trash2, Clock, AlertCircle, RefreshCw, Crown, Shield, Code } from 'lucide-react';
 
 interface TeamMember {
   id: string;
@@ -153,11 +153,23 @@ export default function Team() {
 
   return (
     <div className="pt-8 px-4 pb-4 lg:p-6">
-      <div className="mb-6 lg:mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Gestión de Equipo</h1>
-        <p className="text-sm lg:text-base text-muted-foreground">
-          Invita y gestiona los miembros de tu equipo con diferentes roles y permisos
-        </p>
+      <div className="flex items-center justify-between mb-6 lg:mb-8">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 mt-2">Equipo</h1>
+          <p className="text-sm lg:text-base text-muted-foreground">
+            Gestiona miembros del equipo, permisos y colaboración en proyectos
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualizar
+          </Button>
+          <Button size="sm">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Invitar Miembro
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -167,155 +179,145 @@ export default function Team() {
         </Alert>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Miembros del Equipo */}
+      {/* Métricas del Equipo */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Miembros del Equipo
-            </CardTitle>
-            <CardDescription>
-              {members.length} miembro{members.length !== 1 ? 's' : ''} en total
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Miembros Activos</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {!Array.isArray(members) || members.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No hay miembros en el equipo</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {members.map(member => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={member.avatar} alt={member.name} />
-                        <AvatarFallback>{member.name[0]?.toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-foreground">{member.name}</p>
-                        <p className="text-sm text-muted-foreground">{member.email}</p>
-                        <Badge variant="secondary" className="mt-1">
-                          {member.role}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="text-2xl font-bold">{members.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {members.length} total en el equipo
+            </p>
           </CardContent>
         </Card>
 
-        {/* Invitaciones y Formulario */}
-        <div className="space-y-6">
-          {/* Formulario de Invitación */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Invitar Miembro
-              </CardTitle>
-              <CardDescription>
-                Añade nuevos miembros a tu equipo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleInvite} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Correo Electrónico</Label>
-                  <Input
-                    type="email"
-                    id="email"
-                    value={newInviteEmail}
-                    onChange={(e) => setNewInviteEmail(e.target.value)}
-                    required
-                    placeholder="ejemplo@dominio.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Rol</Label>
-                  <Select value={newInviteRole} onValueChange={setNewInviteRole}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="viewer">Visor - Solo lectura</SelectItem>
-                      <SelectItem value="developer">Desarrollador - Puede desplegar</SelectItem>
-                      <SelectItem value="admin">Administrador - Acceso completo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" className="w-full">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Enviar Invitación
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Invitaciones Pendientes</CardTitle>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{invitations.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Esperando respuesta
+            </p>
+          </CardContent>
+        </Card>
 
-          {/* Invitaciones Pendientes */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Invitaciones Pendientes
-              </CardTitle>
-              <CardDescription>
-                {invitations.length} invitación{invitations.length !== 1 ? 'es' : ''} pendiente{invitations.length !== 1 ? 's' : ''}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!Array.isArray(invitations) || invitations.length === 0 ? (
-                <div className="text-center py-8">
-                  <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-muted-foreground">No hay invitaciones pendientes</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {invitations.map(invitation => (
-                    <div
-                      key={invitation.id}
-                      className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
-                    >
-                      <div>
-                        <p className="font-medium text-foreground">{invitation.email}</p>
-                        <Badge variant="outline" className="mt-1">
-                          {invitation.role}
-                        </Badge>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Invitado el {new Date(invitation.invitedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCancelInvitation(invitation.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Proyectos Compartidos</CardTitle>
+            <Code className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">2</div>
+            <p className="text-xs text-muted-foreground">
+              Disponibles para colaboración
+            </p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Miembros del Equipo */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Miembros del Equipo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!Array.isArray(members) || members.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">No hay miembros en el equipo</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {members.map(member => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={member.avatar} alt={member.name} />
+                      <AvatarFallback>{member.name[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-foreground">{member.name}</p>
+                      <p className="text-sm text-muted-foreground">{member.email}</p>
+                      <Badge variant="secondary" className="mt-1">
+                        {member.role}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveMember(member.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Permisos por Rol */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Permisos por Rol</CardTitle>
+          <CardDescription>
+            Descripción de los permisos disponibles para cada rol
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Propietario */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-yellow-500" />
+                <h3 className="font-semibold">Propietario</h3>
+              </div>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>• Acceso completo a todo</li>
+                <li>• Gestionar equipo y facturación</li>
+                <li>• Eliminar proyectos</li>
+              </ul>
+            </div>
+
+            {/* Administrador */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-blue-500" />
+                <h3 className="font-semibold">Administrador</h3>
+              </div>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>• Desplegar y gestionar apps</li>
+                <li>• Invitar miembros</li>
+                <li>• Configurar dominios</li>
+              </ul>
+            </div>
+
+            {/* Desarrollador */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Code className="h-5 w-5 text-green-500" />
+                <h3 className="font-semibold">Desarrollador</h3>
+              </div>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>• Desplegar aplicaciones</li>
+                <li>• Ver logs y métricas</li>
+                <li>• Gestionar variables de entorno</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
