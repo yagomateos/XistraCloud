@@ -3736,6 +3736,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
     console.log(`💳 Using price ID: ${priceId}`);
     console.log(`💳 Stripe Key exists: ${!!process.env.STRIPE_SECRET_KEY}`);
 
+
     // Verificar que Stripe esté inicializado
     if (!stripe) {
       throw new Error('Stripe no está inicializado');
