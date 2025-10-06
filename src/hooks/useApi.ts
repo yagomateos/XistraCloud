@@ -9,6 +9,14 @@ export const useApi = () => {
       ...(options.headers as Record<string, string> | undefined),
     };
 
+    // Attach JWT token
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
     // Attach user email from context or localStorage fallback
     let email = user?.email as string | undefined;
     if (!email && typeof window !== 'undefined') {
