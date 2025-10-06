@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { API_URL } from '@/lib/api';
 
 export default function RegisterSimple() {
   const [name, setName] = useState('');
@@ -33,10 +34,9 @@ export default function RegisterSimple() {
     setIsLoading(true);
 
     try {
-      const apiUrl = 'http://localhost:3001';
-      console.log('🔗 API URL:', apiUrl);
-      
-      const response = await fetch(`${apiUrl}/auth/register`, {
+      console.log('🔗 API URL:', API_URL);
+
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

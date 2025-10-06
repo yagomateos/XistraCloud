@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContextSimple';
+import { API_URL } from '@/lib/api';
 
 export default function LoginSimple() {
   const [email, setEmail] = useState('');
@@ -20,9 +21,8 @@ export default function LoginSimple() {
     setIsLoading(true);
 
     try {
-      const apiUrl = 'http://localhost:3001';
-      console.log('🔗 API URL:', apiUrl);
-      const response = await fetch(`${apiUrl}/auth/login`, {
+      console.log('🔗 API URL:', API_URL);
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,8 +43,8 @@ export default function LoginSimple() {
           description: "Has iniciado sesión correctamente",
         });
         
-        // Redirigir al dashboard local
-        window.location.href = 'http://localhost:3002/dashboard';
+        // Redirigir al dashboard
+        navigate('/dashboard');
       } else {
         const error = await response.json();
         toast({
