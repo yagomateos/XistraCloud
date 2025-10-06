@@ -28,6 +28,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
+import { API_URL } from '@/lib/api';
 
 interface Backup {
   id: string;
@@ -85,8 +86,8 @@ export default function Backups() {
     try {
       setLoading(true);
       const [backupsResponse, projectsResponse] = await Promise.all([
-        apiCall(`http://localhost:3001/backups`),
-        apiCall(`http://localhost:3001/projects`)
+        apiCall(`${API_URL}/backups`),
+        apiCall(`${API_URL}/projects`)
       ]);
 
       if (!backupsResponse.ok) throw new Error('Error al cargar backups');
@@ -108,7 +109,7 @@ export default function Backups() {
     if (!newBackup.name.trim() || !newBackup.projectId) return;
 
     try {
-      const response = await apiCall(`http://localhost:3001/backups`, {
+      const response = await apiCall(`${API_URL}/backups`, {
         method: 'POST',
         body: JSON.stringify(newBackup)
       });
@@ -127,7 +128,7 @@ export default function Backups() {
     if (!window.confirm('¿Estás seguro de que quieres eliminar este backup?')) return;
 
     try {
-      const response = await apiCall(`http://localhost:3001/backups/${backupId}`, {
+      const response = await apiCall(`${API_URL}/backups/${backupId}`, {
         method: 'DELETE'
       });
 
@@ -143,7 +144,7 @@ export default function Backups() {
     if (!window.confirm('¿Estás seguro de que quieres restaurar este backup? Esto sobrescribirá los datos actuales.')) return;
 
     try {
-      const response = await apiCall(`http://localhost:3001/backups/${backupId}/restore`, {
+      const response = await apiCall(`${API_URL}/backups/${backupId}/restore`, {
         method: 'POST'
       });
 
@@ -157,7 +158,7 @@ export default function Backups() {
 
   const downloadBackup = async (backupId: string) => {
     try {
-      const resp = await apiCall(`http://localhost:3001/backups/${backupId}/download`);
+      const resp = await apiCall(`${API_URL}/backups/${backupId}/download`);
       if (!resp.ok) throw new Error('Error al descargar backup');
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
