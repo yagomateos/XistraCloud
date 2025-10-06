@@ -32,17 +32,24 @@ export default function LoginSimple() {
 
       if (response.ok) {
         const data = await response.json();
-        
+
+        // Save token to localStorage
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('authToken', data.token);
+        }
+
         // Use the login function from context
         login(data.user);
-        
+
         console.log('✅ Login successful:', data.user);
-        
+        console.log('✅ Token saved:', data.token ? 'Yes' : 'No');
+
         toast({
           title: "¡Bienvenido!",
           description: "Has iniciado sesión correctamente",
         });
-        
+
         // Redirigir al dashboard
         navigate('/dashboard');
       } else {
