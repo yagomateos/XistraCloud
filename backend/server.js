@@ -871,7 +871,10 @@ async function deployStaticProject(project) {
     if (fs.existsSync(pkgPath)) {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
       if (pkg.scripts && pkg.scripts.build) {
-        await runCmd('npm', ['install'], repoDir, 10 * 60 * 1000);
+        // devDependencies (vite, build tooling, etc.) must be installed even
+        // though this backend process runs with NODE_ENV=production, which
+        // npm would otherwise use to skip them.
+        await runCmd('npm', ['install', '--include=dev'], repoDir, 10 * 60 * 1000);
         await runCmd('npm', ['run', 'build'], repoDir, 10 * 60 * 1000);
 
         const outputDir = STATIC_OUTPUT_DIRS
