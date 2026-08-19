@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '@/lib/api';
 import { useApi } from '@/hooks/useApi';
+import { useAuth } from '@/contexts/AuthContextSimple';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,7 @@ interface TeamInvitation {
 export default function Team() {
   const navigate = useNavigate();
   const { apiCall } = useApi();
+  const { loading: authLoading } = useAuth();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
   const [newInviteEmail, setNewInviteEmail] = useState('');
@@ -43,6 +45,8 @@ export default function Team() {
   const [sharedProjectsCount, setSharedProjectsCount] = useState(0);
 
   useEffect(() => {
+    if (authLoading) return;
+
     async function fetchTeamData() {
       try {
         const [membersResponse, invitationsResponse, projectsResponse] = await Promise.all([
@@ -82,7 +86,7 @@ export default function Team() {
     }
 
     fetchTeamData();
-  }, []);
+  }, [authLoading]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Plus, Edit, Trash2, Save, X, Eye, EyeOff } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 import { API_URL } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContextSimple';
 
 interface EnvironmentVariable {
   key: string;
@@ -26,6 +27,7 @@ interface Project {
 
 export default function EnvironmentVariables() {
   const { apiCall } = useApi();
+  const { loading: authLoading } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +36,9 @@ export default function EnvironmentVariables() {
   const [showSecrets, setShowSecrets] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
+    if (authLoading) return;
     loadProjects();
-  }, []);
+  }, [authLoading]);
 
   const loadProjects = async () => {
     try {

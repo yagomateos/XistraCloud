@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 import { API_URL } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContextSimple';
 
 const TOTAL_STORAGE_MB = 10 * 1024;
 
@@ -71,6 +72,7 @@ interface Project {
 
 export default function Backups() {
   const { apiCall } = useApi();
+  const { loading: authLoading } = useAuth();
   const [backups, setBackups] = useState<Backup[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,8 +86,9 @@ export default function Backups() {
   });
 
   useEffect(() => {
+    if (authLoading) return;
     loadData();
-  }, []);
+  }, [authLoading]);
 
   // POLLING DESACTIVADO COMPLETAMENTE - problemas con backend scheduling
   // useEffect(() => {
