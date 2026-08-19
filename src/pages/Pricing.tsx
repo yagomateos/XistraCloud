@@ -30,7 +30,7 @@ const PricingPage: React.FC = () => {
       price: 0,
       description: 'Ideal para proyectos personales y prototipos',
       features: [
-        '1 Proyecto',
+        '6 Proyectos',
         'Despliegues desde Git',
         'Dominio .xistra.app',
         'SSL automático',
@@ -226,7 +226,7 @@ const PricingPage: React.FC = () => {
               <tbody>
                 <tr className="border-b">
                   <td className="py-3 px-4 font-medium">Proyectos máximos</td>
-                  <td className="text-center py-3 px-4">1</td>
+                  <td className="text-center py-3 px-4">6</td>
                   <td className="text-center py-3 px-4">5</td>
                   <td className="text-center py-3 px-4">20</td>
                 </tr>

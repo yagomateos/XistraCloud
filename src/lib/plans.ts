@@ -17,7 +17,7 @@ export interface PlanFeatures {
 
 export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
   free: {
-    maxProjects: 1,
+    maxProjects: 6,
     maxDeployments: 5,
     customDomains: false,
     customDomainsLimit: 0,
