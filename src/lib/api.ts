@@ -128,7 +128,7 @@ const buildAuthHeaders = (extra: Record<string, string> = {}) => {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         const parsed = JSON.parse(storedUser);
-        userEmail = parsed?.email || 'yagomateos@hotmail.com';
+        userEmail = parsed?.email || '';
       }
       const token = localStorage.getItem('token') || localStorage.getItem('authToken');
       if (token && typeof token === 'string') {
@@ -136,17 +136,12 @@ const buildAuthHeaders = (extra: Record<string, string> = {}) => {
       }
     }
   } catch {
-    // Fallback para desarrollo
-    userEmail = 'yagomateos@hotmail.com';
+    // ignore malformed localStorage state
   }
-
-  // En desarrollo, siempre incluir x-user-email
-  const isDevelopment = typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   return {
     'Content-Type': 'application/json',
-    ...(isDevelopment || userEmail ? { 'x-user-email': userEmail } : {}),
+    ...(userEmail ? { 'x-user-email': userEmail } : {}),
     ...(bearerToken ? { 'Authorization': bearerToken } : {}),
     ...extra
   } as Record<string, string>;
