@@ -8,6 +8,7 @@ const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
+const { spawn } = require('child_process');
 
 // Security modules
 const { 
@@ -832,22 +833,100 @@ app.get('/projects', getCurrentUser, async (req, res) => {
 });
 
 // Create project endpoint (per-user)
+// Real build/deploy pipeline for Git-imported static sites.
+// Clones the repo, builds it if it's a Node project, and serves the
+// resulting static output under https://<slug>.xistracloud.com via the
+// wildcard nginx vhost. Only static output is supported (no long-running
+// servers) — anything else is left as a failed deploy rather than faked.
+const DEPLOY_ROOT = '/var/www/deployments';
+const STATIC_OUTPUT_DIRS = ['dist', 'build', 'out'];
+
+function runCmd(cmd, args, cwd, timeoutMs = 5 * 60 * 1000) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { cwd, timeout: timeoutMs });
+    let stderr = '';
+    child.stderr?.on('data', (d) => { stderr += d.toString(); });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`${cmd} ${args.join(' ')} exited with code ${code}: ${stderr.slice(-500)}`));
+    });
+  });
+}
+
+async function deployStaticProject(project) {
+  const slug = project.id_slug;
+  const repoDir = path.join(DEPLOY_ROOT, slug, 'repo');
+  const publicDir = path.join(DEPLOY_ROOT, slug, 'public');
+
+  try {
+    fs.rmSync(path.join(DEPLOY_ROOT, slug), { recursive: true, force: true });
+    fs.mkdirSync(repoDir, { recursive: true });
+
+    await runCmd('git', ['clone', '--depth', '1', project.repository, repoDir]);
+
+    const pkgPath = path.join(repoDir, 'package.json');
+    let sourceDir = repoDir;
+
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (pkg.scripts && pkg.scripts.build) {
+        await runCmd('npm', ['install'], repoDir, 10 * 60 * 1000);
+        await runCmd('npm', ['run', 'build'], repoDir, 10 * 60 * 1000);
+
+        const outputDir = STATIC_OUTPUT_DIRS
+          .map((d) => path.join(repoDir, d))
+          .find((d) => fs.existsSync(d));
+
+        if (!outputDir) {
+          throw new Error('Build succeeded but no dist/build/out directory was produced');
+        }
+        sourceDir = outputDir;
+      } else {
+        throw new Error('package.json has no "build" script — only static sites and buildable Node projects are supported');
+      }
+    }
+
+    if (!fs.existsSync(path.join(sourceDir, 'index.html'))) {
+      throw new Error('No index.html found in the deployable output — not a static site');
+    }
+
+    fs.mkdirSync(publicDir, { recursive: true });
+    fs.cpSync(sourceDir, publicDir, { recursive: true });
+    fs.rmSync(repoDir, { recursive: true, force: true });
+
+    project.status = 'deployed';
+    project.url = `https://${slug}.xistracloud.com`;
+    console.log(`✅ Deployed "${project.name}" -> ${project.url}`);
+  } catch (error) {
+    project.status = 'failed';
+    project.url = null;
+    project.deploy_error = error.message;
+    console.error(`❌ Deploy failed for "${project.name}":`, error.message);
+  } finally {
+    saveUsers();
+  }
+}
+
 app.post('/projects', getCurrentUser, createLimiter, validateSchema(projectCreateSchema), async (req, res) => {
   try {
     const { name, repository, framework } = req.body;
-    
+
     if (!name || !repository) {
-      return res.status(400).json({ 
-        error: 'Name and repository are required' 
+      return res.status(400).json({
+        error: 'Name and repository are required'
       });
     }
 
+    const slug = `${String(name).toLowerCase().replace(/[^a-z0-9-]/g, '-')}-${crypto.randomUUID().slice(0, 6)}`;
+
     const newProject = {
       id: crypto.randomUUID(),
+      id_slug: slug,
       name: name,
       repository: repository,
       framework: framework || 'unknown',
-      status: 'deployed',
+      status: 'building',
       url: null,
       user_id: req.user.email,
       created_at: new Date().toISOString(),
@@ -861,8 +940,10 @@ app.post('/projects', getCurrentUser, createLimiter, validateSchema(projectCreat
     req.userData.projects.push(newProject);
     saveUsers();
 
-    console.log(`🚀 Project "${name}" created for user ${req.user.email}`);
+    console.log(`🚀 Project "${name}" created for user ${req.user.email}, building...`);
     res.status(201).json(newProject);
+
+    deployStaticProject(newProject);
   } catch (error) {
     console.error('❌ Error in POST /projects:', error);
     res.status(500).json({ error: error.message });
