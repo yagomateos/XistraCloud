@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Loader2, CheckCircle, Server, Globe, Shield, Zap, Database, Palette } from 'lucide-react';
 
-import { API_URL } from '@/lib/api';
+import { API_URL, buildAuthHeaders } from '@/lib/api';
 
 interface AppTemplate {
   id: string;
@@ -150,7 +150,7 @@ export default function AppInstall() {
     try {
       const response = await fetch(`${API_URL}/apps/deploy`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders(),
         body: JSON.stringify({
           templateId: template.id,
           name: config.appName,

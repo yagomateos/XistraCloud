@@ -120,7 +120,7 @@ if (SHOULD_DEBUG) {
 }
 
 // Helper: build auth headers with user email for multi-user isolation
-const buildAuthHeaders = (extra: Record<string, string> = {}) => {
+export const buildAuthHeaders = (extra: Record<string, string> = {}) => {
   let userEmail = '';
   let bearerToken = '';
   try {
