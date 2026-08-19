@@ -16,6 +16,7 @@ import DatabaseServices from "@/pages/DatabaseServices";
 import Deployments from "@/pages/Deployments";
 import Logs from "@/pages/Logs";
 import Settings from "@/pages/Settings";
+import SettingsDebug from "@/pages/SettingsDebug";
 import Profile from "@/pages/Profile";
 import Domains from "@/pages/Domains";
 import Pricing from "@/pages/Pricing";
@@ -67,6 +68,7 @@ const App = () => (
                 <Route path="backups" element={<Backups />} />
                 <Route path="team" element={<Team />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="settings-debug" element={<SettingsDebug />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="pricing" element={<Pricing />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

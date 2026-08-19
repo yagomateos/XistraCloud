@@ -2,20 +2,6 @@
   "user-1758526873069": {
     "projects": [
       {
-        "id": "d058e2c2-84af-4eda-be60-d30ea05bfca4",
-        "name": "getting-started",
-        "repository": "https://github.com/docker/getting-started",
-        "framework": "nextjs",
-        "status": "deployed",
-        "url": "https://getting-started.xistracloud.com",
-        "user_id": "yagomateos@hotmail.com",
-        "created_at": "2025-09-22T09:00:43.798Z",
-        "container_id": null,
-        "deploy_type": "auto",
-        "compose_path": null,
-        "organization_id": null
-      },
-      {
         "id": "7c9be208-c043-47bf-8a2e-16d99d51cc36",
         "name": "getting-started",
         "repository": "https://github.com/docker/getting-started",
@@ -24,6 +10,20 @@
         "url": "https://getting-started.xistracloud.com",
         "user_id": "yagomateos@hotmail.com",
         "created_at": "2025-09-22T09:03:00.612Z",
+        "container_id": null,
+        "deploy_type": "auto",
+        "compose_path": null,
+        "organization_id": null
+      },
+      {
+        "id": "d058e2c2-84af-4eda-be60-d30ea05bfca4",
+        "name": "getting-started",
+        "repository": "https://github.com/docker/getting-started",
+        "framework": "nextjs",
+        "status": "deployed",
+        "url": "https://getting-started.xistracloud.com",
+        "user_id": "yagomateos@hotmail.com",
+        "created_at": "2025-09-22T09:00:43.798Z",
         "container_id": null,
         "deploy_type": "auto",
         "compose_path": null,
@@ -73,27 +73,71 @@
         "instructions": {
           "general": "Despliegue instantáneo en local (simulado)."
         }
+      },
+      {
+        "id": "app-mysql-standalone-4af8f886",
+        "name": "mysql-1765373126796",
+        "template": "MySQL + phpMyAdmin",
+        "status": "running",
+        "urls": [
+          "http://localhost:8100",
+          "http://localhost:8101"
+        ],
+        "ports": [
+          8100,
+          8101
+        ],
+        "accessUrl": "http://localhost:8100",
+        "subdomain": "mysql-1765373126796-212173",
+        "subdomainUrl": "https://mysql-1765373126796-212173.xistracloud.com",
+        "created_at": "2025-12-10T13:25:26.799Z",
+        "type": "database_service",
+        "instructions": {
+          "general": "Despliegue instantáneo en local (simulado)."
+        }
       }
     ],
-    "domains": [],
-    "backups": [
+    "domains": [
       {
-        "id": "backup-ef705553",
-        "name": "SQL",
-        "type": "full",
-        "projectId": "app-mysql-standalone-bee212ce",
-        "projectName": "Proyecto",
-        "status": "completed",
-        "size": "234 MB",
-        "schedule": "manual",
-        "createdAt": "2025-09-23T09:15:58.584Z",
-        "completedAt": "2025-09-23T09:16:01.584Z",
-        "nextBackup": null,
-        "retentionDays": 30,
-        "downloadUrl": "/backups/backup-ef705553/download",
-        "filePath": "/Users/yagomateos/Proyectos/XistraCloud/backend/backups/yagomateos%40hotmail.com/backup-ef705553.tar.gz",
-        "restoredAt": "2025-09-23T09:31:27.112Z"
+        "id": "d9f4fd67-5997-46d0-9094-711143b14a2f",
+        "domain": "test.xistracloud.com",
+        "project_id": "d058e2c2-84af-4eda-be60-d30ea05bfca4",
+        "status": "pending",
+        "ssl_enabled": false,
+        "dns_records": {
+          "cname": {
+            "name": "test.xistracloud.com",
+            "value": "xistracloud.app"
+          },
+          "txt": {
+            "name": "_xistracloud.test.xistracloud.com",
+            "value": "xistracloud-verification=jo71kqdj3l"
+          }
+        },
+        "verification_token": "jo71kqdj3l",
+        "created_at": "2025-12-10T19:08:09.501Z"
       },
+      {
+        "id": "3cde08b7-eba5-4c64-bed3-e6e8bb8ff7a4",
+        "domain": "www.sinaptiks.com",
+        "project_id": "7c9be208-c043-47bf-8a2e-16d99d51cc36",
+        "status": "pending",
+        "ssl_enabled": false,
+        "dns_records": {
+          "cname": {
+            "name": "www.sinaptiks.com",
+            "value": "xistracloud.app"
+          },
+          "txt": {
+            "name": "_xistracloud.www.sinaptiks.com",
+            "value": "xistracloud-verification=m36vv1unr2r"
+          }
+        },
+        "verification_token": "m36vv1unr2r",
+        "created_at": "2025-12-10T19:08:47.246Z"
+      }
+    ],
+    "backups": [
       {
         "id": "backup-fdd3c792",
         "name": "Backup XistraCloud",
@@ -125,6 +169,22 @@
         "retentionDays": 30,
         "downloadUrl": "/backups/backup-fa86e586/download",
         "filePath": "/Users/yagomateos/Proyectos/XistraCloud/backend/backups/yagomateos%40hotmail.com/backup-fa86e586.tar.gz"
+      },
+      {
+        "id": "backup-42bcf008",
+        "name": "SQL",
+        "type": "database",
+        "projectId": "d058e2c2-84af-4eda-be60-d30ea05bfca4",
+        "projectName": "getting-started",
+        "status": "completed",
+        "size": "415 MB",
+        "schedule": "manual",
+        "createdAt": "2025-12-10T19:00:33.769Z",
+        "completedAt": "2025-12-10T19:00:33.769Z",
+        "nextBackup": null,
+        "retentionDays": 30,
+        "downloadUrl": "/backups/backup-42bcf008/download",
+        "filePath": "/Users/yagomateos/Proyectos/XistraCloud/backend/backups/yagomateos%40hotmail.com/backup-42bcf008.tar.gz"
       }
     ],
     "team": {
@@ -155,6 +215,46 @@
             "app-mysql-standalone-a9d2cb5a"
           ],
           "previewUrl": null
+        },
+        {
+          "id": "invitation-c517617b",
+          "email": "test@example.com",
+          "role": "developer",
+          "status": "pending",
+          "invitedAt": "2025-12-10T18:57:18.987Z",
+          "invitedBy": "Usuario Actual",
+          "projectAccess": [],
+          "previewUrl": null
+        },
+        {
+          "id": "invitation-49c6487f",
+          "email": "yagomateos@hotmail.com",
+          "role": "viewer",
+          "status": "pending",
+          "invitedAt": "2025-12-10T18:57:56.544Z",
+          "invitedBy": "Usuario Actual",
+          "projectAccess": [],
+          "previewUrl": null
+        },
+        {
+          "id": "invitation-010e4cb8",
+          "email": "yagomateos@hotmail.com",
+          "role": "viewer",
+          "status": "pending",
+          "invitedAt": "2025-12-10T18:57:56.870Z",
+          "invitedBy": "Usuario Actual",
+          "projectAccess": [],
+          "previewUrl": null
+        },
+        {
+          "id": "invitation-be703dc4",
+          "email": "yagomateos@hotmail.com",
+          "role": "developer",
+          "status": "pending",
+          "invitedAt": "2025-12-10T18:58:06.996Z",
+          "invitedBy": "Usuario Actual",
+          "projectAccess": [],
+          "previewUrl": null
         }
       ]
     },
@@ -184,6 +284,16 @@
         "admin_port": 8080,
         "created_at": "2025-09-24T13:41:54.781Z",
         "connection_string": "mysql://app_user:xistra_1758721314722@localhost:8070"
+      },
+      {
+        "id": "app-mysql-standalone-4af8f886",
+        "name": "mysql-1765373126796",
+        "type": "mysql",
+        "status": "running",
+        "port": 8100,
+        "admin_port": 8080,
+        "created_at": "2025-12-10T13:25:26.799Z",
+        "connection_string": "mysql://app_user:xistra_1765373126796@localhost:8100"
       }
     ]
   },

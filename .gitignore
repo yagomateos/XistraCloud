@@ -32,3 +32,6 @@ env.development
 
 # Runtime deployment data (contains generated credentials)
 deployments/
+
+# User backup archives (runtime data, not source)
+backend/backups/
