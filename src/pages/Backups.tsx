@@ -30,6 +30,22 @@ import {
 import { useApi } from '@/hooks/useApi';
 import { API_URL } from '@/lib/api';
 
+const TOTAL_STORAGE_MB = 10 * 1024;
+
+const parseSizeToMb = (size: string): number => {
+  const match = size?.match(/([\d.]+)\s*(KB|MB|GB)/i);
+  if (!match) return 0;
+  const value = parseFloat(match[1]);
+  const unit = match[2].toUpperCase();
+  if (unit === 'GB') return value * 1024;
+  if (unit === 'KB') return value / 1024;
+  return value;
+};
+
+const formatMb = (mb: number): string => {
+  return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(0)} MB`;
+};
+
 interface Backup {
   id: string;
   name: string;
@@ -403,19 +419,26 @@ export default function Backups() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Espacio utilizado:</span>
-              <span className="font-medium">2.3 GB de 10 GB</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '23%' }}></div>
-            </div>
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>23% utilizado</span>
-              <span>7.7 GB disponibles</span>
-            </div>
-          </div>
+          {(() => {
+            const usedMb = backups.reduce((sum, b) => sum + parseSizeToMb(b.size), 0);
+            const percentUsed = Math.min(100, Math.round((usedMb / TOTAL_STORAGE_MB) * 100));
+            const availableMb = Math.max(0, TOTAL_STORAGE_MB - usedMb);
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Espacio utilizado:</span>
+                  <span className="font-medium">{formatMb(usedMb)} de {formatMb(TOTAL_STORAGE_MB)}</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${percentUsed}%` }}></div>
+                </div>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{percentUsed}% utilizado</span>
+                  <span>{formatMb(availableMb)} disponibles</span>
+                </div>
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 

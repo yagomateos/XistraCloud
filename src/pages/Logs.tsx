@@ -11,8 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Download, AlertCircle, Info, CheckCircle, XCircle, Bug, RefreshCw, ChevronLeft, ChevronRight, Activity, Server, Cpu, HardDrive, Wifi } from 'lucide-react';
+import { Search, Download, AlertCircle, Info, CheckCircle, XCircle, Bug, RefreshCw, ChevronLeft, ChevronRight, Activity, Server, Cpu, HardDrive } from 'lucide-react';
 import { getLogs } from '@/lib/api';
+import { useApi } from '@/hooks/useApi';
+import { API_URL } from '@/lib/api';
+
+interface SystemMetrics {
+  cpu: { usage: number };
+  memory: { total: number; used: number };
+}
 
 const Logs = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,6 +27,18 @@ const Logs = () => {
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
+  const { apiCall } = useApi();
+
+  const { data: systemMetrics } = useQuery<SystemMetrics>({
+    queryKey: ['system-metrics'],
+    queryFn: async () => {
+      const response = await apiCall(`${API_URL}/system/metrics`);
+      if (!response.ok) throw new Error('Error al obtener métricas del sistema');
+      const data = await response.json();
+      return data.metrics;
+    },
+    refetchInterval: 10000,
+  });
 
   // Fetch logs from API
   const { data: logs = [], isLoading, error, refetch } = useQuery({
@@ -202,7 +221,7 @@ const Logs = () => {
       </div>
 
       {/* System Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Estado del Sistema</CardTitle>
@@ -222,9 +241,9 @@ const Logs = () => {
             <Cpu className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">23%</div>
+            <div className="text-2xl font-bold">{systemMetrics ? `${Math.round(systemMetrics.cpu.usage)}%` : '—'}</div>
             <p className="text-xs text-muted-foreground">
-              Uso promedio en 1h
+              Uso actual del servidor
             </p>
           </CardContent>
         </Card>
@@ -235,22 +254,9 @@ const Logs = () => {
             <HardDrive className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1.2 GB</div>
+            <div className="text-2xl font-bold">{systemMetrics ? `${systemMetrics.memory.used} GB` : '—'}</div>
             <p className="text-xs text-muted-foreground">
-              De 4 GB disponibles
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Red</CardTitle>
-            <Wifi className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">45 MB/s</div>
-            <p className="text-xs text-muted-foreground">
-              Tráfico saliente
+              {systemMetrics ? `De ${systemMetrics.memory.total} GB disponibles` : 'Cargando...'}
             </p>
           </CardContent>
         </Card>

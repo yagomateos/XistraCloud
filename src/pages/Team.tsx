@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Users, Mail, UserPlus, Trash2, Clock, AlertCircle, RefreshCw, Crown, Shield, Code } from 'lucide-react';
 
 interface TeamMember {
@@ -38,13 +39,16 @@ export default function Team() {
   const [newInviteRole, setNewInviteRole] = useState('viewer');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [sharedProjectsCount, setSharedProjectsCount] = useState(0);
 
   useEffect(() => {
     async function fetchTeamData() {
       try {
-        const [membersResponse, invitationsResponse] = await Promise.all([
+        const [membersResponse, invitationsResponse, projectsResponse] = await Promise.all([
           apiCall(`${API_URL}/team/members`),
-          apiCall(`${API_URL}/team/invitations`)
+          apiCall(`${API_URL}/team/invitations`),
+          apiCall(`${API_URL}/projects`)
         ]);
 
         if (membersResponse.ok) {
@@ -59,6 +63,13 @@ export default function Team() {
           setInvitations(Array.isArray(invitationsData) ? invitationsData : []);
         } else {
           setInvitations([]);
+        }
+
+        if (projectsResponse.ok) {
+          const projectsData = await projectsResponse.json();
+          setSharedProjectsCount(Array.isArray(projectsData) ? projectsData.length : 0);
+        } else {
+          setSharedProjectsCount(0);
         }
       } catch (err) {
         console.error('Error fetching team data:', err);
@@ -93,6 +104,7 @@ export default function Team() {
         setInvitations(prev => [...prev, data.invitation]);
         setNewInviteEmail('');
         setNewInviteRole('viewer');
+        setIsInviteDialogOpen(false);
       } else {
         setError(data.error || 'No se pudo enviar la invitación');
       }
@@ -161,14 +173,63 @@ export default function Team() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
-          <Button size="sm">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Invitar Miembro
-          </Button>
+          <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invitar Miembro
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Invitar miembro al equipo</DialogTitle>
+                <DialogDescription>
+                  Envía una invitación por email a un nuevo miembro del equipo
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleInvite}>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="usuario@ejemplo.com"
+                      value={newInviteEmail}
+                      onChange={(e) => setNewInviteEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="role">Rol</Label>
+                    <Select value={newInviteRole} onValueChange={setNewInviteRole}>
+                      <SelectTrigger id="role">
+                        <SelectValue placeholder="Selecciona un rol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="viewer">Viewer - Solo lectura</SelectItem>
+                        <SelectItem value="developer">Developer - Deploy y gestión</SelectItem>
+                        <SelectItem value="admin">Admin - Acceso completo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Enviar Invitación
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -213,7 +274,7 @@ export default function Team() {
             <Code className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2</div>
+            <div className="text-2xl font-bold">{sharedProjectsCount}</div>
             <p className="text-xs text-muted-foreground">
               Disponibles para colaboración
             </p>
@@ -266,6 +327,52 @@ export default function Team() {
           )}
         </CardContent>
       </Card>
+
+      {/* Invitaciones Pendientes */}
+      {invitations.length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Invitaciones Pendientes</CardTitle>
+            <CardDescription>
+              {invitations.length} invitación{invitations.length !== 1 ? 'es' : ''} esperando respuesta
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {invitations.map(invitation => (
+                <div
+                  key={invitation.id}
+                  className="flex items-center justify-between p-4 border rounded-lg bg-muted/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                      <Mail className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{invitation.email}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline">{invitation.role}</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Pendiente
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleCancelInvitation(invitation.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Permisos por Rol */}
       <Card>

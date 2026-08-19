@@ -191,6 +191,12 @@ app.delete('/database/services/:id', getCurrentUser, (req, res) => {
   }
   
   const deletedService = req.userData.databaseServices.splice(serviceIndex, 1)[0];
+
+  // Also remove the matching deployment record created alongside this service
+  if (req.userData.deployments) {
+    req.userData.deployments = req.userData.deployments.filter(d => d.id !== id);
+  }
+
   saveUsers();
   console.log(`🗑️ Deleted database service: ${deletedService.name}`);
   
@@ -2567,19 +2573,15 @@ app.get('/apps/deployments', async (req, res) => {
 app.get('/deployments', secureAuth, async (req, res) => {
   try {
     console.log(`📊 Fetching deployments for user: ${req.user.email}`);
-    
-    // Get user-specific deployments
-    const userDeployments = req.userData.deployments || [];
-    
-    // If user has no deployments, return empty array
-    if (userDeployments.length === 0) {
-      console.log(`📊 No deployments found for user: ${req.user.email}`);
-      return res.json([]);
-    }
-    
-    console.log(`📊 Found ${userDeployments.length} deployments for user: ${req.user.email}`);
-    res.json(userDeployments);
-    
+
+    // Combine Git-imported projects with app-template deployments (both are "deployments")
+    const projects = req.userData.projects || [];
+    const appDeployments = req.userData.deployments || [];
+    const combined = [...projects, ...appDeployments];
+
+    console.log(`📊 Found ${combined.length} deployments for user: ${req.user.email}`);
+    res.json(combined);
+
   } catch (error) {
     console.error('❌ Error fetching deployments:', error);
     res.status(500).json({ error: 'Failed to fetch deployments' });

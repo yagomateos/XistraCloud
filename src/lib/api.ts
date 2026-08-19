@@ -604,37 +604,8 @@ export const getAllDeployments = async (): Promise<any[]> => {
     console.log('✅ Successfully fetched all deployments from API');
     return data;
   } catch (error) {
-    console.error('❌ Error fetching deployments from API, falling back to mock data:', error);
-    
-    // Mock preview deployments
-    const mockPreviewDeployments = [
-      {
-        id: 'preview-1',
-        name: 'mi-app-web (feature-auth)',
-        status: 'running',
-        url: 'https://mi-app-web-feature-auth.xistracloud.com',
-        repository: 'https://github.com/usuario/mi-app-web.git',
-        framework: 'React',
-        type: 'preview_deployment',
-        branch: 'feature-auth',
-        commit_sha: 'abc1234',
-        created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'preview-2',
-        name: 'mi-app-web (pr-15)',
-        status: 'running',
-        url: 'https://mi-app-web-pr-15.xistracloud.com',
-        repository: 'https://github.com/usuario/mi-app-web.git',
-        framework: 'React',
-        type: 'preview_deployment',
-        branch: 'pr-15',
-        commit_sha: 'def5678',
-        created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
-      }
-    ];
-    
-    return [...MOCK_PROJECTS, ...mockPreviewDeployments];
+    console.error('❌ Error fetching deployments from API:', error);
+    throw error;
   }
 };
 

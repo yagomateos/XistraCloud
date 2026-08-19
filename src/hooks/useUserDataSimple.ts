@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContextSimple';
 import { useApi } from '@/hooks/useApi';
+import { API_URL } from '@/lib/api';
 
 interface UserData {
   id: string;
@@ -33,17 +34,21 @@ export const useUserDataSimple = () => {
 
   // Cargar perfil real desde backend
   useEffect(() => {
+    if (!user) return;
+
     const loadProfile = async () => {
       try {
-        const res = await apiCall('/user/profile', { method: 'GET' });
-        const profile = (res as any)?.profile || {};
+        const res = await apiCall(`${API_URL}/user/profile`, { method: 'GET' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const profile = data?.profile || {};
         const merged = {
-          ...(userData || user || {}),
-          name: profile.fullName || (userData || user || {}).name || '',
-          email: (userData || user || {}).email || '',
-          bio: profile.bio || (userData || user || {}).bio || '',
-          plan_type: profile.plan_type || (userData || user || {}).plan_type || 'free',
-          avatar: profile.avatarUrl || (userData || user || {}).avatar || '',
+          ...user,
+          name: profile.fullName || user.name || '',
+          email: user.email || '',
+          bio: profile.bio ?? user.bio ?? '',
+          plan_type: profile.plan_type || user.plan_type || 'free',
+          avatar: profile.avatarUrl || user.avatar || '',
         } as UserData;
         setUserData(merged);
         localStorage.setItem('user', JSON.stringify(merged));
@@ -52,8 +57,7 @@ export const useUserDataSimple = () => {
       }
     };
     loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const updateProfile = async (profile: {
     name: string;
@@ -68,7 +72,7 @@ export const useUserDataSimple = () => {
     setLoading(true);
     try {
       // Persistir en backend
-      const resp = await apiCall('/user/profile', {
+      const resp = await apiCall(`${API_URL}/user/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -77,7 +81,8 @@ export const useUserDataSimple = () => {
         })
       });
 
-      const saved = (resp as any)?.profile || {};
+      const respData = resp.ok ? await resp.json() : null;
+      const saved = respData?.profile || {};
       const updatedUser = {
         ...user,
         ...profile,
