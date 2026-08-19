@@ -52,31 +52,24 @@ const authRegisterSchema = Joi.object({
     })
 });
 
-// Validación para proyectos
+// Validación para proyectos (importados desde un repositorio Git)
 const projectCreateSchema = Joi.object({
   name: Joi.string()
-    .min(2)
+    .min(1)
     .max(100)
-    .pattern(/^[a-zA-Z0-9\s\-_]+$/)
+    .required(),
+  repository: Joi.string()
+    .uri()
     .required()
     .messages({
-      'string.pattern.base': 'Project name contains invalid characters'
+      'string.uri': 'Repository must be a valid URL'
     }),
-  description: Joi.string()
-    .max(500)
+  framework: Joi.string()
+    .max(50)
     .allow(''),
-  type: Joi.string()
-    .valid('wordpress', 'n8n', 'minecraft', 'custom')
-    .required(),
-  template: Joi.string()
-    .max(100)
-    .allow(''),
-  gitUrl: Joi.string()
-    .uri()
+  status: Joi.string()
+    .max(50)
     .allow('')
-    .messages({
-      'string.uri': 'Git URL must be valid'
-    })
 });
 
 // Validación para backups

@@ -552,20 +552,8 @@ export const getProjects = async (): Promise<Project[]> => {
     
     return projectsWithLastDeploy;
   } catch (error) {
-    console.error('❌ Error fetching projects from API, falling back to mock data:', error);
-    
-    // Add lastDeploy field for ProjectCard compatibility  
-    const projectsWithLastDeploy = MOCK_PROJECTS.map(project => ({
-      ...project,
-      lastDeploy: new Date(project.created_at).toLocaleDateString('es-ES', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }));
-    
-    return projectsWithLastDeploy;
+    console.error('❌ Error fetching projects from API:', error);
+    throw error;
   }
 };
 
