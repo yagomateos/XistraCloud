@@ -166,17 +166,16 @@ export default function AppInstall() {
       });
 
       const result = await response.json();
-      
+
       if (response.ok && result.success) {
-        // Mostrar éxito y abrir en nueva pestaña
-        setTimeout(() => {
-          window.open(result.deployment.accessUrl, '_blank');
-        }, 1000);
-        
-        // Redirigir a proyectos después de 2 segundos
-        setTimeout(() => {
-          navigate('/dashboard/projects');
-        }, 2000);
+        if (result.deployment.accessUrl) {
+          // Instant (simulated) deployments already have a URL.
+          setTimeout(() => window.open(result.deployment.accessUrl, '_blank'), 1000);
+        }
+        // Real deployments build in the background — send the user to
+        // Despliegues, which polls and will show it move from
+        // "building" to "deployed" with its real URL once ready.
+        navigate('/dashboard/deployments');
       } else {
         throw new Error(result.error || 'Error en la instalación');
       }

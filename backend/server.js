@@ -2332,207 +2332,118 @@ app.get('/apps/templates', (req, res) => {
   }
 });
 
+// Checks whether a TCP port is free on localhost.
+function isPortFree(port) {
+  return new Promise((resolve) => {
+    const tester = require('net').createServer()
+      .once('error', () => resolve(false))
+      .once('listening', () => tester.close(() => resolve(true)))
+      .listen(port, '127.0.0.1');
+  });
+}
+
+async function allocateFreePort() {
+  for (let i = 0; i < 50; i++) {
+    const port = 20000 + Math.floor(Math.random() * 20000);
+    if (await isPortFree(port)) return port;
+  }
+  throw new Error('No se encontró un puerto libre');
+}
+
+// Regenerates the nginx subdomain -> container-port map from every user's
+// running app deployments, then reloads nginx so it takes effect.
+function regenerateAppPortsMap() {
+  const entries = [];
+  for (const data of userData.values()) {
+    for (const dep of data.deployments || []) {
+      if (dep.type === 'app_deployment' && dep.status === 'deployed' && dep.subdomain && dep.port) {
+        entries.push(`    ${dep.subdomain} '127.0.0.1:${dep.port}';`);
+      }
+    }
+  }
+  const mapContent = `map $subdomain $app_upstream {\n    default '';\n${entries.join('\n')}\n}\n`;
+  try {
+    fs.writeFileSync('/etc/nginx/conf.d/app-ports.conf', mapContent);
+    require('child_process').execSync('nginx -s reload');
+  } catch (error) {
+    console.error('⚠️ Failed to update nginx app routing:', error.message);
+  }
+}
+
+// Clones the template's docker-compose file, remaps every declared
+// container port to a fresh free host port, and brings it up with
+// `docker compose`. Updates the deployment record in place and wires it
+// into the wildcard nginx proxy on success.
+async function deployComposeApp(deployment, template, environment) {
+  const deployPath = path.resolve(__dirname, 'deployed-apps', deployment.id);
+  try {
+    fs.mkdirSync(deployPath, { recursive: true });
+
+    const composePath = path.resolve(__dirname, '..', 'awesome-compose', template.compose);
+    let composeContent = fs.readFileSync(composePath, 'utf8');
+
+    const allocatedPorts = [];
+    for (const containerPort of template.ports) {
+      const port = await allocateFreePort();
+      allocatedPorts.push(port);
+      const quoted = new RegExp(`-\\s*"(\\d+):${containerPort}"`, 'g');
+      const unquoted = new RegExp(`-\\s*(\\d+):${containerPort}(?!\\d)`, 'g');
+      composeContent = composeContent.replace(quoted, `- "${port}:${containerPort}"`);
+      composeContent = composeContent.replace(unquoted, `- ${port}:${containerPort}`);
+    }
+
+    fs.writeFileSync(path.join(deployPath, 'compose.yaml'), composeContent);
+
+    const envLines = Object.entries(environment).map(([key, value]) => `${key}=${value}`);
+    envLines.push(`PROJECT_NAME=${deployment.id}`);
+    fs.writeFileSync(path.join(deployPath, '.env'), envLines.join('\n'));
+
+    await runCmd('docker', ['compose', '-p', deployment.id, 'up', '-d'], deployPath, 5 * 60 * 1000);
+
+    deployment.port = allocatedPorts[0];
+    deployment.ports = allocatedPorts;
+    deployment.status = 'deployed';
+    deployment.url = deployment.subdomainUrl;
+    deployment.accessUrl = deployment.subdomainUrl;
+
+    regenerateAppPortsMap();
+    console.log(`✅ App "${deployment.name}" deployed -> ${deployment.subdomainUrl}`);
+  } catch (error) {
+    deployment.status = 'failed';
+    deployment.deploy_error = error.message;
+    deployment.url = null;
+    console.error(`❌ App deploy failed for "${deployment.name}":`, error.message);
+  } finally {
+    saveUsers();
+  }
+}
+
 // POST /apps/deploy - Deploy an app template
 app.post('/apps/deploy', secureAuth, async (req, res) => {
   try {
-    const { templateId, name, environment = {}, domain } = req.body;
+    const { templateId, name, environment = {} } = req.body;
     console.log(`🚀 Deploying app ${name} for user: ${req.user.email}`);
-    
+
     if (!templateId || !name) {
       return res.status(400).json({ error: 'Template ID y nombre son requeridos' });
     }
-    
+
     const template = APP_TEMPLATES[templateId];
     if (!template) {
       return res.status(404).json({ error: 'Template no encontrado' });
     }
 
-    // Generate unique project ID and ports
     const projectId = `app-${templateId}-${crypto.randomUUID().substring(0, 8)}`;
-    const basePort = 8000 + Math.floor(Math.random() * 1000);
-    
-    // Generate subdomain
     const subdomain = `${name.toLowerCase().replace(/[^a-z0-9-]/g, '-')}-${crypto.randomUUID().substring(0, 6)}`;
     const subdomainUrl = `https://${subdomain}.xistracloud.com`;
-    
-    console.log(`🚀 Iniciando despliegue de ${template.name} como ${name}...`);
 
-  // Instant local path for database templates (skip Docker)
-  if (templateId.includes('-standalone') && process.env.LOCAL_INSTANT !== 'false') {
-    const urls = template.ports.map((_, index) => `http://localhost:${basePort + index}`);
+    // Instant local path for database templates (unchanged: explicitly simulated)
+    if (templateId.includes('-standalone') && process.env.LOCAL_INSTANT !== 'false') {
+      const basePort = 8000 + Math.floor(Math.random() * 1000);
+      const urls = template.ports.map((_, index) => `http://localhost:${basePort + index}`);
 
-    // Register DB service per user
-    const dbType = templateId.replace('-standalone', '');
-    const adminPort = environment.PHPMYADMIN_PORT || environment.PGADMIN_PORT || environment.REDIS_COMMANDER_PORT || 8080;
-    const dbService = {
-      id: projectId,
-      name: name,
-      type: dbType,
-      status: 'running',
-      port: template.ports[0] ? basePort : 3306,
-      admin_port: adminPort,
-      created_at: new Date().toISOString(),
-      connection_string: `${dbType}://${environment.MYSQL_USER || environment.POSTGRES_USER || 'user'}:${environment.MYSQL_PASSWORD || environment.POSTGRES_PASSWORD || environment.REDIS_PASSWORD || 'pass'}@localhost:${template.ports[0] ? basePort : 3306}`
-    };
-    if (!req.userData.databaseServices) req.userData.databaseServices = [];
-    req.userData.databaseServices.push(dbService);
-
-    // Save deployment to user data
-    const userDeploymentData = {
-      id: projectId,
-      name: name,
-      template: template.name,
-      status: 'running',
-      urls: urls,
-      ports: template.ports.map((_, index) => basePort + index),
-      accessUrl: urls[0],
-      subdomain: subdomain,
-      subdomainUrl: subdomainUrl,
-      created_at: new Date().toISOString(),
-      type: 'database_service',
-      instructions: {
-        general: 'Despliegue instantáneo en local (simulado).'
-      }
-    };
-    if (!req.userData.deployments) req.userData.deployments = [];
-    req.userData.deployments.push(userDeploymentData);
-    saveUsers();
-
-    return res.json({
-      success: true,
-      message: `${template.name} desplegado instantáneamente como ${name}`,
-      deployment: userDeploymentData
-    });
-  }
-    
-    // Create deployment directory (use absolute path relative to this file)
-    const deployPath = path.resolve(__dirname, 'deployed-apps', projectId);
-    await execAsync(`mkdir -p ${deployPath}`);
-    
-    // Resolve compose file from repo (absolute path, independent of cwd)
-    const composePath = path.resolve(__dirname, '..', 'awesome-compose', template.compose);
-    const targetComposePath = path.join(deployPath, 'compose.yaml');
-    
-    // Read and modify compose file with dynamic ports
-    let composeContent = await fsp.readFile(composePath, 'utf8');
-    
-    // Replace static ports with dynamic ones without corrupting target port
-    // Special-case minecraft which uses 25565
-    let currentPort = basePort;
-    if (templateId === 'minecraft') {
-      composeContent = composeContent.replace(/-\s*"?25565:25565"?/g, `- "${currentPort}:25565"`);
-      currentPort++;
-    } else {
-      for (const containerPort of template.ports) {
-        // Replace quoted mappings first
-        const quotedMapping = new RegExp(`-\\s*\"(\\d+):(${containerPort})\"`, 'gm');
-        composeContent = composeContent.replace(quotedMapping, (_m, _hp, cp) => `- "${currentPort}:${cp}"`);
-        // Then unquoted mappings
-        const unquotedMapping = new RegExp(`-\\s*(\\d+):(${containerPort})(?!\\S)`, 'gm');
-        composeContent = composeContent.replace(unquotedMapping, (_m, _hp, cp) => `- ${currentPort}:${cp}`);
-        currentPort++;
-      }
-    }
-    
-    // Fix any malformed port lines (ensure proper quotes)
-    composeContent = composeContent.replace(/- "(\d+):(\d+)(?!")/g, '- "$1:$2"');
-    
-    // Add project name prefix to container names
-    composeContent = composeContent.replace(/container_name: ([\\w-]+)/g, `container_name: ${projectId}-$1`);
-    
-    await fsp.writeFile(targetComposePath, composeContent);
-    
-    // Create .env file
-    const envContent = Object.entries(environment)
-      .map(([key, value]) => `${key}=${value}`)
-      .join('\n');
-    await fsp.writeFile(path.join(deployPath, '.env'), envContent);
-    
-    // Deploy with Docker Compose
-    console.log('🚀 Desplegando con Docker Compose...');
-    
-    try {
-      const { stdout, stderr } = await execAsync(
-        `cd ${deployPath} && docker-compose -p ${projectId} up -d`,
-        { timeout: 600000 } // 10 minutos timeout
-      );
-      
-      console.log('✅ Despliegue exitoso:', stdout);
-      if (stderr) {
-        console.log('⚠️ Warnings:', stderr);
-      }
-    } catch (error) {
-      console.error('❌ Error durante el despliegue:', error);
-      throw new Error(`Error durante el despliegue: ${error.message}`);
-    }
-    
-    // Calculate URLs
-    const urls = template.ports.map((originalPort, index) => {
-      const mappedPort = basePort + index;
-      return `http://localhost:${mappedPort}`;
-    });
-    
-    // Wait a bit for the application to fully start
-    console.log('⏳ Esperando que la aplicación se inicie completamente...');
-    await new Promise(resolve => setTimeout(resolve, 5000)); // 5 segundos
-    
-    // Verify the application is responding
-    try {
-      const healthCheckUrl = urls[0];
-      const { execSync } = require('child_process');
-      const healthCheck = execSync(`curl -s -o /dev/null -w "%{http_code}" ${healthCheckUrl}`, { encoding: 'utf8', timeout: 10000 });
-      
-      if (healthCheck.trim() === '200' || healthCheck.trim() === '302') {
-        console.log('✅ Aplicación verificada y funcionando');
-      } else {
-        console.log(`⚠️ Aplicación respondiendo con código: ${healthCheck.trim()}`);
-      }
-    } catch (error) {
-      console.log('⚠️ No se pudo verificar la aplicación, pero el despliegue fue exitoso');
-    }
-    
-    // Store deployment in database (usando tabla deployments existente)
-    const deploymentRecord = {
-      id: projectId,
-      project_id: projectId, // Para compatibilidad
-      name: name,
-      status: 'running',
-      url: urls[0],
-      framework: templateId, // Usamos framework para almacenar template_id
-      created_at: new Date().toISOString(),
-      type: 'app_deployment', // Marcador especial para apps
-      deployment_logs: JSON.stringify({
-        template_id: templateId,
-        template_name: template.name,
-        urls: urls,
-        ports: template.ports.map((_, index) => basePort + index),
-        environment: environment,
-        deploy_path: deployPath
-      })
-    };
-    
-    // Skip storing DB services in shared table when in instant/local mode
-    if (!(process.env.LOCAL_INSTANT && templateId.includes('-standalone'))) {
-      const { data, error } = await supabase
-        .from('deployments')
-        .insert([deploymentRecord])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ Error storing deployment:', error);
-        // Continue anyway
-      }
-    }
-
-    // Generate logs
-    await generateAppDeploymentLogs(projectId, template.name, name, 'success', urls[0]);
-    
-    // If it's a database service, also save it to the database services list
-    if (templateId.includes('-standalone')) {
       const dbType = templateId.replace('-standalone', '');
       const adminPort = environment.PHPMYADMIN_PORT || environment.PGADMIN_PORT || environment.REDIS_COMMANDER_PORT || 8080;
-      
       const dbService = {
         id: projectId,
         name: name,
@@ -2541,68 +2452,67 @@ app.post('/apps/deploy', secureAuth, async (req, res) => {
         port: template.ports[0] ? basePort : 3306,
         admin_port: adminPort,
         created_at: new Date().toISOString(),
-        connection_string: `${dbType}://${environment.MYSQL_USER || environment.POSTGRES_USER || 'user'}:${environment.MYSQL_PASSWORD || environment.POSTGRES_PASSWORD || environment.REDIS_PASSWORD}@localhost:${template.ports[0] ? basePort : 3306}`
+        connection_string: `${dbType}://${environment.MYSQL_USER || environment.POSTGRES_USER || 'user'}:${environment.MYSQL_PASSWORD || environment.POSTGRES_PASSWORD || environment.REDIS_PASSWORD || 'pass'}@localhost:${template.ports[0] ? basePort : 3306}`
       };
-      
-      deployedDatabaseServices.push(dbService);
-      
-      // Save to file
-      try {
-        const fsSync = require('fs');
-        fsSync.writeFileSync(servicesFile, JSON.stringify(deployedDatabaseServices, null, 2));
-        console.log(`💾 Saved database service: ${dbService.name}`);
-      } catch (error) {
-        console.error('Error saving database service:', error);
-      }
+      if (!req.userData.databaseServices) req.userData.databaseServices = [];
+      req.userData.databaseServices.push(dbService);
+
+      const userDeploymentData = {
+        id: projectId,
+        name: name,
+        template: template.name,
+        status: 'running',
+        urls: urls,
+        ports: template.ports.map((_, index) => basePort + index),
+        accessUrl: urls[0],
+        subdomain: subdomain,
+        subdomainUrl: subdomainUrl,
+        created_at: new Date().toISOString(),
+        type: 'database_service',
+        instructions: {
+          general: 'Despliegue instantáneo en local (simulado).'
+        }
+      };
+      if (!req.userData.deployments) req.userData.deployments = [];
+      req.userData.deployments.push(userDeploymentData);
+      saveUsers();
+
+      return res.json({
+        success: true,
+        message: `${template.name} desplegado instantáneamente como ${name}`,
+        deployment: userDeploymentData
+      });
     }
-    
-    // Save deployment to user data
+
+    // Real deploy: docker compose up, then wire into the wildcard nginx proxy.
     const userDeploymentData = {
       id: projectId,
       name: name,
       template: template.name,
-      status: 'running',
-      urls: urls,
-      ports: template.ports.map((_, index) => basePort + index),
-      accessUrl: urls[0],
+      templateId,
+      status: 'building',
+      url: null,
+      accessUrl: null,
       subdomain: subdomain,
       subdomainUrl: subdomainUrl,
       created_at: new Date().toISOString(),
-      instructions: {
-        wordpress: "WordPress está listo. Si ves 'aplicación no encontrada', espera unos segundos y recarga la página. WordPress puede tardar un momento en inicializarse completamente.",
-        general: "La aplicación puede tardar unos segundos en estar completamente disponible. Si no funciona inmediatamente, espera y recarga la página."
-      }
+      type: 'app_deployment'
     };
-    
-    // Add to user's deployments
-    if (req.userData && req.userData.deployments) {
-      req.userData.deployments.push(userDeploymentData);
-      saveUsers();
-      console.log(`💾 Saved deployment to user data: ${req.user.email}`);
-    }
-    
-    res.json({
+
+    if (!req.userData.deployments) req.userData.deployments = [];
+    req.userData.deployments.push(userDeploymentData);
+    saveUsers();
+
+    res.status(202).json({
       success: true,
-      message: `${template.name} desplegado exitosamente como ${name}`,
+      message: `Desplegando ${template.name}...`,
       deployment: userDeploymentData
     });
-    
+
+    deployComposeApp(userDeploymentData, template, environment);
   } catch (error) {
     console.error('❌ Error deploying app:', error);
-    
-    // Generate error logs
-    if (req.body.templateId && req.body.name) {
-      await generateAppDeploymentLogs(
-        `app-${req.body.templateId}-error`, 
-        req.body.templateId, 
-        req.body.name, 
-        'failed', 
-        null,
-        error.message
-      );
-    }
-    
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: error.message,
       message: 'Error durante el despliegue'
@@ -2745,46 +2655,32 @@ app.delete('/apps/deployments/:id', secureAuth, async (req, res) => {
   try {
     const { id } = req.params;
     console.log(`🗑️ Deleting deployment ${id} for user: ${req.user.email}`);
-    
-    // Get deployment info
-    const { data: deployment, error } = await supabase
-      .from('deployments')
-      .select('*')
-      .eq('id', id)
-      .eq('type', 'app_deployment')
-      .single();
 
-    if (error || !deployment) {
+    const deployments = req.userData.deployments || [];
+    const index = deployments.findIndex(d => d.id === id && d.type === 'app_deployment');
+    if (index === -1) {
       return res.status(404).json({ error: 'Deployment not found' });
     }
+    const deployment = deployments[index];
 
-    // Parse deployment logs to get deploy_path
-    let deployPath = null;
+    // Stop and remove containers (best-effort — a failed/never-started
+    // deploy may have no containers to remove).
     try {
-      const logs = JSON.parse(deployment.deployment_logs || '{}');
-      deployPath = logs.deploy_path;
+      await runCmd('docker', ['compose', '-p', id, 'down', '-v'], path.resolve(__dirname, 'deployed-apps', id), 60000);
+      console.log(`✅ Stopped containers for ${id}`);
     } catch (e) {
-      console.log('Could not parse deployment logs');
+      console.warn(`⚠️ Could not stop containers for ${id}:`, e.message);
     }
 
-    // Stop and remove containers
-    await execAsync(`docker-compose -p ${id} down -v`);
-    console.log(`✅ Stopped containers for ${id}`);
+    fs.rmSync(path.resolve(__dirname, 'deployed-apps', id), { recursive: true, force: true });
 
-    // Clean up deployment directory
-    if (deployPath) {
-      await execAsync(`rm -rf ${deployPath}`);
-    }
+    deployments.splice(index, 1);
+    regenerateAppPortsMap();
+    saveUsers();
 
-    // Remove from database
-    await supabase
-      .from('deployments')
-      .delete()
-      .eq('id', id);
-
-    res.json({ 
-      success: true, 
-      message: `Deployment ${deployment.name} eliminado exitosamente` 
+    res.json({
+      success: true,
+      message: `Deployment ${deployment.name} eliminado exitosamente`
     });
 
   } catch (error) {
