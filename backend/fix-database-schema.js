@@ -1,8 +1,8 @@
 // Fix database schema - Add missing dns_configured column
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = 'https://metzjfocvkelucinstul.supabase.co';
-const supabaseServiceKey = '***REMOVED-SUPABASE-SERVICE-KEY***';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

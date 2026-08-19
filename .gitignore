@@ -29,3 +29,6 @@ backend/getting-started-*env.production
 env.production
 env.staging
 env.development
+
+# Runtime deployment data (contains generated credentials)
+deployments/

@@ -69,8 +69,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/auth/', authLimiter); // 5 requests per 15 min for auth
 app.use('/', apiLimiter);       // General rate limiting
 
-const supabaseUrl = 'https://metzjfocvkelucinstul.supabase.co';
-const supabaseServiceKey = '***REMOVED-SUPABASE-SERVICE-KEY***';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in environment variables');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -227,168 +232,9 @@ app.get('/test-deployment', (req, res) => {
   });
 });
 
-// Get all domains
-app.get('/domains', async (req, res) => {
-  try {
-    console.log('🌐 Fetching all domains');
-    
-    const { data: domains, error } = await supabase
-      .from('domains')
-      .select(`
-        id,
-        domain,
-        project_id,
-        created_at,
-        status,
-        ssl_enabled,
-        dns_records,
-        verification_token,
-        projects!inner (
-          id,
-          name
-        )
-      `)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('❌ Supabase error fetching domains:', error);
-      return res.status(500).json({ 
-        error: 'Failed to fetch domains',
-        supabaseError: error.message 
-      });
-    }
-
-    console.log(`✅ Found ${domains?.length || 0} domains`);
-    res.json({ domains: domains || [] });
-
-  } catch (error) {
-    console.error('❌ Error fetching domains:', error);
-    res.status(500).json({ 
-      error: 'Internal server error',
-      details: error.message 
-    });
-  }
-});
-
-// Dashboard stats endpoint
-app.get('/dashboard/stats', async (req, res) => {
-  try {
-    console.log('📊 Fetching dashboard stats with REAL data from Supabase');
-    
-    // Get REAL projects to calculate stats
-    const { data: projects } = await supabase
-      .from('projects')
-      .select('*');
-
-    const { data: domains } = await supabase
-      .from('domains')
-      .select('*');
-
-    console.log(`📊 Found ${projects?.length || 0} projects and ${domains?.length || 0} domains`);
-
-    // Calculate REAL project stats based on actual status
-    const projectStats = {
-      active: projects?.filter(p => p.status === 'deployed').length || 0,
-      building: projects?.filter(p => p.status === 'building').length || 0,
-      error: projects?.filter(p => p.status === 'failed').length || 0,
-      stopped: projects?.filter(p => p.status === 'stopped').length || 0,
-      pending: projects?.filter(p => p.status === 'pending').length || 0
-    };
-
-    console.log('📊 Real project stats:', projectStats);
-
-    // Generate deployment trend based on REAL project creation dates
-    const deploymentTrend = [];
-    const today = new Date();
-    
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      // Count projects created on this date
-      const projectsOnDate = projects?.filter(p => {
-        const projectDate = new Date(p.created_at).toISOString().split('T')[0];
-        return projectDate === dateStr;
-      }).length || 0;
-      
-      const successRate = 0.8; // 80% success rate
-      const success = Math.floor(projectsOnDate * successRate);
-      const failed = projectsOnDate - success;
-      
-      deploymentTrend.push({
-        date: dateStr,
-        deployments: projectsOnDate,
-        success,
-        failed
-      });
-    }
-
-    // Generate recent activity based on REAL projects
-    const recentActivity = [];
-    const sortedProjects = projects?.sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    ).slice(0, 5) || [];
-
-    sortedProjects.forEach((project, index) => {
-      const statusMessages = {
-        deployed: 'Deployment successful',
-        building: 'Build in progress...',
-        pending: 'Deployment queued',
-        failed: 'Build failed - reviewing logs',
-        stopped: 'Service stopped'
-      };
-
-      const statusColors = {
-        deployed: 'success',
-        building: 'warning', 
-        pending: 'warning',
-        failed: 'error',
-        stopped: 'warning'
-      };
-
-      recentActivity.push({
-        id: (index + 1).toString(),
-        type: 'deployment',
-        project: project.name,
-        message: statusMessages[project.status] || 'Status updated',
-        created_at: project.created_at,
-        status: statusColors[project.status] || 'info'
-      });
-    });
-
-    // Add some domain activities if we have domains
-    if (domains && domains.length > 0) {
-      const recentDomains = domains.slice(0, 2);
-      recentDomains.forEach((domain, index) => {
-        recentActivity.push({
-          id: (sortedProjects.length + index + 1).toString(),
-          type: 'domain',
-          project: domain.project_name || 'Unknown Project',
-          message: domain.status === 'verified' ? 'Domain verified successfully' : 'Domain configuration updated',
-          created_at: domain.created_at,
-          status: domain.status === 'verified' ? 'success' : 'warning'
-        });
-      });
-    }
-
-    const dashboardStats = {
-      projectStats,
-      deploymentTrend,
-      recentActivity: recentActivity.slice(0, 10) // Limit to 10 items
-    };
-
-    console.log('✅ REAL Dashboard stats calculated:', JSON.stringify(dashboardStats, null, 2));
-    res.json(dashboardStats);
-
-  } catch (error) {
-    console.error('❌ Error fetching dashboard stats:', error)
-    res.status(500).json({ 
-      error: 'Failed to fetch dashboard stats',
-      details: error.message 
-    });
-  }
-});
+// GET /domains endpoint moved to line ~3793
+// GET /dashboard/stats endpoint moved to line ~3809
+// POST /domains endpoint moved to line ~3902
 
 // Logs endpoint with Railway-style detailed logging
 app.get('/logs', async (req, res) => {
@@ -789,124 +635,7 @@ app.get('/logs', async (req, res) => {
   }
 });
 
-// Working domain creation endpoint
-app.post('/domains', async (req, res) => {
-  try {
-    console.log('🚀 Domain creation v2.0:', req.body);
-    
-    const { domain, project_id, projectId } = req.body;
-    const projectIdValue = project_id || projectId;
-
-    // Basic validation
-    if (!domain || !projectIdValue) {
-      return res.status(400).json({ 
-        error: 'Missing required fields',
-        received: { domain: !!domain, project_id: !!project_id, projectId: !!projectId }
-      });
-    }
-
-    // Domain validation
-    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
-    if (!domainRegex.test(domain)) {
-      return res.status(400).json({ 
-        error: 'Invalid domain format',
-        domain,
-        valid: false
-      });
-    }
-
-    // Get project
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select('id, name')
-      .eq('id', projectIdValue)
-      .single();
-
-    if (projectError || !project) {
-      return res.status(404).json({ 
-        error: 'Project not found',
-        projectId: projectIdValue,
-        supabaseError: projectError?.message
-      });
-    }
-
-    // Check existing domain
-    const { data: existing } = await supabase
-      .from('domains')
-      .select('id')
-      .eq('domain', domain)
-      .single();
-
-    if (existing) {
-      return res.status(409).json({ 
-        error: 'Domain already exists',
-        domain,
-        existingId: existing.id
-      });
-    }
-
-    // Create domain
-    const verificationToken = Math.random().toString(36).substring(2, 22);
-    const dnsRecords = {
-      cname: { name: domain, value: 'xistracloud.app' },
-      txt: { name: `_xistracloud.${domain}`, value: `xistracloud-verification=${verificationToken}` }
-    };
-
-    console.log('🚀 Creating domain in database:', {
-      domain,
-      project_id: projectIdValue,
-      status: 'pending',
-      ssl_enabled: false,
-      dns_records: dnsRecords,
-      verification_token: verificationToken
-    });
-
-    const { data: newDomain, error: insertError } = await supabase
-      .from('domains')
-      .insert({
-        domain,
-        project_id: projectIdValue,
-        status: 'pending',
-        ssl_enabled: false,
-        dns_records: dnsRecords,
-        verification_token: verificationToken
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      return res.status(500).json({
-        error: 'Database insertion failed',
-        details: insertError.message,
-        code: insertError.code
-      });
-    }
-
-    // Success response
-    res.status(201).json({
-      success: true,
-      domain: {
-        id: newDomain.id,
-        domain: newDomain.domain,
-        projectName: project.name,
-        projectId: project.id,
-        status: newDomain.status,
-        ssl: newDomain.ssl_enabled,
-        dnsRecords: newDomain.dns_records,
-        verificationToken: newDomain.verification_token,
-        createdAt: newDomain.created_at
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Unexpected error:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      details: error.message,
-      stack: error.stack
-    });
-  }
-});
+// POST /domains endpoint moved to line ~3789
 
 // Delete domain endpoint
 app.delete('/domains/:id', async (req, res) => {
@@ -3848,6 +3577,208 @@ async function sendPaymentConfirmationEmail(session) {
   
   return true;
 }
+
+// ==========================================
+// ENDPOINTS THAT REQUIRE secureAuth
+// (Must be after users/userData initialization)
+// ==========================================
+
+// GET /domains - Get all domains for user
+app.get('/domains', secureAuth, async (req, res) => {
+  try {
+    console.log('🌐 Fetching all domains for user:', req.user.email);
+    const domains = req.userData.domains || [];
+    console.log(`✅ Found ${domains?.length || 0} domains`);
+    res.json({ domains: domains || [] });
+  } catch (error) {
+    console.error('❌ Error fetching domains:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error.message
+    });
+  }
+});
+
+// GET /dashboard/stats - Get dashboard statistics
+app.get('/dashboard/stats', secureAuth, async (req, res) => {
+  try {
+    console.log('📊 Fetching dashboard stats for user:', req.user.email);
+    const projects = req.userData.projects || [];
+    const domains = req.userData.domains || [];
+    console.log(`📊 Found ${projects?.length || 0} projects and ${domains?.length || 0} domains`);
+
+    const projectStats = {
+      active: projects?.filter(p => p.status === 'deployed').length || 0,
+      building: projects?.filter(p => p.status === 'building').length || 0,
+      error: projects?.filter(p => p.status === 'failed').length || 0,
+      stopped: projects?.filter(p => p.status === 'stopped').length || 0,
+      pending: projects?.filter(p => p.status === 'pending').length || 0
+    };
+
+    const deploymentTrend = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const projectsOnDate = projects?.filter(p => {
+        const projectDate = new Date(p.created_at).toISOString().split('T')[0];
+        return projectDate === dateStr;
+      }).length || 0;
+      const successRate = 0.8;
+      deploymentTrend.push({
+        date: dateStr,
+        deployments: projectsOnDate,
+        success: Math.floor(projectsOnDate * successRate),
+        failed: projectsOnDate - Math.floor(projectsOnDate * successRate)
+      });
+    }
+
+    const recentActivity = [];
+    const sortedProjects = projects?.sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ).slice(0, 5) || [];
+
+    sortedProjects.forEach((project, index) => {
+      const statusMessages = {
+        deployed: 'Deployment successful',
+        building: 'Build in progress...',
+        pending: 'Deployment queued',
+        failed: 'Build failed - reviewing logs',
+        stopped: 'Service stopped'
+      };
+      const statusColors = {
+        deployed: 'success',
+        building: 'warning',
+        pending: 'warning',
+        failed: 'error',
+        stopped: 'warning'
+      };
+      recentActivity.push({
+        id: (index + 1).toString(),
+        type: 'deployment',
+        project: project.name,
+        message: statusMessages[project.status] || 'Status updated',
+        created_at: project.created_at,
+        status: statusColors[project.status] || 'info'
+      });
+    });
+
+    if (domains && domains.length > 0) {
+      const recentDomains = domains.slice(0, 2);
+      recentDomains.forEach((domain, index) => {
+        recentActivity.push({
+          id: (sortedProjects.length + index + 1).toString(),
+          type: 'domain',
+          project: domain.project_name || 'Unknown Project',
+          message: domain.status === 'verified' ? 'Domain verified successfully' : 'Domain configuration updated',
+          created_at: domain.created_at,
+          status: domain.status === 'verified' ? 'success' : 'warning'
+        });
+      });
+    }
+
+    res.json({
+      projectStats,
+      deploymentTrend,
+      recentActivity: recentActivity.slice(0, 10)
+    });
+  } catch (error) {
+    console.error('❌ Error fetching dashboard stats:', error);
+    res.status(500).json({
+      error: 'Failed to fetch dashboard stats',
+      details: error.message
+    });
+  }
+});
+
+// POST /domains - Create new domain
+app.post('/domains', secureAuth, async (req, res) => {
+  try {
+    console.log('🚀 Domain creation for user:', req.user.email, 'data:', req.body);
+    const { domain, project_id, projectId } = req.body;
+    const projectIdValue = project_id || projectId;
+
+    if (!domain || !projectIdValue) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        received: { domain: !!domain, project_id: !!project_id, projectId: !!projectId }
+      });
+    }
+
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+    if (!domainRegex.test(domain)) {
+      return res.status(400).json({
+        error: 'Invalid domain format',
+        domain,
+        valid: false
+      });
+    }
+
+    const projects = req.userData.projects || [];
+    const project = projects.find(p => p.id === projectIdValue);
+
+    if (!project) {
+      return res.status(404).json({
+        error: 'Project not found',
+        projectId: projectIdValue
+      });
+    }
+
+    const domains = req.userData.domains || [];
+    const existing = domains.find(d => d.domain === domain);
+
+    if (existing) {
+      return res.status(409).json({
+        error: 'Domain already exists',
+        domain,
+        existingId: existing.id
+      });
+    }
+
+    const verificationToken = Math.random().toString(36).substring(2, 22);
+    const dnsRecords = {
+      cname: { name: domain, value: 'xistracloud.app' },
+      txt: { name: `_xistracloud.${domain}`, value: `xistracloud-verification=${verificationToken}` }
+    };
+
+    const newDomain = {
+      id: crypto.randomUUID(),
+      domain,
+      project_id: projectIdValue,
+      status: 'pending',
+      ssl_enabled: false,
+      dns_records: dnsRecords,
+      verification_token: verificationToken,
+      created_at: new Date().toISOString()
+    };
+
+    if (!req.userData.domains) req.userData.domains = [];
+    req.userData.domains.push(newDomain);
+    saveUsers();
+
+    res.status(201).json({
+      success: true,
+      domain: {
+        id: newDomain.id,
+        domain: newDomain.domain,
+        projectName: project.name,
+        projectId: project.id,
+        status: newDomain.status,
+        ssl: newDomain.ssl_enabled,
+        dnsRecords: newDomain.dns_records,
+        verificationToken: newDomain.verification_token,
+        createdAt: newDomain.created_at
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error creating domain:', error);
+    res.status(500).json({
+      error: 'Failed to create domain',
+      details: error.message
+    });
+  }
+});
 
 app.listen(port, () => {
   console.log(`✅ XistraCloud API v2.0 running on port ${port}`);

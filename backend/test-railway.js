@@ -2,9 +2,9 @@
 require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
 
-const RAILWAY_SUPABASE_URL = 'https://metzjfocvkelucinstul.supabase.co';
-const RAILWAY_SUPABASE_KEY = '***REMOVED-SUPABASE-ANON-KEY***';
-const RAILWAY_SERVICE_KEY = '***REMOVED-SUPABASE-SERVICE-KEY***';
+const RAILWAY_SUPABASE_URL = process.env.SUPABASE_URL;
+const RAILWAY_SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+const RAILWAY_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 async function testRailwaySimulation() {
   console.log('🚂 === RAILWAY SIMULATION TEST ===\n');

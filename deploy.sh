@@ -11,7 +11,8 @@ fi
 
 VPS_IP=$1
 VPS_USER=$2
-VPS_PASSWORD="***REMOVED-VPS-PASSWORD***"
+read -s -p "VPS password: " VPS_PASSWORD
+echo
 
 echo "🚀 Iniciando deploy a $VPS_USER@$VPS_IP"
 
