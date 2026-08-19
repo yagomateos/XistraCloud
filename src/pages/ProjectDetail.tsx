@@ -204,18 +204,22 @@ const ProjectDetail = () => {
                   <span className="text-sm font-medium">Último deploy</span>
                   <span className="text-sm text-muted-foreground">{project.lastDeploy}</span>
                 </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">URL de producción</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(project.url, '_blank')}
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Abrir
-                  </Button>
-                </div>
+                {project.url && (
+                  <>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">URL de producción</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(project.url, '_blank')}
+                      >
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Abrir
+                      </Button>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

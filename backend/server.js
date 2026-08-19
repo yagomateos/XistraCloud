@@ -842,17 +842,13 @@ app.post('/projects', getCurrentUser, createLimiter, validateSchema(projectCreat
       });
     }
 
-    // Generate a simple demo URL based on name
-    const projectSlug = String(name).toLowerCase().replace(/[^a-z0-9-]/g, '-');
-    const deploymentUrl = `https://${projectSlug}.${process.env.DEV_DOMAIN || 'xistracloud.com'}`;
-
     const newProject = {
       id: crypto.randomUUID(),
       name: name,
       repository: repository,
       framework: framework || 'unknown',
       status: 'deployed',
-      url: deploymentUrl,
+      url: null,
       user_id: req.user.email,
       created_at: new Date().toISOString(),
       container_id: null,
