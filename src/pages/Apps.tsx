@@ -9,7 +9,7 @@ const CATALOG: CatalogApp[] = [
   { id: 'wordpress-mysql', name: 'WordPress', description: 'CMS líder con MySQL', icon: '📝' },
   { id: 'n8n', name: 'n8n', description: 'Automatización visual', icon: '⚡' },
   { id: 'minecraft', name: 'Minecraft Server', description: 'Servidor Java Edition', icon: '🎮' },
-  { id: 'nextcloud-postgres', name: 'Nextcloud', description: 'Almacenamiento en la nube auto-hospedado', icon: '☁️' },
+  { id: 'nextcloud-postgres', name: 'Nextcloud', description: 'Almacenamiento en la nube', icon: '☁️' },
   { id: 'gitea-postgres', name: 'Gitea', description: 'Servicio Git auto-hospedado', icon: '🦊' },
   { id: 'portainer', name: 'Portainer', description: 'Gestión visual de contenedores Docker', icon: '🐳' },
 ];
