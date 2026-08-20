@@ -2398,7 +2398,7 @@ async function deployComposeApp(deployment, template, environment) {
     envLines.push(`PROJECT_NAME=${deployment.id}`);
     fs.writeFileSync(path.join(deployPath, '.env'), envLines.join('\n'));
 
-    await runCmd('docker', ['compose', '-p', deployment.id, 'up', '-d'], deployPath, 5 * 60 * 1000);
+    await runCmd('docker', ['compose', '-p', deployment.id, 'up', '-d', '--pull', 'always'], deployPath, 5 * 60 * 1000);
 
     deployment.port = allocatedPorts[0];
     deployment.ports = allocatedPorts;
