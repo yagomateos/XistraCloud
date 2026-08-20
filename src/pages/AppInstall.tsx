@@ -92,6 +92,44 @@ const templates: Record<string, AppTemplate> = {
       'Acceso inmediato tras el despliegue'
     ],
     icon: '🎮'
+  },
+  'nextcloud-postgres': {
+    id: 'nextcloud-postgres',
+    name: 'Nextcloud',
+    description: 'Plataforma de colaboración y almacenamiento en la nube auto-hospedada',
+    features: [
+      'Almacenamiento de archivos tipo Google Drive',
+      'Base de datos PostgreSQL incluida',
+      'Sincronización y compartición de archivos',
+      'Apps adicionales (calendario, contactos, etc.)',
+      'Completa el asistente de administrador tras el despliegue'
+    ],
+    icon: '☁️'
+  },
+  'gitea-postgres': {
+    id: 'gitea-postgres',
+    name: 'Gitea',
+    description: 'Servicio Git auto-hospedado ligero, alternativa a GitHub',
+    features: [
+      'Repositorios Git ilimitados',
+      'Base de datos PostgreSQL incluida',
+      'Issues, pull requests y wikis',
+      'Interfaz ligera y rápida',
+      'Completa el asistente de instalación tras el despliegue'
+    ],
+    icon: '🦊'
+  },
+  portainer: {
+    id: 'portainer',
+    name: 'Portainer',
+    description: 'Interfaz web para gestionar contenedores Docker',
+    features: [
+      'Gestión visual de contenedores, imágenes y volúmenes',
+      'Acceso directo al Docker del servidor',
+      'Panel de administración intuitivo',
+      'Acceso inmediato tras el despliegue'
+    ],
+    icon: '🐳'
   }
 };
 

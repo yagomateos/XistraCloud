@@ -1,7 +1,7 @@
 services:
   portainer:
     image: portainer/portainer-ce:alpine
-    container_name: portainer
+    container_name: ${PROJECT_NAME:-portainer}
     command: -H unix:///var/run/docker.sock
     ports:
       - "9000:9000"
