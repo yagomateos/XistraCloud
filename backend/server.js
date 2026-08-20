@@ -2054,9 +2054,9 @@ const APP_TEMPLATES = {
   'nextcloud-postgres': {
     name: 'Nextcloud',
     description: 'Plataforma de colaboración y almacenamiento en la nube auto-hospedada',
-    compose: 'nextcloud-postgres/compose.yaml', 
+    compose: 'nextcloud-postgres/compose.yaml',
     env_required: ['POSTGRES_PASSWORD', 'NEXTCLOUD_ADMIN_USER', 'NEXTCLOUD_ADMIN_PASSWORD'],
-    ports: [8080, 5432],
+    ports: [80],
     category: 'cms'
   },
 
