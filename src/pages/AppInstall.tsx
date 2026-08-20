@@ -79,6 +79,19 @@ const templates: Record<string, AppTemplate> = {
       'Optimización de consultas'
     ],
     icon: '🗄️'
+  },
+  minecraft: {
+    id: 'minecraft',
+    name: 'Minecraft Server',
+    description: 'Servidor de Minecraft Java Edition listo para jugar',
+    features: [
+      'Java Edition (itzg/minecraft-server)',
+      'Mundo persistente',
+      'Hasta 1.5 GB de memoria asignada',
+      'Puerto 25565 expuesto',
+      'Acceso inmediato tras el despliegue'
+    ],
+    icon: '🎮'
   }
 };
 
