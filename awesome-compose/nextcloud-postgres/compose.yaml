@@ -12,7 +12,7 @@ services:
     volumes:
       - nc_data:/var/www/html
   db:
-    image: postgres:alpine
+    image: postgres:16-alpine
     environment:
       - POSTGRES_PASSWORD=nextcloud
       - POSTGRES_DB=nextcloud
