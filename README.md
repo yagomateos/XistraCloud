@@ -280,7 +280,7 @@ Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo [LICEN
 ---
 
 <div align="center">
-  <strong>Construido con ❤️ usando tecnologías web modernas en React y Typescript</strong>
+  <strong>Construido con ❤️ usando tecnologías web modernas en React</strong>
   <br>
   <sub>XistraCloud - El futuro del despliegue en la nube</sub>
 </div>
